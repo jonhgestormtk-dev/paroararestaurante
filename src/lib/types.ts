@@ -28,6 +28,7 @@ export type OrderStatus = 'Pendente' | 'Em Preparo' | 'Saiu para Entrega' | 'Fin
 
 export interface Order {
   id: string;
+  orderNumber?: string;
   customer: {
     name: string;
     phone: string;

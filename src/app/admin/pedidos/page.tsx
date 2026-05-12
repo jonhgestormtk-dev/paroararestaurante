@@ -73,8 +73,11 @@ export default function AdminOrders() {
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
     return orders.filter(o => {
-      const matchesSearch = o.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            o.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const orderIdMatch = o.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const orderNumMatch = o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+      const customerMatch = o.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSearch = orderIdMatch || orderNumMatch || customerMatch;
       const matchesStatus = statusFilter === 'todos' || o.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -107,9 +110,10 @@ export default function AdminOrders() {
 
   const exportToCSV = () => {
     if (!orders) return;
-    const headers = ['ID', 'Data', 'Cliente', 'Telefone', 'Total', 'Status'];
+    const headers = ['ID', 'Num Pedido', 'Data', 'Cliente', 'Telefone', 'Total', 'Status'];
     const rows = orders.map(o => [
       o.id,
+      o.orderNumber || '-',
       formatDate(o.createdAt),
       o.customer.name,
       o.customer.phone,
@@ -151,7 +155,7 @@ export default function AdminOrders() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
-              placeholder="Buscar por cliente ou ID..."
+              placeholder="Buscar por cliente, ID ou número..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white border-areia-escura/50 focus:ring-marrom-terra"
@@ -188,7 +192,9 @@ export default function AdminOrders() {
               <div key={order.id} className="p-5 space-y-4 bg-white hover:bg-areia-clara/10 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-cinza-organico">#{order.id.substring(0, 8)}</p>
+                    <p className="text-[10px] font-mono text-marrom-terra font-black">
+                      #{order.orderNumber || order.id.substring(0, 8)}
+                    </p>
                     <div className="flex items-center gap-1.5 text-xs font-bold text-marrom-madeira">
                       <Calendar className="w-3.5 h-3.5" />
                       {formatDate(order.createdAt)}
@@ -273,7 +279,8 @@ export default function AdminOrders() {
           <Table>
             <TableHeader className="bg-areia-clara/10">
               <TableRow className="hover:bg-transparent border-areia-escura">
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">ID / Data</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ref Pedido</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Data</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total</TableHead>
@@ -285,19 +292,21 @@ export default function AdminOrders() {
               {loading ? (
                 Array(5).fill(0).map((_, i) => (
                   <TableRow key={i} className="animate-pulse">
-                    <TableCell colSpan={6} className="h-20 bg-areia-media/5"></TableCell>
+                    <TableCell colSpan={7} className="h-20 bg-areia-media/5"></TableCell>
                   </TableRow>
                 ))
               ) : filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-areia-media/5 border-areia-escura group transition-colors">
                     <TableCell>
-                      <div className="space-y-0.5">
-                        <p className="text-[10px] font-mono text-cinza-organico">#{order.id.substring(0, 8)}</p>
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-marrom-madeira uppercase">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(order.createdAt)}
-                        </div>
+                      <p className="text-[10px] font-mono text-marrom-terra font-black">
+                        #{order.orderNumber || order.id.substring(0, 8)}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-marrom-madeira uppercase">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(order.createdAt)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -351,7 +360,7 @@ export default function AdminOrders() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-cinza-organico italic font-subheadline">
+                  <TableCell colSpan={7} className="h-32 text-center text-cinza-organico italic font-subheadline">
                     Nenhum pedido encontrado.
                   </TableCell>
                 </TableRow>

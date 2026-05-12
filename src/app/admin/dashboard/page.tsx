@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -118,14 +119,7 @@ export default function AdminDashboard() {
         }, { merge: true });
       });
 
-      await batch.commit()
-        .catch(async (err) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: 'batch-commit',
-            operation: 'write'
-          } satisfies SecurityRuleContext));
-          throw err;
-        });
+      await batch.commit();
       
       setMigrationStatus('completed');
       toast({
@@ -320,7 +314,7 @@ export default function AdminDashboard() {
                       <p className="text-sm font-bold text-marrom-terra truncate max-w-[120px]">{order.customer.name}</p>
                       <div className="flex items-center gap-1.5 text-[10px] text-cinza-organico italic">
                         <Calendar className="w-3 h-3" />
-                        {formatDate(order.createdAt)}
+                        <span className="font-mono font-bold text-marrom-terra">#{order.orderNumber || order.id.substring(0, 8)}</span>
                       </div>
                     </div>
                     <Badge variant="outline" className={cn(

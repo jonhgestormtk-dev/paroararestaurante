@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -10,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +35,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     address: ''
   });
 
-  const handleSendToWhatsApp = () => {
+  const handleSendToWhatsApp = async () => {
     if (!customerInfo.name || !customerInfo.phone) {
       toast({
         variant: "destructive",
@@ -46,7 +47,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     const whatsappNumber = '559184541085';
     
-    const orderData = {
+    // Preparar dados base
+    const baseOrderData = {
       customer: customerInfo,
       items: cart.map(item => ({
         productId: item.id,
@@ -61,42 +63,55 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     if (db) {
       const ordersCol = collection(db, 'orders');
-      addDoc(ordersCol, orderData).catch(async (err) => {
+      try {
+        // Gerar número sequencial baseado na contagem atual
+        const snapshot = await getDocs(ordersCol);
+        const nextOrderNumber = (snapshot.size + 1).toString().padStart(7, '0');
+        
+        const orderData = {
+          ...baseOrderData,
+          orderNumber: nextOrderNumber
+        };
+
+        await addDoc(ordersCol, orderData);
+        
+        // Formatar mensagem para WhatsApp
+        let orderText = `Olá, gostaria de fazer este pedido:\n\n🛒 *PEDIDO #${nextOrderNumber} — PAROARA*\n\n`;
+        orderText += `👤 *Cliente:* ${customerInfo.name}\n`;
+        orderText += `📞 *Contato:* ${customerInfo.phone}\n`;
+        if (customerInfo.address) orderText += `📍 *Entrega:* ${customerInfo.address}\n`;
+        orderText += `\n---------------------------\n`;
+        
+        cart.forEach(item => {
+          orderText += `• ${item.quantity}x *${item.name}* — R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
+          if (item.observations) {
+            orderText += `   _Obs: ${item.observations}_\n`;
+          }
+        });
+
+        orderText += `\n*Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}*\n\n`;
+        orderText += `---------------------------\nForma de pagamento sugerida: _Cartão / Pix_`;
+
+        const encodedText = encodeURIComponent(orderText);
+        window.open(`https://wa.me/${whatsappNumber}?text=${encodedText}`, '_blank');
+        
+        clearCart();
+        setCustomerInfo({ name: '', phone: '', address: '' });
+        onClose();
+
+        toast({
+          title: "Pedido Enviado!",
+          description: `Seu pedido #${nextOrderNumber} foi registrado com sucesso.`
+        });
+
+      } catch (err: any) {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: ordersCol.path,
           operation: 'create',
-          requestResourceData: orderData
+          requestResourceData: baseOrderData
         } satisfies SecurityRuleContext));
-      });
-    }
-
-    let orderText = `Olá, gostaria de fazer este pedido:\n\n🛒 *PEDIDO — PAROARA*\n\n`;
-    orderText += `👤 *Cliente:* ${customerInfo.name}\n`;
-    orderText += `📞 *Contato:* ${customerInfo.phone}\n`;
-    if (customerInfo.address) orderText += `📍 *Entrega:* ${customerInfo.address}\n`;
-    orderText += `\n---------------------------\n`;
-    
-    cart.forEach(item => {
-      orderText += `• ${item.quantity}x *${item.name}* — R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
-      if (item.observations) {
-        orderText += `   _Obs: ${item.observations}_\n`;
       }
-    });
-
-    orderText += `\n*Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}*\n\n`;
-    orderText += `---------------------------\nForma de pagamento sugerida: _Cartão / Pix_`;
-
-    const encodedText = encodeURIComponent(orderText);
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodedText}`, '_blank');
-    
-    clearCart();
-    setCustomerInfo({ name: '', phone: '', address: '' });
-    onClose();
-
-    toast({
-      title: "Pedido Enviado!",
-      description: "Seu pedido foi registrado e enviado para o WhatsApp."
-    });
+    }
   };
 
   return (
