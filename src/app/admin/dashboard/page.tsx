@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -24,8 +23,7 @@ import {
   Timestamp, 
   doc, 
   writeBatch, 
-  serverTimestamp,
-  getDocs
+  serverTimestamp
 } from 'firebase/firestore';
 import { Order, Product } from '@/lib/types';
 import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
@@ -44,6 +42,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -118,7 +118,14 @@ export default function AdminDashboard() {
         }, { merge: true });
       });
 
-      await batch.commit();
+      await batch.commit()
+        .catch(async (err) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: 'batch-commit',
+            operation: 'write'
+          } satisfies SecurityRuleContext));
+          throw err;
+        });
       
       setMigrationStatus('completed');
       toast({
