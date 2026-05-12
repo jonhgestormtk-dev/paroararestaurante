@@ -11,7 +11,8 @@ import {
   Database,
   Loader2,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -145,6 +146,21 @@ export default function AdminDashboard() {
     }
   }, [loadingProducts, loadingCategories, allProducts, allCategories, db]);
 
+  const formatDate = (createdAt: any) => {
+    if (!createdAt) return '...';
+    try {
+      if (createdAt instanceof Timestamp) {
+        return createdAt.toDate().toLocaleDateString('pt-BR');
+      }
+      if (createdAt.seconds) {
+        return new Date(createdAt.seconds * 1000).toLocaleDateString('pt-BR');
+      }
+      return new Date(createdAt).toLocaleDateString('pt-BR');
+    } catch (e) {
+      return 'Data Inválida';
+    }
+  };
+
   const stats = useMemo(() => {
     if (!allOrders) return {
       totalOrders: '0',
@@ -199,7 +215,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-headline text-marrom-terra uppercase tracking-wider">Dashboard Admin</h1>
@@ -295,7 +311,10 @@ export default function AdminDashboard() {
                   <div key={order.id} className="flex items-center justify-between group">
                     <div className="space-y-1">
                       <p className="text-sm font-bold text-marrom-terra truncate max-w-[120px]">{order.customer.name}</p>
-                      <p className="text-[10px] text-cinza-organico italic">R$ {order.total.toFixed(2)}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-cinza-organico italic">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(order.createdAt)}
+                      </div>
                     </div>
                     <Badge variant="outline" className={cn(
                       "text-[8px] uppercase font-bold tracking-widest",

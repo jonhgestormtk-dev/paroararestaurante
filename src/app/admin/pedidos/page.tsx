@@ -15,10 +15,12 @@ import {
   CheckCircle,
   Clock,
   Truck,
-  AlertCircle
+  AlertCircle,
+  User,
+  Package
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, updateDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
 import { Order, OrderStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +80,21 @@ export default function AdminOrders() {
     });
   }, [orders, searchTerm, statusFilter]);
 
+  const formatDate = (createdAt: any) => {
+    if (!createdAt) return '...';
+    try {
+      if (createdAt instanceof Timestamp) {
+        return createdAt.toDate().toLocaleDateString('pt-BR');
+      }
+      if (createdAt.seconds) {
+        return new Date(createdAt.seconds * 1000).toLocaleDateString('pt-BR');
+      }
+      return new Date(createdAt).toLocaleDateString('pt-BR');
+    } catch (e) {
+      return 'Data Inválida';
+    }
+  };
+
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     if (!db) return;
     try {
@@ -93,7 +110,7 @@ export default function AdminOrders() {
     const headers = ['ID', 'Data', 'Cliente', 'Telefone', 'Total', 'Status'];
     const rows = orders.map(o => [
       o.id,
-      new Date(o.createdAt?.seconds * 1000).toLocaleDateString(),
+      formatDate(o.createdAt),
       o.customer.name,
       o.customer.phone,
       o.total.toFixed(2),
@@ -113,7 +130,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-headline text-marrom-terra">Pedidos</h1>
@@ -130,7 +147,7 @@ export default function AdminOrders() {
       </div>
 
       <Card className="bg-white border-areia-escura overflow-hidden">
-        <div className="p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col md:flex-row gap-4">
+        <div className="p-4 md:p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
@@ -157,7 +174,102 @@ export default function AdminOrders() {
           </Select>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile View: Cards */}
+        <div className="block md:hidden divide-y divide-areia-escura">
+          {loading ? (
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="p-6 space-y-4 animate-pulse">
+                <div className="h-4 w-1/3 bg-areia-media/20 rounded"></div>
+                <div className="h-6 w-1/2 bg-areia-media/20 rounded"></div>
+              </div>
+            ))
+          ) : filteredOrders.length > 0 ? (
+            filteredOrders.map((order) => (
+              <div key={order.id} className="p-5 space-y-4 bg-white hover:bg-areia-clara/10 transition-colors">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-mono text-cinza-organico">#{order.id.substring(0, 8)}</p>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-marrom-madeira">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {formatDate(order.createdAt)}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-widest border", STATUS_COLORS[order.status])}>
+                    {order.status}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-marrom-terra opacity-60" />
+                    <p className="text-sm font-black text-marrom-terra uppercase tracking-tight">{order.customer.name}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-verde-folha">
+                    <Phone className="w-3.5 h-3.5" />
+                    {order.customer.phone}
+                  </div>
+                  {order.customer.address && (
+                    <div className="flex items-center gap-2 text-[10px] text-cinza-organico italic">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {order.customer.address}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-areia-clara/10 p-3 rounded-sm border border-areia-escura/30 space-y-2">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-marrom-madeira opacity-60">
+                    <Package className="w-3 h-3" /> Itens
+                  </div>
+                  <div className="text-xs text-marrom-texto">
+                    {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-lg font-black text-marrom-escuro">
+                    R$ {order.total.toFixed(2).replace('.', ',')}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-10 w-10 text-verde-folha bg-verde-folha/5 rounded-full"
+                      onClick={() => window.open(`https://wa.me/${order.customer.phone.replace(/\D/g,'')}`, '_blank')}
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-10 w-10 border-areia-escura rounded-full">
+                          <MoreVertical className="w-5 h-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura w-56">
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
+                          <Clock className="w-4 h-4 text-caramelo-palha" /> Pendente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Em Preparo')} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
+                          <AlertCircle className="w-4 h-4 text-marrom-madeira" /> Em Preparo
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Saiu para Entrega')} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
+                          <Truck className="w-4 h-4 text-verde-folha" /> Em Rota
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Finalizado')} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
+                          <CheckCircle className="w-4 h-4 text-marrom-escuro" /> Finalizado
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-12 text-center text-cinza-organico italic text-sm">Nenhum pedido encontrado.</div>
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader className="bg-areia-clara/10">
               <TableRow className="hover:bg-transparent border-areia-escura">
@@ -184,7 +296,7 @@ export default function AdminOrders() {
                         <p className="text-[10px] font-mono text-cinza-organico">#{order.id.substring(0, 8)}</p>
                         <div className="flex items-center gap-1 text-[10px] font-bold text-marrom-madeira uppercase">
                           <Calendar className="w-3 h-3" />
-                          {new Date(order.createdAt?.seconds * 1000).toLocaleDateString()}
+                          {formatDate(order.createdAt)}
                         </div>
                       </div>
                     </TableCell>
@@ -198,11 +310,11 @@ export default function AdminOrders() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-[200px] truncate">
+                      <div className="max-w-[200px] truncate text-xs text-cinza-organico">
                         {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
                       </div>
                     </TableCell>
-                    <TableCell className="font-bold text-marrom-escuro">R$ {order.total.toFixed(2)}</TableCell>
+                    <TableCell className="font-bold text-marrom-escuro text-sm">R$ {order.total.toFixed(2).replace('.', ',')}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-widest border", STATUS_COLORS[order.status])}>
                         {order.status}
