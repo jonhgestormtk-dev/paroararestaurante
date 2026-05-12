@@ -91,11 +91,11 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Número do WhatsApp (Com DDD)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Número do WhatsApp (Apenas números)</Label>
                 <div className="relative">
                   <Input 
                     value={settings.whatsapp}
-                    onChange={(e) => setSettings({...settings, whatsapp: e.target.value})}
+                    onChange={(e) => setSettings({...settings, whatsapp: e.target.value.replace(/\D/g, '')})}
                     className="bg-areia-clara/20 border-areia-escura pl-10"
                     placeholder="Ex: 5591988887777"
                   />

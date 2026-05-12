@@ -524,8 +524,9 @@ export default function AdminOrders() {
                   <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">WhatsApp / Telefone</Label>
                   <Input 
                     value={editFormData.phone}
-                    onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                    onChange={(e) => setEditFormData({...editFormData, phone: e.target.value.replace(/\D/g, '')})}
                     className="bg-white border-areia-escura"
+                    placeholder="Somente números"
                   />
                 </div>
 

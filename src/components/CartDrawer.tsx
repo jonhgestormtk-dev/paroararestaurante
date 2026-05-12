@@ -173,9 +173,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </Label>
                     <Input 
                       value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value.replace(/\D/g, '')})}
                       className="bg-white border-marrom-madeira/10 h-10 text-sm focus:ring-marrom-terra rounded-lg"
-                      placeholder="(91) 90000-0000"
+                      placeholder="Ex: 91988887777"
                     />
                   </div>
                   <div className="space-y-1">
