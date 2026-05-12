@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -40,43 +39,43 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-marrom-escuro/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         
         {product.promotion && (
-          <Badge className="absolute top-4 left-4 bg-verde-folha text-areia-clara border-none font-black tracking-widest text-[9px] px-3 py-1 shadow-lg">
+          <Badge className="absolute top-2 left-2 md:top-4 md:left-4 bg-verde-folha text-areia-clara border-none font-black tracking-widest text-[8px] md:text-[9px] px-2 py-0.5 md:px-3 md:py-1 shadow-lg">
             PROMOÇÃO
           </Badge>
         )}
         
-        <Badge className="absolute top-4 right-4 bg-marrom-escuro/60 backdrop-blur-md text-areia-clara border-none font-bold text-[9px] px-3 py-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <Badge className="absolute top-2 right-2 md:top-4 md:right-4 bg-marrom-escuro/60 backdrop-blur-md text-areia-clara border-none font-bold text-[8px] md:text-[9px] px-2 py-0.5 md:px-3 md:py-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
           {product.category}
         </Badge>
       </div>
       
-      <div className="p-6 flex flex-col flex-grow bg-areia-clara/20">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="font-headline text-xl text-marrom-terra leading-tight line-clamp-2">
-            {product.emoji && <span className="mr-2 opacity-80">{product.emoji}</span>}
+      <div className="p-3 md:p-6 flex flex-col flex-grow bg-areia-clara/20">
+        <div className="flex justify-between items-start mb-2 md:mb-3">
+          <h3 className="font-headline text-[13px] md:text-xl text-marrom-terra leading-tight line-clamp-2 uppercase tracking-wide">
+            {product.emoji && <span className="mr-1 opacity-80">{product.emoji}</span>}
             {product.name}
           </h3>
         </div>
         
-        <p className="text-xs md:text-sm text-cinza-organico font-body italic line-clamp-2 mb-6 flex-grow opacity-80 leading-relaxed">
+        <p className="text-[10px] md:text-sm text-cinza-organico font-body italic line-clamp-2 mb-3 md:mb-6 flex-grow opacity-80 leading-relaxed">
           {product.description}
         </p>
         
-        <div className="flex items-center justify-between mt-auto pt-4 border-t border-areia-escura/20">
+        <div className="flex items-center justify-between mt-auto pt-2 md:pt-4 border-t border-areia-escura/20">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest text-marrom-madeira/60 font-bold mb-1">A partir de</span>
-            <span className="font-body font-black text-marrom-escuro text-xl">
+            <span className="text-[7px] md:text-[10px] uppercase tracking-widest text-marrom-madeira/60 font-bold mb-0.5">A partir de</span>
+            <span className="font-body font-black text-marrom-escuro text-sm md:text-xl">
               R$ {product.price.toFixed(2).replace('.', ',')}
             </span>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-1 md:gap-2">
             <Button
               size="icon"
-              className="h-10 w-10 rounded-full bg-marrom-terra text-areia-clara hover:bg-caramelo-palha transition-all duration-300 shadow-md group/btn"
+              className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-marrom-terra text-areia-clara hover:bg-caramelo-palha transition-all duration-300 shadow-md group/btn"
               onClick={handleQuickAdd}
             >
-              <Plus className="w-5 h-5 group-hover/btn:rotate-90 transition-transform" />
+              <Plus className="w-4 h-4 md:w-5 md:h-5 group-hover/btn:rotate-90 transition-transform" />
             </Button>
             <Button
               size="sm"

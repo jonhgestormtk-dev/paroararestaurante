@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -14,7 +13,7 @@ import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 import { CartTray } from '@/components/CartTray';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy, writeBatch, doc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
 import { Product } from '@/lib/types';
 import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -63,16 +62,14 @@ export default function Home() {
   }, [db]);
   const { data: allProductsRaw, loading: productsLoading } = useCollection<Product>(allProductsQuery);
 
-  // Lógica de Auto-Seed (Caso o banco esteja vazio, popula automaticamente)
+  // Lógica de Auto-Seed
   useEffect(() => {
     const autoSeed = async () => {
       if (!db || productsLoading || categoriesLoading) return;
       
       if ((!allProductsRaw || allProductsRaw.length === 0) && (!firestoreCategories || firestoreCategories.length === 0)) {
-        console.log('Detectado banco vazio. Iniciando sincronização automática...');
         const batch = writeBatch(db);
         
-        // Categorias
         const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
         validCategories.forEach((catName, index) => {
           const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
@@ -85,7 +82,6 @@ export default function Home() {
           });
         });
 
-        // Produtos
         PRODUCTS.forEach((product) => {
           const productRef = doc(db, 'products', product.id);
           const { id, ...productData } = product;
@@ -154,7 +150,7 @@ export default function Home() {
 
           <ExperienceSection />
           
-          <div id="menu" className="relative scroll-mt-24">
+          <div id="menu" className="relative scroll-mt-[130px]">
             <div className="container mx-auto px-4 pt-20 text-center">
               <h2 className="text-4xl font-headline text-marrom-terra mb-12">Nosso Cardápio</h2>
             </div>
@@ -171,7 +167,7 @@ export default function Home() {
                   <Loader2 className="w-10 h-10 animate-spin text-marrom-terra opacity-20" />
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                   {filteredProducts.map((product) => (
                     <ProductCard 
                       key={product.id} 

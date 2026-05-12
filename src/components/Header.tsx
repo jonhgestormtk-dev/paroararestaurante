@@ -28,15 +28,15 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 z-50 w-full h-20 md:h-24 bg-marrom-escuro text-areia-clara shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-b border-marrom-madeira/40 transition-all duration-500 backdrop-blur-sm bg-opacity-95 flex items-center">
+      <header className="fixed top-0 z-50 w-full h-16 md:h-20 bg-marrom-escuro text-areia-clara shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-b border-marrom-madeira/40 transition-all duration-500 backdrop-blur-sm bg-opacity-95 flex items-center">
         <div className="container mx-auto px-4 flex items-center justify-between">
           {/* Logo & Name */}
-          <Link href="/" className="flex items-center gap-3 md:gap-5">
+          <Link href="/" className="flex items-center gap-2 md:gap-5">
             <div className="flex flex-col items-start">
-              <h1 className="text-xl md:text-3xl font-headline tracking-[0.2em] text-caramelo-palha leading-none uppercase">
+              <h1 className="text-lg md:text-3xl font-headline tracking-[0.2em] text-caramelo-palha leading-none uppercase">
                 PAROARA
               </h1>
-              <p className="text-[8px] md:text-[10px] font-subheadline italic text-areia-media/80 tracking-widest uppercase mt-1">
+              <p className="text-[7px] md:text-[10px] font-subheadline text-areia-media/80 tracking-widest uppercase mt-0.5">
                 O Restaurante Marajoara
               </p>
             </div>
@@ -61,7 +61,7 @@ export function Header() {
           </nav>
           
           {/* Actions */}
-          <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-2 md:gap-6">
             <div 
               className="relative cursor-pointer group p-2 hover:bg-white/5 rounded-full transition-colors" 
               onClick={() => setIsCartOpen(true)}
@@ -85,7 +85,7 @@ export function Header() {
             {/* Mobile Menu Toggle */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-areia-clara hover:bg-white/10">
+                <Button variant="ghost" size="icon" className="lg:hidden text-areia-clara hover:bg-white/10 p-0 h-10 w-10">
                   <Menu className="w-6 h-6" />
                 </Button>
               </SheetTrigger>
