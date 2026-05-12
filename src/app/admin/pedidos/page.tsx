@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -17,11 +18,14 @@ import {
   AlertCircle,
   User,
   Package,
-  Edit2
+  Edit2,
+  Trash2,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
-import { Order, OrderStatus } from '@/lib/types';
+import { Order, OrderStatus, Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -58,6 +62,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   'Pendente': 'text-caramelo-palha bg-caramelo-palha/10 border-caramelo-palha/20',
@@ -71,7 +76,14 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [editFormData, setEditFormData] = useState({ name: '', phone: '', address: '' });
+  
+  // Estado de edição ampliado
+  const [editFormData, setEditFormData] = useState({ 
+    name: '', 
+    phone: '', 
+    address: '',
+    items: [] as any[] 
+  });
   
   const { toast } = useToast();
   const db = useFirestore();
@@ -81,6 +93,13 @@ export default function AdminOrders() {
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   }, [db]);
   const { data: orders, loading } = useCollection<Order>(ordersQuery);
+
+  // Buscar produtos para permitir adicionar itens ao editar
+  const productsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'products'), orderBy('name', 'asc'));
+  }, [db]);
+  const { data: products } = useCollection<Product>(productsQuery);
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
@@ -125,20 +144,64 @@ export default function AdminOrders() {
     setEditFormData({
       name: order.customer.name,
       phone: order.customer.phone,
-      address: order.customer.address || ''
+      address: order.customer.address || '',
+      items: JSON.parse(JSON.stringify(order.items)) // Deep clone para edição segura
     });
     setIsEditModalOpen(true);
   };
 
+  const handleUpdateItemQty = (index: number, delta: number) => {
+    const newItems = [...editFormData.items];
+    const item = newItems[index];
+    const newQty = Math.max(1, item.quantity + delta);
+    newItems[index] = { ...item, quantity: newQty };
+    setEditFormData({ ...editFormData, items: newItems });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    const newItems = editFormData.items.filter((_, i) => i !== index);
+    setEditFormData({ ...editFormData, items: newItems });
+  };
+
+  const handleAddItem = (productId: string) => {
+    const product = products?.find(p => p.id === productId);
+    if (!product) return;
+
+    const existingItemIndex = editFormData.items.findIndex(i => i.productId === productId);
+    if (existingItemIndex > -1) {
+      handleUpdateItemQty(existingItemIndex, 1);
+    } else {
+      setEditFormData({
+        ...editFormData,
+        items: [...editFormData.items, {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1
+        }]
+      });
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!db || !editingOrder) return;
+
+    if (editFormData.items.length === 0) {
+      toast({ variant: "destructive", title: "Erro", description: "O pedido deve ter pelo menos um item." });
+      return;
+    }
+
+    const newTotal = editFormData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
     try {
       await updateDoc(doc(db, 'orders', editingOrder.id), {
         'customer.name': editFormData.name,
         'customer.phone': editFormData.phone,
-        'customer.address': editFormData.address
+        'customer.address': editFormData.address,
+        items: editFormData.items,
+        total: newTotal
       });
-      toast({ title: "Pedido Atualizado", description: "Os dados do cliente foram salvos." });
+      toast({ title: "Pedido Atualizado", description: "As alterações foram salvas com sucesso." });
       setIsEditModalOpen(false);
     } catch (e) {
       toast({ variant: "destructive", title: "Erro ao Editar", description: "Não foi possível salvar as alterações." });
@@ -229,10 +292,10 @@ export default function AdminOrders() {
               <div key={order.id} className="p-5 space-y-4 bg-white hover:bg-areia-clara/10 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-base font-mono text-marrom-terra font-black tracking-widest bg-marrom-terra/5 px-2 py-0.5 rounded-sm">
+                    <p className="text-xl font-mono text-marrom-terra font-black tracking-widest bg-marrom-terra/5 px-3 py-1 rounded-sm border border-marrom-terra/10">
                       #{order.orderNumber || order.id.substring(0, 8)}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-marrom-madeira">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-marrom-madeira mt-2">
                       <Calendar className="w-3.5 h-3.5" />
                       {formatDate(order.createdAt)}
                     </div>
@@ -268,7 +331,7 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-2 border-t border-dashed border-areia-escura/30">
                   <div className="text-lg font-black text-marrom-escuro">
                     R$ {order.total.toFixed(2).replace('.', ',')}
                   </div>
@@ -290,7 +353,7 @@ export default function AdminOrders() {
                       <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura w-56">
                         {order.status === 'Pendente' && (
                           <DropdownMenuItem onClick={() => handleOpenEditModal(order)} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
-                            <Edit2 className="w-4 h-4 text-marrom-madeira" /> Editar Dados
+                            <Edit2 className="w-4 h-4 text-marrom-madeira" /> Editar Pedido
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
@@ -381,7 +444,7 @@ export default function AdminOrders() {
                         <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura">
                           {order.status === 'Pendente' && (
                             <DropdownMenuItem onClick={() => handleOpenEditModal(order)} className="text-xs uppercase font-bold tracking-widest gap-2">
-                              <Edit2 className="w-3 h-3 text-marrom-madeira" /> Editar Dados
+                              <Edit2 className="w-3 h-3 text-marrom-madeira" /> Editar Pedido
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="text-xs uppercase font-bold tracking-widest gap-2">
@@ -417,47 +480,112 @@ export default function AdminOrders() {
         </div>
       </Card>
 
-      {/* Modal de Edição */}
+      {/* Modal de Edição de Pedido */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="bg-areia-clara border-none shadow-2xl p-0 overflow-hidden max-w-md">
+        <DialogContent className="bg-areia-clara border-none shadow-2xl p-0 overflow-hidden max-w-2xl">
           <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara">
             <DialogTitle className="font-headline tracking-widest uppercase">
-              Editar Dados do Cliente
+              Editar Detalhes do Pedido
             </DialogTitle>
           </DialogHeader>
           
-          <div className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Nome do Cliente</Label>
-              <Input 
-                value={editFormData.name}
-                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
-                className="bg-white border-areia-escura"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">WhatsApp / Telefone</Label>
-              <Input 
-                value={editFormData.phone}
-                onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
-                className="bg-white border-areia-escura"
-              />
-            </div>
+          <ScrollArea className="max-h-[70vh]">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Coluna Dados do Cliente */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira mb-2">Informações do Cliente</h4>
+                
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">Nome</Label>
+                  <Input 
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                    className="bg-white border-areia-escura"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">WhatsApp / Telefone</Label>
+                  <Input 
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                    className="bg-white border-areia-escura"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Endereço de Entrega</Label>
-              <Input 
-                value={editFormData.address}
-                onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
-                className="bg-white border-areia-escura"
-              />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">Endereço de Entrega</Label>
+                  <Input 
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                    className="bg-white border-areia-escura"
+                  />
+                </div>
+              </div>
+
+              {/* Coluna Itens do Pedido */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira mb-2">Itens & Cardápio</h4>
+                
+                <div className="space-y-3">
+                  {editFormData.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-white border border-areia-escura rounded-sm group">
+                      <div className="flex-1 pr-2">
+                        <p className="text-xs font-bold text-marrom-terra truncate">{item.name}</p>
+                        <p className="text-[10px] text-cinza-organico">R$ {item.price.toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center border border-areia-escura rounded-sm bg-areia-clara/20">
+                          <button onClick={() => handleUpdateItemQty(idx, -1)} className="p-1 hover:bg-areia-media">
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-6 text-center text-xs font-black">{item.quantity}</span>
+                          <button onClick={() => handleUpdateItemQty(idx, 1)} className="p-1 hover:bg-areia-media">
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRemoveItem(idx)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2 block">Adicionar do Cardápio</Label>
+                  <Select onValueChange={(val) => handleAddItem(val)}>
+                    <SelectTrigger className="bg-white border-areia-escura h-9 text-xs">
+                      <SelectValue placeholder="Escolher Prato..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-areia-clara">
+                      {products?.filter(p => p.active !== false).map(p => (
+                        <SelectItem key={p.id} value={p.id} className="text-xs">{p.name} - R$ {p.price.toFixed(2)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="pt-4 border-t border-dashed border-areia-escura">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Novo Total</span>
+                    <span className="text-lg font-black text-marrom-escuro">
+                      R$ {editFormData.items.reduce((acc, i) => acc + (i.price * i.quantity), 0).toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
 
           <DialogFooter className="p-6 bg-white border-t border-areia-escura">
             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="text-[10px] uppercase font-bold tracking-widest">Cancelar</Button>
-            <Button onClick={handleSaveEdit} className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-6 font-bold uppercase tracking-widest text-[10px]">
+            <Button onClick={handleSaveEdit} className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-8 font-bold uppercase tracking-widest text-[10px]">
               Salvar Alterações
             </Button>
           </DialogFooter>
