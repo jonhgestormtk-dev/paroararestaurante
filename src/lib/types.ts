@@ -11,10 +11,12 @@ export interface Product {
   category: Category;
   promotion?: boolean;
   featured?: boolean;
+  active?: boolean;
   ingredients?: string[];
   emoji?: string;
   stock?: number;
   createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface CartItem extends Product {

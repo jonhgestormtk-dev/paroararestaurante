@@ -9,7 +9,9 @@ import {
   Edit2, 
   Trash2, 
   Image as ImageIcon,
-  Sparkles
+  Sparkles,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -46,6 +48,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 const CATEGORIES: Category[] = [
   'Regionais', 'Peixes', 'Carnes', 'Grelhados', 'Executivos', 'Massas', 'Bebidas', 'Sobremesas'
@@ -72,6 +75,7 @@ export default function AdminProducts() {
     imageUrl: '',
     featured: false,
     promotion: false,
+    active: true,
     stock: 20
   });
 
@@ -86,7 +90,10 @@ export default function AdminProducts() {
   const handleOpenModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
-      setFormData(product);
+      setFormData({
+        ...product,
+        active: product.active !== undefined ? product.active : true
+      });
     } else {
       setEditingProduct(null);
       setFormData({
@@ -97,6 +104,7 @@ export default function AdminProducts() {
         imageUrl: '',
         featured: false,
         promotion: false,
+        active: true,
         stock: 20
       });
     }
@@ -106,12 +114,21 @@ export default function AdminProducts() {
   const handleSave = () => {
     if (!db) return;
 
-    const dataToSave = { ...formData };
-    if (!dataToSave.name || !dataToSave.price) {
-      toast({ variant: "destructive", title: "Campos Obrigatórios", description: "Nome e preço são necessários." });
+    // Validação de campos obrigatórios
+    if (!formData.name?.trim() || !formData.price || formData.price <= 0 || !formData.stock || formData.stock < 0 || !formData.description?.trim()) {
+      toast({ 
+        variant: "destructive", 
+        title: "Campos Obrigatórios", 
+        description: "Nome, preço (positivo), estoque (mínimo 0) e descrição curta são necessários." 
+      });
       return;
     }
 
+    const dataToSave = { 
+      ...formData,
+      active: formData.active ?? true
+    };
+    
     const productsCol = collection(db, 'products');
 
     if (editingProduct) {
@@ -158,6 +175,26 @@ export default function AdminProducts() {
       const permissionError = new FirestorePermissionError({
         path: docRef.path,
         operation: 'delete',
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    });
+  };
+
+  const toggleProductActive = (product: Product) => {
+    if (!db) return;
+    const docRef = doc(db, 'products', product.id);
+    const newState = !product.active;
+    
+    updateDoc(docRef, { active: newState }).then(() => {
+      toast({ 
+        title: newState ? "Prato Ativado" : "Prato Desativado", 
+        description: `O prato agora está ${newState ? 'visível' : 'oculto'} para os clientes.` 
+      });
+    }).catch(async (error) => {
+      const permissionError = new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'update',
+        requestResourceData: { active: newState },
       } satisfies SecurityRuleContext);
       errorEmitter.emit('permission-error', permissionError);
     });
@@ -213,7 +250,10 @@ export default function AdminProducts() {
                 ))
               ) : filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
-                  <TableRow key={product.id} className="hover:bg-areia-media/5 border-areia-escura group transition-colors">
+                  <TableRow key={product.id} className={cn(
+                    "hover:bg-areia-media/5 border-areia-escura group transition-colors",
+                    product.active === false && "opacity-60 bg-gray-50/50"
+                  )}>
                     <TableCell>
                       <div className="w-12 h-12 rounded-sm bg-areia-clara flex items-center justify-center overflow-hidden border border-areia-escura">
                         {product.imageUrl ? (
@@ -236,9 +276,23 @@ export default function AdminProducts() {
                     </TableCell>
                     <TableCell className="font-bold text-marrom-escuro">R$ {product.price.toFixed(2)}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => toggleProductActive(product)}
+                          className={cn(
+                            "flex items-center gap-1.5 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter border transition-all",
+                            product.active !== false 
+                              ? "bg-verde-folha/10 text-verde-folha border-verde-folha/20" 
+                              : "bg-gray-200 text-gray-500 border-gray-300"
+                          )}
+                        >
+                          {product.active !== false ? (
+                            <><CheckCircle2 className="w-3 h-3" /> Ativo</>
+                          ) : (
+                            <><XCircle className="w-3 h-3" /> Inativo</>
+                          )}
+                        </button>
                         {product.featured && <Sparkles className="w-4 h-4 text-caramelo-palha" title="Destaque" />}
-                        {product.promotion && <Badge className="bg-verde-folha text-[8px] h-4">PROMO</Badge>}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -282,6 +336,7 @@ export default function AdminProducts() {
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="bg-white border-areia-escura"
                   placeholder="Ex: Filé Marajoara"
+                  required
                 />
               </div>
               
@@ -310,6 +365,7 @@ export default function AdminProducts() {
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
                     className="bg-white border-areia-escura"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -319,19 +375,33 @@ export default function AdminProducts() {
                     value={formData.stock}
                     onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})}
                     className="bg-white border-areia-escura"
+                    required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-areia-escura">
+                <div className="flex items-center justify-between p-3 bg-white/50 rounded-sm border border-areia-escura">
+                  <Label htmlFor="active-toggle" className="text-xs font-bold text-marrom-madeira">Status do Prato (Ativo/Inativo)</Label>
+                  <Switch 
+                    id="active-toggle" 
+                    checked={formData.active !== false}
+                    onCheckedChange={(v) => setFormData({...formData, active: v})}
+                  />
+                </div>
+                <p className="text-[9px] text-cinza-organico italic uppercase">Produtos inativos não aparecem no cardápio digital para os clientes.</p>
               </div>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Descrição Curta</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Descrição Curta *</Label>
                 <Textarea 
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className="bg-white border-areia-escura resize-none h-24"
                   placeholder="Breve descrição para o card..."
+                  required
                 />
               </div>
 

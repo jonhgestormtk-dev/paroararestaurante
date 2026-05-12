@@ -15,12 +15,13 @@
         "category": { "type": "string" },
         "featured": { "type": "boolean" },
         "promotion": { "type": "boolean" },
+        "active": { "type": "boolean" },
         "ingredients": { "type": "array", "items": { "type": "string" } },
         "emoji": { "type": "string" },
         "stock": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "price", "category"]
+      "required": ["name", "price", "category", "description", "stock"]
     },
     "Order": {
       "title": "Pedido",
