@@ -13,6 +13,7 @@
         "imageUrl": { "type": "string" },
         "featured": { "type": "boolean" },
         "active": { "type": "boolean" },
+        "stock": { "type": "number" },
         "createdAt": { "type": "object" }
       },
       "required": ["name", "price", "category"]

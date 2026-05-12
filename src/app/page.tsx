@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { PromoBanner } from '@/components/PromoBanner';
@@ -16,7 +17,6 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Product } from '@/lib/types';
 import { Sparkles, Loader2 } from 'lucide-react';
-import Link from 'next/link';
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
