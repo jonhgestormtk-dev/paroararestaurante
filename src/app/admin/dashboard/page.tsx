@@ -1,19 +1,23 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   ShoppingBag, 
   DollarSign, 
   Package, 
   TrendingUp,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Database,
+  Loader2,
+  CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, limit, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, limit, orderBy, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Order, Product } from '@/lib/types';
+import { PRODUCTS } from '@/lib/mock-data';
 import { 
   BarChart, 
   Bar, 
@@ -28,9 +32,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const db = useFirestore();
+  const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Buscar todos os pedidos para estatísticas e gráfico
   const allOrdersQuery = useMemo(() => {
@@ -52,6 +59,41 @@ export default function AdminDashboard() {
     return collection(db, 'products');
   }, [db]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
+
+  // Função para popular o banco de dados caso esteja vazio
+  const seedDatabase = async () => {
+    if (!db) return;
+    setIsSeeding(true);
+    
+    try {
+      const productsCol = collection(db, 'products');
+      
+      const promises = PRODUCTS.map((product) => {
+        const productRef = doc(productsCol, product.id);
+        return setDoc(productRef, {
+          ...product,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      });
+
+      await Promise.all(promises);
+      
+      toast({
+        title: "Sincronização Concluída",
+        description: `${PRODUCTS.length} pratos foram migrados para o Firestore.`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Erro na Migração",
+        description: "Não foi possível popular o banco de dados.",
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   // Cálculos de Estatísticas Reais
   const stats = useMemo(() => {
@@ -115,9 +157,22 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-10">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-headline text-marrom-terra">Dashboard Real</h1>
-        <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-headline text-marrom-terra uppercase tracking-wider">Dashboard Real</h1>
+          <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
+        </div>
+        
+        {(!allProducts || allProducts.length === 0) && (
+          <Button 
+            onClick={seedDatabase} 
+            disabled={isSeeding}
+            className="bg-caramelo-palha hover:bg-marrom-madeira text-white gap-2 py-6 px-8 rounded-sm font-bold uppercase tracking-widest text-xs shadow-lg transition-all"
+          >
+            {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+            {isSeeding ? 'Sincronizando...' : 'Migrar Cardápio Inicial'}
+          </Button>
+        )}
       </div>
 
       {/* Metrics Grid */}
