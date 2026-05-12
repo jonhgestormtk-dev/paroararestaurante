@@ -161,6 +161,11 @@ export default function AdminDashboard() {
     }
   };
 
+  const currentMonthName = useMemo(() => {
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    return months[new Date().getMonth()];
+  }, []);
+
   const stats = useMemo(() => {
     if (!allOrders) return {
       totalOrders: '0',
@@ -196,20 +201,19 @@ export default function AdminDashboard() {
 
   const chartData = useMemo(() => {
     if (!allOrders) return [];
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Obter último dia do mês atual
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
     const result = [];
     
-    // Gera os últimos 6 meses cronologicamente, incluindo o mês atual
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(1); // Evita problemas com virada de mês (ex: 31 de Março para Fevereiro)
-      date.setMonth(date.getMonth() - i);
-      
-      const monthIdx = date.getMonth();
-      const year = date.getFullYear();
-      const label = months[monthIdx];
-      
-      const pedidosNoMes = allOrders.filter(order => {
+    // Gerar dados para cada dia do mês atual
+    for (let day = 1; day <= lastDayOfMonth; day++) {
+      const pedidosNoDia = allOrders.filter(order => {
         let orderDate;
         if (order.createdAt instanceof Timestamp) {
           orderDate = order.createdAt.toDate();
@@ -218,10 +222,18 @@ export default function AdminDashboard() {
         } else {
           orderDate = new Date(order.createdAt);
         }
-        return orderDate.getMonth() === monthIdx && orderDate.getFullYear() === year;
+        
+        return (
+          orderDate.getDate() === day && 
+          orderDate.getMonth() === currentMonth && 
+          orderDate.getFullYear() === currentYear
+        );
       }).length;
       
-      result.push({ name: label, pedidos: pedidosNoMes });
+      result.push({ 
+        name: day.toString().padStart(2, '0'), 
+        pedidos: pedidosNoDia 
+      });
     }
     
     return result;
@@ -294,20 +306,37 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 bg-white border-areia-escura">
           <CardHeader>
-            <CardTitle className="font-headline text-lg text-marrom-terra">Volume de Vendas</CardTitle>
+            <CardTitle className="font-headline text-lg text-marrom-terra">
+              Volume de Vendas - <span className="text-caramelo-palha">{currentMonthName}</span>
+            </CardTitle>
           </CardHeader>
           <CardContent className="h-[350px]">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6A432D' }} />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 9, fill: '#6A432D' }}
+                    interval={window?.innerWidth < 768 ? 2 : 0}
+                  />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6A432D' }} />
-                  <Tooltip cursor={{ fill: 'rgba(75, 46, 31, 0.05)' }} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(75, 46, 31, 0.05)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
                   <Bar dataKey="pedidos" radius={[4, 4, 0, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#A87442' : '#4B2E1F'} />
-                    ))}
+                    {chartData.map((entry, index) => {
+                      const isToday = new Date().getDate().toString().padStart(2, '0') === entry.name;
+                      return (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={isToday ? '#A87442' : '#4B2E1F'} 
+                        />
+                      );
+                    })}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
