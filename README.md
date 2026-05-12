@@ -1,33 +1,36 @@
 # Paroara | Restaurante | Beer Drik’s
 
-Projeto de cardápio digital com temática de Rusticidade Amazônica Premium, conectado ao projeto oficial `restaurante-paroara`.
+Projeto de cardápio digital com temática de Rusticidade Amazônica Premium.
 
 ## 🚀 Status da Integração
 - [x] Projeto Firebase: `restaurante-paroara`
+- [x] Hosting Site ID: `restaurante-paroara-a474a`
 - [x] Firestore: Configurado e pronto
-- [x] Hosting: Preparado para Firebase App Hosting
 
-## 📦 Como enviar para o GitHub e Implantar
+## 📦 Como Implantar (Firebase Hosting)
 
-Como este projeto usa **Firebase App Hosting**, a implantação é automática sempre que você envia código para o GitHub.
+Siga estes passos no terminal para publicar seu site:
 
-### 1. Sincronizar com seu GitHub
-Se você já configurou o repositório, use estes comandos no terminal:
-
+### 1. Login e Inicialização
 ```bash
-git add .
-git commit -m "feat: nova integração com restaurante-paroara"
-git push origin main
+firebase login
+firebase init
 ```
 
-### 2. Configurar o App Hosting (No Console do Firebase)
-1. Vá para a aba **App Hosting** no Console do Firebase.
-2. Clique em "Começar".
-3. Conecte sua conta do GitHub.
-4. Selecione o repositório `paroararestaurante`.
-5. Siga as instruções de "Próximo" até concluir.
+### 2. Implantação Direta
+Para enviar as alterações para o site `https://restaurante-paroara-a474a.web.app`:
 
-O Firebase agora criará um link oficial para o seu site (ex: `https://restaurante-paroara.web.app`) e atualizará o site sempre que você fizer um `git push`.
+```bash
+npm run build
+firebase deploy --only hosting:restaurante-paroara-a474a
+```
+
+## 🛠️ Desenvolvimento Local
+
+```bash
+npm install
+npm run dev
+```
 
 ---
 Desenvolvido como protótipo premium para culinária marajoara.
