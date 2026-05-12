@@ -19,9 +19,24 @@
         "ingredients": { "type": "array", "items": { "type": "string" } },
         "emoji": { "type": "string" },
         "stock": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "price", "category", "description", "stock"]
+    },
+    "Category": {
+      "title": "Categoria",
+      "description": "Uma divisão do cardápio (ex: Peixes, Bebidas).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "active": { "type": "boolean" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "active", "order"]
     },
     "Order": {
       "title": "Pedido",
@@ -62,6 +77,10 @@
     "/products/{productId}": {
       "schema": "Product",
       "description": "Coleção de produtos do cardápio."
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Coleção de categorias organizadoras do cardápio."
     },
     "/orders/{orderId}": {
       "schema": "Order",
