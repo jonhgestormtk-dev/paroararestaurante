@@ -8,16 +8,13 @@ import { ProductModal } from '@/components/ProductModal';
 import { CartTray } from '@/components/CartTray';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Product, Category } from '@/lib/types';
 import { 
   Search, 
   Filter, 
-  ChevronDown, 
-  LayoutGrid, 
-  SlidersHorizontal,
   ArrowUpDown,
-  X
+  Loader2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,37 +30,45 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-const CATEGORIES: Category[] = [
-  'Todos', 'Promoções', 'Regionais', 'Peixes', 'Carnes', 
-  'Grelhados', 'Executivos', 'Massas', 'Bebidas', 'Sobremesas'
-];
-
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'popular' | 'az';
 
 export default function MenuPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<Category>('Todos');
-  const [priceRange, setPriceRange] = useState([0, 200]);
+  const [activeCategory, setActiveCategory] = useState<string>('Todos');
+  const [priceRange, setPriceRange] = useState([0, 250]);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
   const db = useFirestore();
+
+  // Buscar Categorias Reais do Firestore
+  const catQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'categories'), orderBy('order', 'asc'));
+  }, [db]);
+  const { data: firestoreCategories } = useCollection<{id: string, name: string}>(catQuery);
+
+  const categories = useMemo(() => {
+    const base = ['Todos'];
+    if (firestoreCategories) return [...base, ...firestoreCategories.map(c => c.name)];
+    return [...base, 'Promoções', 'Regionais', 'Peixes', 'Carnes', 'Grelhados', 'Executivos', 'Massas', 'Bebidas', 'Sobremesas'];
+  }, [firestoreCategories]);
+
   const productsQuery = useMemo(() => {
     if (!db) return null;
-    return collection(db, 'products');
+    return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
 
   const { data: allProducts, loading } = useCollection<Product>(productsQuery);
 
-  // Lógica de filtragem REAL do Firestore
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
     
     return allProducts
       .filter(p => {
-        const isActive = p.active !== false; // Apenas produtos ativos
+        const isActive = p.active !== false;
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               p.description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
@@ -80,7 +85,6 @@ export default function MenuPage() {
       });
   }, [allProducts, searchTerm, activeCategory, priceRange, sortBy]);
 
-  // Lógica de Paginação
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
@@ -91,7 +95,7 @@ export default function MenuPage() {
   const clearFilters = () => {
     setSearchTerm('');
     setActiveCategory('Todos');
-    setPriceRange([0, 200]);
+    setPriceRange([0, 250]);
     setSortBy('relevance');
   };
 
@@ -101,7 +105,6 @@ export default function MenuPage() {
         <Header />
         
         <main className="flex-1 pt-24 md:pt-24">
-          {/* Hero Interno */}
           <section className="bg-areia-clara py-16 md:py-24 border-b border-areia-escura/30 relative overflow-hidden">
             <div className="absolute inset-0 bg-rustic-texture opacity-[0.03] pointer-events-none"></div>
             <div className="container mx-auto px-4 relative z-10 text-center space-y-4">
@@ -118,7 +121,6 @@ export default function MenuPage() {
           <div className="container mx-auto px-4 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row gap-8">
               
-              {/* Sidebar Filters - Desktop */}
               <aside className="hidden lg:block w-72 space-y-10 sticky top-32 h-fit">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -128,7 +130,6 @@ export default function MenuPage() {
                     </Button>
                   </div>
 
-                  {/* Busca */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
                     <Input 
@@ -139,11 +140,10 @@ export default function MenuPage() {
                     />
                   </div>
 
-                  {/* Categorias */}
                   <div className="space-y-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira/60">Categorias</p>
                     <div className="flex flex-col gap-1">
-                      {CATEGORIES.map((cat) => (
+                      {categories.map((cat) => (
                         <button
                           key={cat}
                           onClick={() => setActiveCategory(cat)}
@@ -160,7 +160,6 @@ export default function MenuPage() {
                     </div>
                   </div>
 
-                  {/* Preço */}
                   <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira/60">Preço</p>
                     <Slider 
@@ -178,7 +177,6 @@ export default function MenuPage() {
                 </div>
               </aside>
 
-              {/* Mobile Filter Trigger */}
               <div className="lg:hidden flex gap-3 mb-6">
                 <Sheet>
                   <SheetTrigger asChild>
@@ -204,7 +202,7 @@ export default function MenuPage() {
                       <div className="space-y-4">
                         <label className="text-xs font-bold uppercase tracking-widest text-marrom-madeira">Categorias</label>
                         <div className="grid grid-cols-2 gap-2">
-                          {CATEGORIES.map((cat) => (
+                          {categories.map((cat) => (
                             <Button
                               key={cat}
                               variant={activeCategory === cat ? 'default' : 'outline'}
@@ -229,9 +227,6 @@ export default function MenuPage() {
                           step={1}
                         />
                       </div>
-                      <Button className="w-full bg-marrom-terra text-white py-6" onClick={() => document.querySelector('[data-radix-collection-item]')?.click()}>
-                        Ver Resultados
-                      </Button>
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -247,15 +242,13 @@ export default function MenuPage() {
                     <SelectItem value="relevance">Relevância</SelectItem>
                     <SelectItem value="price-asc">Menor Preço</SelectItem>
                     <SelectItem value="price-desc">Maior Preço</SelectItem>
-                    <SelectItem value="popular">Mais Pedidos</SelectItem>
+                    <SelectItem value="popular">Destaques</SelectItem>
                     <SelectItem value="az">A-Z</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Main Content Area */}
               <div className="flex-1 space-y-8">
-                {/* Desktop Top Bar */}
                 <div className="hidden lg:flex items-center justify-between pb-6 border-b border-areia-escura/20">
                   <p className="text-cinza-organico text-sm italic">
                     Mostrando <span className="text-marrom-terra font-bold">{filteredProducts.length}</span> pratos selecionados
@@ -277,7 +270,6 @@ export default function MenuPage() {
                   </div>
                 </div>
 
-                {/* Product Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
                   {loading ? (
                     Array(8).fill(0).map((_, i) => (
@@ -302,7 +294,6 @@ export default function MenuPage() {
                   )}
                 </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 pt-12 pb-20">
                     <Button 
@@ -342,18 +333,6 @@ export default function MenuPage() {
             </div>
           </div>
         </main>
-
-        <footer className="bg-grafite-amadeirado text-areia-clara py-20 border-t border-marrom-madeira/20">
-          <div className="container mx-auto px-4 text-center space-y-6">
-            <h3 className="font-headline text-3xl text-caramelo-palha">PAROARA</h3>
-            <p className="text-xs uppercase tracking-[0.4em] opacity-50 font-bold">Tradição Marajoara em Cada Detalhe</p>
-            <div className="flex justify-center gap-8 text-sm font-bold uppercase tracking-widest text-areia-media">
-              <a href="/" className="hover:text-caramelo-palha">Home</a>
-              <a href="#menu" className="hover:text-caramelo-palha">Cardápio</a>
-              <a href="#" className="hover:text-caramelo-palha">Contato</a>
-            </div>
-          </div>
-        </footer>
 
         <ProductModal 
           product={selectedProduct} 

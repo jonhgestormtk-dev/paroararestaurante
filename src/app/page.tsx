@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { PromoBanner } from '@/components/PromoBanner';
@@ -13,39 +13,53 @@ import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 import { CartTray } from '@/components/CartTray';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Product, Category } from '@/lib/types';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState<Category>('Todos');
+  const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
+
+  // Buscar Categorias Reais do Firestore
+  const categoriesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'categories'), orderBy('order', 'asc'));
+  }, [db]);
+  const { data: firestoreCategories } = useCollection<{id: string, name: string}>(categoriesQuery);
+
+  const dynamicCategories = useMemo(() => {
+    const base = ['Todos'];
+    if (firestoreCategories) {
+      return [...base, ...firestoreCategories.map(c => c.name)];
+    }
+    return base;
+  }, [firestoreCategories]);
 
   // Buscar Destaques ativos
   const featuredQuery = useMemo(() => {
     if (!db) return null;
     return query(
       collection(db, 'products'), 
-      where('featured', '==', true)
+      where('featured', '==', true),
+      orderBy('createdAt', 'desc')
     );
   }, [db]);
   const { data: featuredProductsRaw } = useCollection<Product>(featuredQuery);
 
-  // Filtrar apenas ativos no cliente para featured
   const featuredProducts = useMemo(() => {
     if (!featuredProductsRaw) return [];
     return featuredProductsRaw.filter(p => p.active !== false);
   }, [featuredProductsRaw]);
 
-  // Buscar Todos os Produtos
+  // Buscar Todos os Produtos ordenados por novidade
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
-    return collection(db, 'products');
+    return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
-  const { data: allProductsRaw } = useCollection<Product>(allProductsQuery);
+  const { data: allProductsRaw, loading: productsLoading } = useCollection<Product>(allProductsQuery);
 
-  // Lógica de filtragem: Apenas ativos + Categoria
   const filteredProducts = useMemo(() => {
     if (!allProductsRaw) return [];
     const activeOnly = allProductsRaw.filter(p => p.active !== false);
@@ -89,7 +103,7 @@ export default function Home() {
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-cinza-organico italic font-subheadline">
-                  Preparando nossas especialidades...
+                  {productsLoading ? <Loader2 className="w-8 h-8 animate-spin mx-auto text-marrom-terra opacity-20" /> : "Preparando nossas especialidades..."}
                 </div>
               )}
             </div>
@@ -104,12 +118,17 @@ export default function Home() {
             </div>
             
             <CategoryFilter 
-              activeCategory={activeCategory} 
-              onSelect={setActiveCategory} 
+              activeCategory={activeCategory as any} 
+              categories={dynamicCategories as any}
+              onSelect={setActiveCategory as any} 
             />
 
             <section className="container mx-auto px-4 py-16">
-              {filteredProducts && filteredProducts.length > 0 ? (
+              {productsLoading ? (
+                <div className="flex justify-center py-20">
+                  <Loader2 className="w-10 h-10 animate-spin text-marrom-terra opacity-20" />
+                </div>
+              ) : filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
                   {filteredProducts.map((product) => (
                     <ProductCard 
@@ -121,7 +140,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="text-center py-20 bg-areia-media/10 rounded-2xl border border-dashed border-areia-escura/40">
-                  <p className="text-cinza-organico font-subheadline italic text-lg">Em breve mais delícias nesta categoria.</p>
+                  <p className="text-cinza-organico font-subheadline italic text-lg">Nenhum prato encontrado nesta categoria.</p>
                 </div>
               )}
             </section>
@@ -141,23 +160,13 @@ export default function Home() {
                 Um pedaço da Ilha do Marajó no coração de Belém. 
                 Ingredientes selecionados e tradição em cada detalhe.
               </p>
-              <div className="pt-4 flex gap-5">
-                <a href="#" className="w-12 h-12 rounded-full bg-marrom-terra flex items-center justify-center border border-caramelo-palha/20 hover:bg-caramelo-palha hover:text-marrom-escuro transition-all shadow-xl hover:-translate-y-1">
-                  <span className="text-xs font-bold uppercase tracking-tighter">Insta</span>
-                </a>
-                <a href="#" className="w-12 h-12 rounded-full bg-marrom-terra flex items-center justify-center border border-caramelo-palha/20 hover:bg-caramelo-palha hover:text-marrom-escuro transition-all shadow-xl hover:-translate-y-1">
-                  <span className="text-xs font-bold uppercase tracking-tighter">WApp</span>
-                </a>
-              </div>
             </div>
             
             <div className="space-y-8">
               <h4 className="font-headline text-xl text-caramelo-palha border-b border-marrom-madeira/30 pb-3 inline-block">Menu</h4>
               <nav className="flex flex-col gap-4 text-sm font-body text-areia-media/70">
-                <a href="#" className="hover:text-caramelo-palha transition-colors">Página Inicial</a>
+                <a href="/" className="hover:text-caramelo-palha transition-colors">Página Inicial</a>
                 <a href="#menu" className="hover:text-caramelo-palha transition-colors">Nosso Cardápio</a>
-                <a href="#" className="hover:text-caramelo-palha transition-colors">Ofertas Especiais</a>
-                <a href="#" className="hover:text-caramelo-palha transition-colors">Contate-nos</a>
                 <a href="/admin/login" className="hover:text-caramelo-palha transition-colors font-bold text-caramelo-palha/80">Área Administrativa</a>
               </nav>
             </div>
@@ -177,8 +186,7 @@ export default function Home() {
                   <p className="font-bold text-areia-clara uppercase tracking-widest text-xs">Onde Estamos</p>
                   <p className="leading-relaxed">
                     Av. Gentil Bittencourt, 2231<br />
-                    Belém - Pará, Brasil<br />
-                    <span className="text-caramelo-palha mt-2 block">Ver no Google Maps</span>
+                    Belém - Pará, Brasil
                   </p>
                 </div>
               </div>
