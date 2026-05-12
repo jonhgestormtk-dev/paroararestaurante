@@ -1,15 +1,16 @@
+
 'use client';
 
 /**
- * Configuração oficial do Firebase para o projeto Paroara.
- * catalog-paroara-db
+ * Configuração do Firebase para o projeto Paroara.
+ * IMPORTANTE: Substitua os valores abaixo pelas credenciais geradas no console do Firebase
+ * para o projeto 'restaurante-paroara'.
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyC-ffccYES59UMeXV6kG4751gIPQsMVr4c",
-  authDomain: "catalog-paroara-db.firebaseapp.com",
-  projectId: "catalog-paroara-db",
-  storageBucket: "catalog-paroara-db.firebasestorage.app",
+  apiKey: "AIzaSyC-ffccYES59UMeXV6kG4751gIPQsMVr4c", // Temporário: Atualize após criar o projeto
+  authDomain: "restaurante-paroara.firebaseapp.com",
+  projectId: "restaurante-paroara",
+  storageBucket: "restaurante-paroara.firebasestorage.app",
   messagingSenderId: "471751694978",
-  appId: "1:471751694978:web:b20a38faff5e959da3729b",
-  measurementId: "G-HMZPPLVN3Z"
+  appId: "1:471751694978:web:b20a38faff5e959da3729b"
 };

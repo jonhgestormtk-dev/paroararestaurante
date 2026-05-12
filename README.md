@@ -1,3 +1,4 @@
+
 # Paroara | Restaurante | Beer Drik’s
 
 Projeto de cardápio digital com temática de Rusticidade Amazônica Premium.
@@ -34,7 +35,7 @@ git remote add origin https://github.com/jonhgestormtk-dev/paroararestaurante.gi
 
 # Envie os arquivos (force se o repositório no GitHub não estiver vazio)
 git add .
-git commit -m "Setup: Novo projeto Firebase"
+git commit -m "Setup: Novo projeto Firebase restaurante-paroara"
 git push -u origin main --force
 ```
 
