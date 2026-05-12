@@ -25,6 +25,8 @@ import {
   Cell
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const MOCK_CHART_DATA = [
   { name: 'Jan', pedidos: 45 },

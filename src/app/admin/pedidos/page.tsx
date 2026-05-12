@@ -46,6 +46,8 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   'Pendente': 'text-caramelo-palha bg-caramelo-palha/10 border-caramelo-palha/20',
