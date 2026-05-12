@@ -1,13 +1,14 @@
-
 'use client';
 
-// Essas variáveis serão preenchidas automaticamente pelo ambiente do Firebase Studio
-// ou você pode substituí-las pelos valores do seu console Firebase.
+/**
+ * Configuração oficial do Firebase para o projeto Paroara.
+ * Estes valores conectam o app diretamente aos serviços do Google Cloud.
+ */
 export const firebaseConfig = {
-  apiKey: "env-api-key",
-  authDomain: "env-auth-domain",
-  projectId: "env-project-id",
-  storageBucket: "env-storage-bucket",
-  messagingSenderId: "env-messaging-sender-id",
-  appId: "env-app-id"
+  apiKey: "AIzaSyA2oTnfv2ghHMg-gE6A8myGBHGElaQUQWU",
+  authDomain: "studio-744554625-e9347.firebaseapp.com",
+  projectId: "studio-744554625-e9347",
+  storageBucket: "studio-744554625-e9347.firebasestorage.app",
+  messagingSenderId: "929726693262",
+  appId: "1:929726693262:web:380fad7734bb3393ab6edf"
 };
