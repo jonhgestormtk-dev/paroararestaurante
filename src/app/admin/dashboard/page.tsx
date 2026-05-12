@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -40,7 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import Link from 'next/navigation';
+import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
@@ -147,7 +146,7 @@ export default function AdminDashboard() {
     if (!loadingProducts && !loadingCategories && db) {
       if ((!allProducts || allProducts.length === 0) && (!allCategories || allCategories.length === 0)) {
         autoSeedDatabase();
-      } else {
+      } else if ((allProducts && allProducts.length > 0) || (allCategories && allCategories.length > 0)) {
         setMigrationStatus('completed');
       }
     }
