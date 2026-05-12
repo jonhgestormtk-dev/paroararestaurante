@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   ShoppingBag, 
   DollarSign, 
@@ -10,7 +10,7 @@ import {
   Clock,
   Database,
   Loader2,
-  AlertTriangle
+  CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -22,7 +22,8 @@ import {
   Timestamp, 
   doc, 
   writeBatch, 
-  serverTimestamp 
+  serverTimestamp,
+  getDocs
 } from 'firebase/firestore';
 import { Order, Product } from '@/lib/types';
 import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
@@ -36,16 +37,18 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { Badge } from '@/badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
+import Link from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'checking' | 'migrating' | 'completed'>('idle');
+  const hasAttemptedMigration = useRef(false);
 
   // Buscar todos os pedidos para estatísticas
   const allOrdersQuery = useMemo(() => {
@@ -75,18 +78,25 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: allCategories, loading: loadingCategories } = useCollection(catQuery);
 
-  // Função para popular o banco de dados (Produtos e Categorias)
-  const seedDatabase = async () => {
-    if (!db) {
-      console.error("Firestore não inicializado");
-      toast({ variant: "destructive", title: "Erro", description: "Banco de dados não conectado." });
-      return;
-    }
+  // Função para popular o banco de dados automaticamente
+  const autoSeedDatabase = async () => {
+    if (!db || hasAttemptedMigration.current) return;
     
+    hasAttemptedMigration.current = true;
+    setMigrationStatus('migrating');
     setIsSeeding(true);
-    console.log("Iniciando migração de dados...");
     
     try {
+      // Verificação final antes de escrever para evitar duplicatas acidentais
+      const catSnap = await getDocs(collection(db, 'categories'));
+      const prodSnap = await getDocs(collection(db, 'products'));
+      
+      if (!catSnap.empty || !prodSnap.empty) {
+        setMigrationStatus('completed');
+        setIsSeeding(false);
+        return;
+      }
+
       const batch = writeBatch(db);
       
       // 1. Migrar Categorias
@@ -117,23 +127,31 @@ export default function AdminDashboard() {
       });
 
       await batch.commit();
-      console.log("Migração concluída com sucesso!");
       
+      setMigrationStatus('completed');
       toast({
-        title: "Banco de Dados Criado",
-        description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados com sucesso.`,
+        title: "Banco de Dados Inicializado",
+        description: "Os pratos e categorias foram migrados automaticamente para o Firestore.",
       });
     } catch (error: any) {
-      console.error('Erro ao popular banco:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro na Migração",
-        description: error.message || "Não foi possível popular o banco de dados.",
-      });
+      console.error('Erro na migração automática:', error);
+      setMigrationStatus('idle');
+      hasAttemptedMigration.current = false;
     } finally {
       setIsSeeding(false);
     }
   };
+
+  // Efeito para disparar a migração automática se o banco estiver vazio
+  useEffect(() => {
+    if (!loadingProducts && !loadingCategories && db) {
+      if ((!allProducts || allProducts.length === 0) && (!allCategories || allCategories.length === 0)) {
+        autoSeedDatabase();
+      } else {
+        setMigrationStatus('completed');
+      }
+    }
+  }, [loadingProducts, loadingCategories, allProducts, allCategories, db]);
 
   const stats = useMemo(() => {
     if (!allOrders) return {
@@ -188,11 +206,6 @@ export default function AdminDashboard() {
     { label: 'Pedidos do Mês', value: stats.monthlyOrders, icon: TrendingUp, color: 'text-marrom-madeira' },
   ];
 
-  // Mostra que precisa de migração se o carregamento terminou e as coleções estão vazias
-  const needsMigration = !loadingProducts && !loadingCategories && 
-    (!allProducts || allProducts.length === 0) && 
-    (!allCategories || allCategories.length === 0);
-
   return (
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -201,40 +214,25 @@ export default function AdminDashboard() {
           <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
         </div>
         
-        {needsMigration ? (
-          <Button 
-            onClick={seedDatabase} 
-            disabled={isSeeding}
-            className="bg-caramelo-palha hover:bg-marrom-madeira text-white gap-2 py-6 px-8 rounded-sm font-bold uppercase tracking-widest text-xs shadow-lg transition-all"
-          >
-            {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-            {isSeeding ? 'Criando Banco de Dados...' : 'Criar Banco de Dados do Cardápio'}
-          </Button>
-        ) : (
-          <div className="flex items-center gap-2 text-verde-folha bg-verde-folha/10 px-4 py-2 rounded-sm border border-verde-folha/20">
-            {loadingProducts || loadingCategories ? (
+        <div className="flex items-center gap-2">
+          {migrationStatus === 'migrating' || isSeeding ? (
+            <div className="flex items-center gap-2 text-caramelo-palha bg-caramelo-palha/10 px-4 py-2 rounded-sm border border-caramelo-palha/20">
               <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Package className="w-4 h-4" />
-            )}
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              {loadingProducts || loadingCategories ? 'Verificando dados...' : 'Banco de Dados Ativo'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {needsMigration && (
-        <Card className="bg-amber-50 border-amber-200 shadow-none">
-          <CardContent className="p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-bold text-amber-900">Configuração Inicial Necessária</p>
-              <p className="text-xs text-amber-700">Seu banco de dados no Firestore está vazio. Clique no botão acima para carregar automaticamente as categorias e os pratos iniciais do restaurante.</p>
+              <span className="text-[10px] font-black uppercase tracking-widest">Sincronizando Cardápio...</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : migrationStatus === 'completed' ? (
+            <div className="flex items-center gap-2 text-verde-folha bg-verde-folha/10 px-4 py-2 rounded-sm border border-verde-folha/20">
+              <CheckCircle2 className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Banco de Dados Ativo</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-cinza-organico bg-areia-clara px-4 py-2 rounded-sm border border-areia-escura">
+              <Database className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Aguardando Conexão</span>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((stat, i) => (
@@ -308,7 +306,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="text-center py-10 text-cinza-organico text-xs italic">Nenhum pedido recente.</div>
               )}
-              <Link href="/admin/pedidos" passHref>
+              <Link href="/admin/pedidos">
                 <Button variant="outline" className="w-full mt-4 text-[10px] uppercase tracking-[0.2em] font-bold border-areia-escura text-marrom-madeira">
                   Ver todos os pedidos
                 </Button>
