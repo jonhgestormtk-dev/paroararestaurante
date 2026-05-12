@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -14,21 +14,24 @@ import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 import { CartTray } from '@/components/CartTray';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, writeBatch, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { Product } from '@/lib/types';
+import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
+  const { toast } = useToast();
 
   // Buscar categorias ordenadas
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
   }, [db]);
-  const { data: firestoreCategories } = useCollection<{id: string, name: string}>(categoriesQuery);
+  const { data: firestoreCategories, loading: categoriesLoading } = useCollection<{id: string, name: string}>(categoriesQuery);
 
   const dynamicCategories = useMemo(() => {
     const base = ['Todos'];
@@ -59,6 +62,51 @@ export default function Home() {
     return collection(db, 'products');
   }, [db]);
   const { data: allProductsRaw, loading: productsLoading } = useCollection<Product>(allProductsQuery);
+
+  // Lógica de Auto-Seed (Caso o banco esteja vazio, popula automaticamente)
+  useEffect(() => {
+    const autoSeed = async () => {
+      if (!db || productsLoading || categoriesLoading) return;
+      
+      if ((!allProductsRaw || allProductsRaw.length === 0) && (!firestoreCategories || firestoreCategories.length === 0)) {
+        console.log('Detectado banco vazio. Iniciando sincronização automática...');
+        const batch = writeBatch(db);
+        
+        // Categorias
+        const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
+        validCategories.forEach((catName, index) => {
+          const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+          const catRef = doc(db, 'categories', catId);
+          batch.set(catRef, {
+            name: catName,
+            active: true,
+            order: index * 10,
+            createdAt: serverTimestamp()
+          });
+        });
+
+        // Produtos
+        PRODUCTS.forEach((product) => {
+          const productRef = doc(db, 'products', product.id);
+          const { id, ...productData } = product;
+          batch.set(productRef, {
+            ...productData,
+            active: true,
+            createdAt: serverTimestamp()
+          });
+        });
+
+        try {
+          await batch.commit();
+          toast({ title: "Cardápio Sincronizado", description: "Os pratos tradicionais foram carregados." });
+        } catch (e) {
+          console.error('Erro ao sincronizar banco:', e);
+        }
+      }
+    };
+
+    autoSeed();
+  }, [allProductsRaw, firestoreCategories, productsLoading, categoriesLoading, db, toast]);
 
   const filteredProducts = useMemo(() => {
     if (!allProductsRaw) return [];

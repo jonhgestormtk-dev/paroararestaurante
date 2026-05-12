@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -9,7 +10,8 @@ import {
   Clock,
   Database,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -77,25 +79,15 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: allCategories, loading: loadingCategories } = useCollection(catQuery);
 
-  // Função para popular o banco de dados automaticamente
-  const autoSeedDatabase = async () => {
-    if (!db || hasAttemptedMigration.current) return;
+  // Função para popular o banco de dados
+  const seedDatabase = async (force = false) => {
+    if (!db || (hasAttemptedMigration.current && !force)) return;
     
     hasAttemptedMigration.current = true;
     setMigrationStatus('migrating');
     setIsSeeding(true);
     
     try {
-      // Verificação final antes de escrever para evitar duplicatas acidentais
-      const catSnap = await getDocs(collection(db, 'categories'));
-      const prodSnap = await getDocs(collection(db, 'products'));
-      
-      if (!catSnap.empty || !prodSnap.empty) {
-        setMigrationStatus('completed');
-        setIsSeeding(false);
-        return;
-      }
-
       const batch = writeBatch(db);
       
       // 1. Migrar Categorias
@@ -129,13 +121,14 @@ export default function AdminDashboard() {
       
       setMigrationStatus('completed');
       toast({
-        title: "Banco de Dados Inicializado",
-        description: "Os pratos e categorias foram migrados automaticamente para o Firestore.",
+        title: "Sincronização Concluída",
+        description: "Os pratos e categorias foram carregados no Firestore.",
       });
     } catch (error: any) {
-      console.error('Erro na migração automática:', error);
+      console.error('Erro na migração:', error);
       setMigrationStatus('idle');
       hasAttemptedMigration.current = false;
+      toast({ variant: "destructive", title: "Erro na Sincronização", description: "Verifique sua conexão ou permissões." });
     } finally {
       setIsSeeding(false);
     }
@@ -145,7 +138,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!loadingProducts && !loadingCategories && db) {
       if ((!allProducts || allProducts.length === 0) && (!allCategories || allCategories.length === 0)) {
-        autoSeedDatabase();
+        seedDatabase();
       } else if ((allProducts && allProducts.length > 0) || (allCategories && allCategories.length > 0)) {
         setMigrationStatus('completed');
       }
@@ -213,21 +206,32 @@ export default function AdminDashboard() {
           <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => seedDatabase(true)}
+            disabled={isSeeding}
+            className="text-[10px] uppercase font-bold tracking-widest gap-2 border-areia-escura"
+          >
+            <RefreshCw className={cn("w-3 h-3", isSeeding && "animate-spin")} />
+            Forçar Sincronia
+          </Button>
+
           {migrationStatus === 'migrating' || isSeeding ? (
             <div className="flex items-center gap-2 text-caramelo-palha bg-caramelo-palha/10 px-4 py-2 rounded-sm border border-caramelo-palha/20">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Sincronizando Cardápio...</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Sincronizando...</span>
             </div>
           ) : migrationStatus === 'completed' ? (
             <div className="flex items-center gap-2 text-verde-folha bg-verde-folha/10 px-4 py-2 rounded-sm border border-verde-folha/20">
               <CheckCircle2 className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Banco de Dados Ativo</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Banco Ativo</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-cinza-organico bg-areia-clara px-4 py-2 rounded-sm border border-areia-escura">
               <Database className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Aguardando Conexão</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Aguardando...</span>
             </div>
           )}
         </div>
