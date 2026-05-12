@@ -2,12 +2,14 @@
 'use client';
 
 import React from 'react';
-import { X, Trash2, Minus, Plus, MessageSquare } from 'lucide-react';
+import { X, Trash2, Minus, Plus, MessageSquare, ShoppingBag as ShoppingBagIcon } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+
+const ShoppingBag = ShoppingBagIcon;
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -105,7 +107,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
-                        <span className="font-subheadline font-bold text-marrom-escuro">
+                        <span className="font-body font-bold text-marrom-escuro">
                           R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
                         </span>
                       </div>
@@ -122,7 +124,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-cinza-organico">
               <span>Subtotal</span>
-              <span>R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
+              <span className="font-body">R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
             </div>
             <div className="flex justify-between text-sm text-cinza-organico">
               <span>Taxa de Entrega</span>
@@ -130,7 +132,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </div>
             <div className="flex justify-between text-xl font-headline text-marrom-terra pt-2">
               <span>Total</span>
-              <span>R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
+              <span className="font-body">R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
             </div>
           </div>
 
@@ -150,6 +152,3 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     </Sheet>
   );
 }
-
-import { ShoppingBag as ShoppingBagIcon } from 'lucide-react';
-const ShoppingBag = ShoppingBagIcon;

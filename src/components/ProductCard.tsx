@@ -55,7 +55,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         </p>
         
         <div className="flex items-center justify-between mt-auto pt-2">
-          <span className="font-subheadline font-bold text-marrom-escuro text-lg">
+          <span className="font-body font-bold text-marrom-escuro text-lg">
             R$ {product.price.toFixed(2).replace('.', ',')}
           </span>
           <Button
