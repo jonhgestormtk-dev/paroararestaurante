@@ -133,9 +133,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Button>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 bg-marrom-terra/5 px-3 py-1.5 rounded-full">
-              <Star className="w-4 h-4 fill-caramelo-palha text-caramelo-palha" />
-              <span className="text-xs font-bold text-marrom-terra">Restaurante Online</span>
+            <div className="flex flex-col items-end opacity-90 hover:opacity-100 transition-opacity">
+              <h1 className="text-2xl font-headline tracking-[0.2em] text-marrom-terra leading-none uppercase">
+                PAROARA
+              </h1>
+              <p className="text-[9px] font-subheadline italic text-marrom-madeira tracking-widest uppercase mt-1">
+                Restaurante Marajoara
+              </p>
             </div>
           </div>
         </header>
