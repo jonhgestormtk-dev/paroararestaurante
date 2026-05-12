@@ -14,7 +14,7 @@ import { CartTray } from '@/components/CartTray';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { Product, Category } from '@/lib/types';
+import { Product } from '@/lib/types';
 import { Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
