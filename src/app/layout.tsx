@@ -1,6 +1,8 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
+import { FirebaseClientProvider } from '@/firebase';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Paroara | Restaurante | Beer Drik’s',
@@ -25,7 +27,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background text-foreground selection:bg-accent selection:text-white">
-        {children}
+        <FirebaseClientProvider>
+          <FirebaseErrorListener />
+          {children}
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );

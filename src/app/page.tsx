@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { PromoBanner } from '@/components/PromoBanner';
@@ -12,26 +12,39 @@ import { ExperienceSection } from '@/components/ExperienceSection';
 import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 import { CartTray } from '@/components/CartTray';
 import { CartProvider } from '@/context/CartContext';
-import { PRODUCTS } from '@/lib/mock-data';
-import { Category, Product } from '@/lib/types';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import { Product, Category } from '@/lib/types';
 import { Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category>('Todos');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const db = useFirestore();
+
+  // Fetch Highlights (featured == true)
+  const featuredQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'products'), where('featured', '==', true));
+  }, [db]);
+  const { data: featuredProducts } = useCollection<Product>(featuredQuery);
+
+  // Fetch All Products (for the menu)
+  const allProductsQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'products');
+  }, [db]);
+  const { data: allProducts } = useCollection<Product>(allProductsQuery);
 
   const filteredProducts = useMemo(() => {
-    if (activeCategory === 'Todos') return PRODUCTS;
-    return PRODUCTS.filter(p => p.category === activeCategory);
-  }, [activeCategory]);
-
-  const featuredProducts = useMemo(() => {
-    return PRODUCTS.filter(p => p.featured);
-  }, []);
+    if (!allProducts) return [];
+    if (activeCategory === 'Todos') return allProducts;
+    return allProducts.filter(p => p.category === activeCategory);
+  }, [activeCategory, allProducts]);
 
   return (
     <CartProvider>
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background selection:bg-accent selection:text-white">
         <Header />
         
         <main className="flex-1">
@@ -39,36 +52,44 @@ export default function Home() {
           <PromoBanner />
           
           {/* Highlights Section */}
-          <section className="container mx-auto px-4 py-16">
-            <div className="text-center mb-12 space-y-2">
-              <div className="flex items-center justify-center gap-2 text-caramelo-palha mb-2">
-                <Sparkles className="w-5 h-5" />
-                <span className="text-sm font-body uppercase tracking-[0.3em] font-bold">Favoritos</span>
-                <Sparkles className="w-5 h-5" />
+          <section className="container mx-auto px-4 py-20">
+            <div className="text-center mb-16 space-y-4">
+              <div className="flex items-center justify-center gap-3 text-caramelo-palha mb-2 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                <Sparkles className="w-5 h-5 fill-caramelo-palha" />
+                <span className="text-xs font-body uppercase tracking-[0.4em] font-bold">Favoritos</span>
+                <Sparkles className="w-5 h-5 fill-caramelo-palha" />
               </div>
-              <h2 className="text-4xl font-headline text-marrom-terra">Destaques da Casa</h2>
-              <p className="text-cinza-organico font-subheadline italic text-lg">Os sabores mais pedidos do Paroara</p>
-              <div className="w-24 h-1 bg-caramelo-palha mx-auto mt-4 rounded-full"></div>
+              <h2 className="text-4xl md:text-5xl font-headline text-marrom-terra">Destaques da Casa</h2>
+              <p className="text-cinza-organico font-subheadline italic text-xl max-w-2xl mx-auto">
+                Os sabores mais emblemáticos da nossa tradição marajoara.
+              </p>
+              <div className="w-24 h-1 bg-caramelo-palha mx-auto mt-6 rounded-full opacity-60"></div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.map((product) => (
-                <div key={product.id} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-                  <ProductCard 
-                    product={product} 
-                    onClick={() => setSelectedProduct(product)}
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+              {featuredProducts && featuredProducts.length > 0 ? (
+                featuredProducts.map((product) => (
+                  <div key={product.id} className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                    <ProductCard 
+                      product={product} 
+                      onClick={() => setSelectedProduct(product)}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-10 text-cinza-organico italic font-subheadline">
+                  Preparando nossas especialidades...
                 </div>
-              ))}
+              )}
             </div>
           </section>
 
           <ExperienceSection />
           
-          <div id="menu" className="relative scroll-mt-20">
-            <div className="container mx-auto px-4 pt-16 text-center">
-              <h2 className="text-4xl font-headline text-marrom-terra mb-4">Explore Nosso Cardápio</h2>
-              <div className="w-16 h-1 bg-caramelo-palha mx-auto rounded-full mb-8"></div>
+          <div id="menu" className="relative scroll-mt-24">
+            <div className="container mx-auto px-4 pt-20 text-center">
+              <h2 className="text-4xl font-headline text-marrom-terra mb-6">Explore Nosso Cardápio</h2>
+              <div className="w-16 h-1 bg-caramelo-palha mx-auto rounded-full mb-12"></div>
             </div>
             
             <CategoryFilter 
@@ -76,9 +97,9 @@ export default function Home() {
               onSelect={setActiveCategory} 
             />
 
-            <section className="container mx-auto px-4 py-12">
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+            <section className="container mx-auto px-4 py-16">
+              {filteredProducts && filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
                   {filteredProducts.map((product) => (
                     <ProductCard 
                       key={product.id} 
@@ -88,8 +109,8 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 bg-areia-media/20 rounded-lg border border-dashed border-areia-escura">
-                  <p className="text-cinza-organico font-subheadline italic">Em breve mais delícias nesta categoria.</p>
+                <div className="text-center py-20 bg-areia-media/10 rounded-2xl border border-dashed border-areia-escura/40">
+                  <p className="text-cinza-organico font-subheadline italic text-lg">Em breve mais delícias nesta categoria.</p>
                 </div>
               )}
             </section>
@@ -98,54 +119,63 @@ export default function Home() {
           <WhatsAppCTA />
         </main>
 
-        <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-20 pb-32">
-          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h3 className="font-headline text-3xl text-caramelo-palha">PAROARA</h3>
-                <p className="text-xs uppercase tracking-widest opacity-60">O verdadeiro restaurante marajoara</p>
+        <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-24 pb-36 border-t border-marrom-madeira/20">
+          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
+            <div className="space-y-8 col-span-1 lg:col-span-1">
+              <div className="space-y-2">
+                <h3 className="font-headline text-4xl text-caramelo-palha tracking-widest">PAROARA</h3>
+                <p className="text-[10px] uppercase tracking-[0.5em] text-areia-clara/60 font-bold">O verdadeiro restaurante marajoara</p>
               </div>
-              <p className="text-sm font-body opacity-70 leading-relaxed max-w-xs">
+              <p className="text-sm font-body text-areia-media/80 leading-relaxed max-w-xs italic">
                 Um pedaço da Ilha do Marajó no coração de Belém. 
-                Ingredientes selecionados e tradição em cada detalhe da nossa culinária.
+                Ingredientes selecionados e tradição em cada detalhe.
               </p>
-              <div className="pt-4 flex gap-4">
-                <a href="#" className="w-10 h-10 rounded-full bg-marrom-terra flex items-center justify-center border border-caramelo-palha/20 hover:bg-caramelo-palha hover:text-marrom-escuro transition-all shadow-lg">
-                  <span className="text-xs font-bold">IG</span>
+              <div className="pt-4 flex gap-5">
+                <a href="#" className="w-12 h-12 rounded-full bg-marrom-terra flex items-center justify-center border border-caramelo-palha/20 hover:bg-caramelo-palha hover:text-marrom-escuro transition-all shadow-xl hover:-translate-y-1">
+                  <span className="text-xs font-bold uppercase tracking-tighter">Insta</span>
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-marrom-terra flex items-center justify-center border border-caramelo-palha/20 hover:bg-caramelo-palha hover:text-marrom-escuro transition-all shadow-lg">
-                  <span className="text-xs font-bold">WA</span>
+                <a href="#" className="w-12 h-12 rounded-full bg-marrom-terra flex items-center justify-center border border-caramelo-palha/20 hover:bg-caramelo-palha hover:text-marrom-escuro transition-all shadow-xl hover:-translate-y-1">
+                  <span className="text-xs font-bold uppercase tracking-tighter">WApp</span>
                 </a>
               </div>
             </div>
             
-            <div className="space-y-6">
-              <h4 className="font-headline text-xl text-caramelo-palha border-b border-marrom-madeira/50 pb-2 inline-block">Navegação</h4>
-              <nav className="flex flex-col gap-3 text-sm font-body opacity-70">
-                <a href="#" className="hover:text-caramelo-palha transition-colors">Home</a>
-                <a href="#menu" className="hover:text-caramelo-palha transition-colors">Cardápio</a>
-                <a href="#" className="hover:text-caramelo-palha transition-colors">Promoções</a>
-                <a href="#" className="hover:text-caramelo-palha transition-colors">Admin</a>
+            <div className="space-y-8">
+              <h4 className="font-headline text-xl text-caramelo-palha border-b border-marrom-madeira/30 pb-3 inline-block">Menu</h4>
+              <nav className="flex flex-col gap-4 text-sm font-body text-areia-media/70">
+                <a href="#" className="hover:text-caramelo-palha transition-colors">Página Inicial</a>
+                <a href="#menu" className="hover:text-caramelo-palha transition-colors">Nosso Cardápio</a>
+                <a href="#" className="hover:text-caramelo-palha transition-colors">Ofertas Especiais</a>
+                <a href="#" className="hover:text-caramelo-palha transition-colors">Contate-nos</a>
+                <a href="#" className="hover:text-caramelo-palha transition-colors font-bold text-caramelo-palha/80">Área Administrativa</a>
               </nav>
             </div>
 
-            <div className="space-y-6">
-              <h4 className="font-headline text-xl text-caramelo-palha border-b border-marrom-madeira/50 pb-2 inline-block">Horário & Local</h4>
-              <div className="space-y-4 opacity-70 text-sm">
-                <p>
-                  Terça a Domingo<br />
-                  11:00 às 15:00 • 18:00 às 23:30
-                </p>
-                <p>
-                  Av. Gentil Bittencourt, 2231<br />
-                  Belém - PA
-                </p>
+            <div className="space-y-8 lg:col-span-2">
+              <h4 className="font-headline text-xl text-caramelo-palha border-b border-marrom-madeira/30 pb-3 inline-block">Visite-nos</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4 text-sm text-areia-media/70">
+                  <p className="font-bold text-areia-clara uppercase tracking-widest text-xs">Horário de Funcionamento</p>
+                  <p className="leading-relaxed">
+                    Terça a Domingo<br />
+                    11h às 15h • Almoço<br />
+                    18h às 23h30 • Jantar
+                  </p>
+                </div>
+                <div className="space-y-4 text-sm text-areia-media/70">
+                  <p className="font-bold text-areia-clara uppercase tracking-widest text-xs">Onde Estamos</p>
+                  <p className="leading-relaxed">
+                    Av. Gentil Bittencourt, 2231<br />
+                    Belém - Pará, Brasil<br />
+                    <span className="text-caramelo-palha mt-2 block">Ver no Google Maps</span>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-          <div className="container mx-auto px-4 mt-20 pt-8 border-t border-marrom-madeira/20 text-center">
-            <p className="text-[10px] uppercase tracking-[0.3em] opacity-40">
-              © 2026 Paroara Restaurante • Todos os direitos reservados
+          <div className="container mx-auto px-4 mt-24 pt-10 border-t border-marrom-madeira/10 text-center">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-areia-media/40 font-bold">
+              © 2026 Paroara Restaurante • Tradição Amazônica • Todos os direitos reservados
             </p>
           </div>
         </footer>

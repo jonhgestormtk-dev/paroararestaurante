@@ -2,36 +2,50 @@
 'use client';
 
 import React from 'react';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function WhatsAppCTA() {
+  const handleOrder = () => {
+    window.open('https://wa.me/559184541085', '_blank');
+  };
+
   return (
-    <section className="py-24 bg-marrom-escuro relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full bg-rustic-texture opacity-[0.05] pointer-events-none"></div>
+    <section className="py-32 bg-marrom-escuro relative overflow-hidden">
+      {/* Texture and Gradients */}
+      <div className="absolute top-0 left-0 w-full h-full bg-rustic-texture opacity-[0.08] pointer-events-none"></div>
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-caramelo-palha/10 rounded-full blur-[100px]"></div>
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-verde-folha/10 rounded-full blur-[100px]"></div>
       
       <div className="container mx-auto px-4 text-center relative z-10">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-headline text-caramelo-palha">
-              Peça agora pelo WhatsApp
+        <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+          <div className="space-y-6">
+            <h2 className="text-5xl md:text-7xl font-headline text-caramelo-palha leading-tight">
+              Peça agora pelo <br className="hidden md:block" /> WhatsApp
             </h2>
-            <p className="text-areia-clara text-lg md:text-xl font-subheadline italic opacity-80">
-              Seu pedido chega rápido, fresco e preparado na hora com todo o sabor do Marajó.
+            <div className="w-24 h-1 bg-caramelo-palha/30 mx-auto rounded-full"></div>
+            <p className="text-areia-clara text-xl md:text-3xl font-subheadline italic opacity-80 max-w-2xl mx-auto leading-relaxed">
+              Seu pedido chega rápido, fresco e preparado na hora com todo o vigor e sabor do Marajó.
             </p>
           </div>
 
-          <Button 
-            className="bg-verde-folha hover:bg-verde-escuro text-white px-12 py-8 text-xl font-bold rounded-full shadow-2xl transition-all hover:scale-105 gap-3"
-            onClick={() => window.open('https://wa.me/559184541085', '_blank')}
-          >
-            <MessageCircle className="w-8 h-8" />
-            Fazer Pedido • +55 91 8454-1085
-          </Button>
-          
-          <p className="text-areia-escura text-xs uppercase tracking-[0.3em] font-body opacity-60">
-            Atendimento exclusivo Belém/PA
-          </p>
+          <div className="flex flex-col items-center gap-6">
+            <Button 
+              className="bg-verde-folha hover:bg-verde-escuro text-white px-16 py-10 text-2xl font-black rounded-full shadow-[0_20px_60px_rgba(78,91,44,0.4)] transition-all hover:scale-105 active:scale-95 gap-4 group"
+              onClick={handleOrder}
+            >
+              <MessageCircle className="w-10 h-10 group-hover:rotate-12 transition-transform" />
+              Fazer Pedido Agora
+            </Button>
+            
+            <div className="flex items-center gap-3 text-areia-media/60 uppercase tracking-[0.4em] font-bold text-[10px]">
+              <span className="w-10 h-[1px] bg-white/20"></span>
+              Atendimento Exclusivo Belém/PA
+              <span className="w-10 h-[1px] bg-white/20"></span>
+            </div>
+            
+            <p className="text-caramelo-palha font-black text-2xl tracking-widest">+55 91 8454-1085</p>
+          </div>
         </div>
       </div>
     </section>

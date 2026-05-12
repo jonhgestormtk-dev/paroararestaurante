@@ -1,0 +1,33 @@
+
+{
+  "entities": {
+    "Product": {
+      "title": "Produto",
+      "description": "Um item do cardápio do restaurante.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "longDescription": { "type": "string" },
+        "price": { "type": "number" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string" },
+        "featured": { "type": "boolean" },
+        "promotion": { "type": "boolean" },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "emoji": { "type": "string" }
+      },
+      "required": ["name", "price", "category"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Coleção de produtos do cardápio."
+    }
+  }
+}

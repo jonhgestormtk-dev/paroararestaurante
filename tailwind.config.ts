@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -18,13 +17,28 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        /* Brand Colors mapped to HSL variables */
+        'marrom-terra': 'hsl(var(--marrom-terra))',
+        'marrom-escuro': 'hsl(var(--marrom-escuro))',
+        'marrom-madeira': 'hsl(var(--marrom-madeira))',
+        'caramelo-palha': 'hsl(var(--caramelo-palha))',
+        'areia-clara': 'hsl(var(--areia-clara))',
+        'areia-media': 'hsl(var(--areia-media))',
+        'areia-escura': 'hsl(var(--areia-escura))',
+        'verde-folha': 'hsl(var(--verde-folha))',
+        'verde-escuro': 'hsl(var(--verde-escuro))',
+        'oliva-suave': 'hsl(var(--oliva-suave))',
+        'grafite-amadeirado': 'hsl(var(--grafite-amadeirado))',
+        'marrom-texto': 'hsl(var(--marrom-texto))',
+        'cinza-organico': 'hsl(var(--cinza-organico))',
+        'branco-quente': 'hsl(var(--branco-quente))',
         brand: {
-          earth: 'hex(#4B2E1F)',
-          espresso: 'hex(#2E1B12)',
-          wood: 'hex(#6A432D)',
-          caramel: 'hex(#A87442)',
-          sand: 'hex(#F3E7D3)',
-          leaf: 'hex(#4E5B2C)',
+          earth: '#4B2E1F',
+          espresso: '#2E1B12',
+          wood: '#6A432D',
+          caramel: '#A87442',
+          sand: '#F3E7D3',
+          leaf: '#4E5B2C',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',
