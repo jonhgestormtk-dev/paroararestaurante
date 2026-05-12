@@ -2,56 +2,48 @@
 {
   "entities": {
     "Product": {
-      "title": "Produto",
-      "description": "Um item do cardápio do restaurante.",
+      "title": "Product",
+      "description": "A menu item for the restaurant.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "name": { "type": "string" },
         "description": { "type": "string" },
-        "longDescription": { "type": "string" },
         "price": { "type": "number" },
         "imageUrl": { "type": "string" },
         "category": { "type": "string" },
         "featured": { "type": "boolean" },
         "promotion": { "type": "boolean" },
         "active": { "type": "boolean" },
-        "ingredients": { "type": "array", "items": { "type": "string" } },
-        "emoji": { "type": "string" },
         "stock": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "emoji": { "type": "string" }
       },
-      "required": ["name", "price", "category", "description", "stock"]
+      "required": ["name", "price", "category", "description"]
     },
     "Category": {
-      "title": "Categoria",
-      "description": "Uma divisão do cardápio (ex: Peixes, Bebidas).",
+      "title": "Category",
+      "description": "A menu category for organization.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "name": { "type": "string" },
         "active": { "type": "boolean" },
-        "order": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "order": { "type": "number" }
       },
       "required": ["name", "active", "order"]
     },
     "Order": {
-      "title": "Pedido",
-      "description": "Um pedido realizado por um cliente.",
+      "title": "Order",
+      "description": "A customer order.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "customer": {
           "type": "object",
           "properties": {
             "name": { "type": "string" },
-            "phone": { "type": "string" },
-            "address": { "type": "string" }
+            "phone": { "type": "string" }
           }
         },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
         "items": {
           "type": "array",
           "items": {
@@ -63,10 +55,7 @@
               "quantity": { "type": "number" }
             }
           }
-        },
-        "total": { "type": "number" },
-        "status": { "type": "string", "enum": ["Pendente", "Em Preparo", "Saiu para Entrega", "Finalizado"] },
-        "createdAt": { "type": "string", "format": "date-time" }
+        }
       }
     }
   },
@@ -76,15 +65,15 @@
   "firestore": {
     "/products/{productId}": {
       "schema": "Product",
-      "description": "Coleção de produtos do cardápio."
+      "description": "Collection of menu products."
     },
     "/categories/{categoryId}": {
       "schema": "Category",
-      "description": "Coleção de categorias organizadoras do cardápio."
+      "description": "Collection of menu categories."
     },
     "/orders/{orderId}": {
       "schema": "Order",
-      "description": "Coleção de pedidos do restaurante."
+      "description": "Collection of customer orders."
     }
   }
 }
