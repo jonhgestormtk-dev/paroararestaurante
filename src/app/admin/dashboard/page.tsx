@@ -11,13 +11,12 @@ import {
   ArrowRight,
   Database,
   Loader2,
-  CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, limit, orderBy, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Order, Product } from '@/lib/types';
-import { PRODUCTS } from '@/lib/mock-data';
+import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { 
   BarChart, 
   Bar, 
@@ -39,7 +38,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // Buscar todos os pedidos para estatísticas e gráfico
+  // Buscar todos os pedidos para estatísticas
   const allOrdersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
@@ -60,15 +59,39 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
 
-  // Função para popular o banco de dados caso esteja vazio
+  // Buscar categorias para verificar se precisa migrar
+  const catQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'categories');
+  }, [db]);
+  const { data: allCategories } = useCollection(catQuery);
+
+  // Função para popular o banco de dados (Produtos e Categorias)
   const seedDatabase = async () => {
     if (!db) return;
     setIsSeeding(true);
     
     try {
-      const productsCol = collection(db, 'products');
+      // 1. Migrar Categorias
+      const categoriesCol = collection(db, 'categories');
+      const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
       
-      const promises = PRODUCTS.map((product) => {
+      const catPromises = validCategories.map((catName, index) => {
+        // Criar um ID amigável para a categoria
+        const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+        const catRef = doc(categoriesCol, catId);
+        return setDoc(catRef, {
+          name: catName,
+          active: true,
+          order: index * 10,
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      });
+
+      // 2. Migrar Produtos
+      const productsCol = collection(db, 'products');
+      const productPromises = PRODUCTS.map((product) => {
         const productRef = doc(productsCol, product.id);
         return setDoc(productRef, {
           ...product,
@@ -77,11 +100,11 @@ export default function AdminDashboard() {
         }, { merge: true });
       });
 
-      await Promise.all(promises);
+      await Promise.all([...catPromises, ...productPromises]);
       
       toast({
         title: "Sincronização Concluída",
-        description: `${PRODUCTS.length} pratos foram migrados para o Firestore.`,
+        description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados.`,
       });
     } catch (error) {
       console.error(error);
@@ -95,7 +118,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Cálculos de Estatísticas Reais
   const stats = useMemo(() => {
     if (!allOrders) return {
       totalOrders: '0',
@@ -122,21 +144,16 @@ export default function AdminDashboard() {
     };
   }, [allOrders, allProducts]);
 
-  // Agrupar dados para o gráfico (Últimos 6 meses)
   const chartData = useMemo(() => {
     if (!allOrders) return [];
-
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const dataMap: Record<string, number> = {};
-
-    // Inicializar os últimos 6 meses com zero
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const label = months[d.getMonth()];
       dataMap[label] = 0;
     }
-
     allOrders.forEach(order => {
       const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000);
       const label = months[date.getMonth()];
@@ -144,7 +161,6 @@ export default function AdminDashboard() {
         dataMap[label]++;
       }
     });
-
     return Object.entries(dataMap).map(([name, pedidos]) => ({ name, pedidos }));
   }, [allOrders]);
 
@@ -155,27 +171,28 @@ export default function AdminDashboard() {
     { label: 'Pedidos do Mês', value: stats.monthlyOrders, icon: TrendingUp, color: 'text-marrom-madeira' },
   ];
 
+  const needsMigration = (!allProducts || allProducts.length === 0) || (!allCategories || allCategories.length === 0);
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="text-3xl font-headline text-marrom-terra uppercase tracking-wider">Dashboard Real</h1>
+          <h1 className="text-3xl font-headline text-marrom-terra uppercase tracking-wider">Dashboard Admin</h1>
           <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
         </div>
         
-        {(!allProducts || allProducts.length === 0) && (
+        {needsMigration && (
           <Button 
             onClick={seedDatabase} 
             disabled={isSeeding}
             className="bg-caramelo-palha hover:bg-marrom-madeira text-white gap-2 py-6 px-8 rounded-sm font-bold uppercase tracking-widest text-xs shadow-lg transition-all"
           >
             {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-            {isSeeding ? 'Sincronizando...' : 'Migrar Cardápio Inicial'}
+            {isSeeding ? 'Sincronizando...' : 'Migrar Cardápio e Categorias'}
           </Button>
         )}
       </div>
 
-      {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((stat, i) => (
           <Card key={i} className="bg-white border-areia-escura hover:shadow-lg transition-all group overflow-hidden">
@@ -189,14 +206,12 @@ export default function AdminDashboard() {
                   <stat.icon className="w-6 h-6" />
                 </div>
               </div>
-              <div className="absolute bottom-0 left-0 h-1 bg-marrom-terra w-0 group-hover:w-full transition-all duration-500"></div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Chart Section */}
         <Card className="lg:col-span-2 bg-white border-areia-escura">
           <CardHeader>
             <CardTitle className="font-headline text-lg text-marrom-terra">Volume de Vendas</CardTitle>
@@ -206,27 +221,9 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fill: '#6A432D' }} 
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fill: '#6A432D' }} 
-                  />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(75, 46, 31, 0.05)' }}
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #E5DCCB',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontFamily: 'DM Sans'
-                    }}
-                  />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6A432D' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6A432D' }} />
+                  <Tooltip cursor={{ fill: 'rgba(75, 46, 31, 0.05)' }} />
                   <Bar dataKey="pedidos" radius={[4, 4, 0, 0]}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#A87442' : '#4B2E1F'} />
@@ -235,14 +232,11 @@ export default function AdminDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-cinza-organico italic">
-                Aguardando dados de pedidos...
-              </div>
+              <div className="flex items-center justify-center h-full text-cinza-organico italic">Aguardando dados...</div>
             )}
           </CardContent>
         </Card>
 
-        {/* Recent Orders Section */}
         <Card className="bg-white border-areia-escura">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-headline text-lg text-marrom-terra">Últimos Pedidos</CardTitle>
@@ -269,11 +263,9 @@ export default function AdminDashboard() {
               ) : (
                 <div className="text-center py-10 text-cinza-organico text-xs italic">Nenhum pedido recente.</div>
               )}
-              
               <Link href="/admin/pedidos" passHref>
-                <Button variant="outline" className="w-full mt-4 text-[10px] uppercase tracking-[0.2em] font-bold border-areia-escura text-marrom-madeira hover:bg-marrom-terra hover:text-white transition-all">
+                <Button variant="outline" className="w-full mt-4 text-[10px] uppercase tracking-[0.2em] font-bold border-areia-escura text-marrom-madeira">
                   Ver todos os pedidos
-                  <ArrowRight className="w-3 h-3 ml-2" />
                 </Button>
               </Link>
             </div>
