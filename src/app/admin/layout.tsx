@@ -78,9 +78,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           "lg:relative lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full p-6">
+        <div className="flex flex-col h-full p-6 overflow-y-auto hide-scrollbar">
           {/* Logo Section */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-8 shrink-0">
             <div className="space-y-1">
               <h2 className="font-headline text-2xl text-caramelo-palha tracking-widest leading-none">PAROARA</h2>
               <p className="text-[8px] uppercase tracking-[0.4em] font-bold opacity-40">Admin Panel</p>
@@ -95,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Button>
           </div>
 
-          <Separator className="bg-marrom-madeira/20 mb-8" />
+          <Separator className="bg-marrom-madeira/20 mb-8 shrink-0" />
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1">
@@ -123,10 +123,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          <Separator className="bg-marrom-madeira/20 my-6" />
+          <Separator className="bg-marrom-madeira/20 my-6 shrink-0" />
 
           {/* Footer Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 shrink-0 pb-4">
             <div className="bg-marrom-terra/20 p-4 rounded-md border border-marrom-madeira/20 flex items-center gap-3">
               <div className="w-9 h-9 shrink-0 rounded-full bg-caramelo-palha flex items-center justify-center text-marrom-escuro font-black text-sm shadow-inner">
                 A
