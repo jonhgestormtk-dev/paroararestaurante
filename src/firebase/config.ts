@@ -2,15 +2,14 @@
 'use client';
 
 /**
- * Configuração do Firebase para o projeto Paroara.
- * IMPORTANTE: Substitua os valores abaixo pelas credenciais geradas no console do Firebase
- * para o NOVO projeto 'restaurante-paroara'.
+ * Configuração oficial do Firebase para o projeto Paroara.
+ * Integrado em: restaurante-paroara
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSy_AGUARDE_NOVA_CHAVE", 
+  apiKey: "AIzaSyA_vPp-IuTfHyepKsRRnllHGMQfgzaNHZc",
   authDomain: "restaurante-paroara.firebaseapp.com",
   projectId: "restaurante-paroara",
   storageBucket: "restaurante-paroara.firebasestorage.app",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:000000000000000000"
+  messagingSenderId: "1027887094999",
+  appId: "1:1027887094999:web:9c510a17abe34d42c96492"
 };
