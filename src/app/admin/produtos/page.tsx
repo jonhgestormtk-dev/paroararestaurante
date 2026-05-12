@@ -50,10 +50,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
-const CATEGORIES: Category[] = [
-  'Regionais', 'Peixes', 'Carnes', 'Grelhados', 'Executivos', 'Massas', 'Bebidas', 'Sobremesas'
-];
-
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,6 +57,21 @@ export default function AdminProducts() {
   const { toast } = useToast();
 
   const db = useFirestore();
+  
+  // Buscar Categorias dinamicamente para o formulário
+  const catQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'categories');
+  }, [db]);
+  const { data: firestoreCategories } = useCollection<{id: string, name: string}>(catQuery);
+
+  const categories = useMemo(() => {
+    if (!firestoreCategories || firestoreCategories.length === 0) {
+      return ['Regionais', 'Peixes', 'Carnes', 'Grelhados', 'Executivos', 'Massas', 'Bebidas', 'Sobremesas'];
+    }
+    return firestoreCategories.map(c => c.name);
+  }, [firestoreCategories]);
+
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'products');
@@ -84,7 +95,7 @@ export default function AdminProducts() {
     return products.filter(p => 
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   }, [products, searchTerm]);
 
   const handleOpenModal = (product?: Product) => {
@@ -98,7 +109,7 @@ export default function AdminProducts() {
       setEditingProduct(null);
       setFormData({
         name: '',
-        category: 'Regionais',
+        category: categories[0] || 'Regionais',
         price: 0,
         description: '',
         imageUrl: '',
@@ -114,9 +125,8 @@ export default function AdminProducts() {
   const handleSave = () => {
     if (!db) return;
 
-    // Validação aprimorada de campos obrigatórios
     const isInvalid = !formData.name?.trim() || 
-                      formData.price === undefined || formData.price <= 0 || 
+                      formData.price === undefined || formData.price < 0 || 
                       formData.stock === undefined || formData.stock < 0 || 
                       !formData.description?.trim();
 
@@ -124,7 +134,7 @@ export default function AdminProducts() {
       toast({ 
         variant: "destructive", 
         title: "Campos Obrigatórios", 
-        description: "Certifique-se de preencher Nome, Preço (positivo), Estoque (mínimo 0) e Descrição." 
+        description: "Certifique-se de preencher Nome, Preço, Estoque e Descrição." 
       });
       return;
     }
@@ -143,13 +153,12 @@ export default function AdminProducts() {
         .then(() => {
           toast({ title: "Prato Atualizado", description: "As alterações foram salvas com sucesso." });
         })
-        .catch(async (error) => {
-          const permissionError = new FirestorePermissionError({
+        .catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
             operation: 'update',
             requestResourceData: dataToSave,
-          } satisfies SecurityRuleContext);
-          errorEmitter.emit('permission-error', permissionError);
+          } satisfies SecurityRuleContext));
         });
     } else {
       addDoc(productsCol, {
@@ -159,13 +168,12 @@ export default function AdminProducts() {
         .then(() => {
           toast({ title: "Prato Adicionado", description: "O novo item já está disponível no cardápio." });
         })
-        .catch(async (error) => {
-          const permissionError = new FirestorePermissionError({
+        .catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: productsCol.path,
             operation: 'create',
             requestResourceData: dataToSave,
-          } satisfies SecurityRuleContext);
-          errorEmitter.emit('permission-error', permissionError);
+          } satisfies SecurityRuleContext));
         });
     }
     
@@ -178,12 +186,11 @@ export default function AdminProducts() {
     const docRef = doc(db, 'products', id);
     deleteDoc(docRef).then(() => {
       toast({ title: "Prato Removido", description: "O item foi excluído permanentemente." });
-    }).catch(async (error) => {
-      const permissionError = new FirestorePermissionError({
+    }).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
         operation: 'delete',
-      } satisfies SecurityRuleContext);
-      errorEmitter.emit('permission-error', permissionError);
+      } satisfies SecurityRuleContext));
     });
   };
 
@@ -191,20 +198,7 @@ export default function AdminProducts() {
     if (!db) return;
     const docRef = doc(db, 'products', product.id);
     const newState = !product.active;
-    
-    updateDoc(docRef, { active: newState }).then(() => {
-      toast({ 
-        title: newState ? "Prato Ativado" : "Prato Desativado", 
-        description: `O prato agora está ${newState ? 'visível' : 'oculto'} para os clientes.` 
-      });
-    }).catch(async (error) => {
-      const permissionError = new FirestorePermissionError({
-        path: docRef.path,
-        operation: 'update',
-        requestResourceData: { active: newState },
-      } satisfies SecurityRuleContext);
-      errorEmitter.emit('permission-error', permissionError);
-    });
+    updateDoc(docRef, { active: newState });
   };
 
   return (
@@ -224,8 +218,8 @@ export default function AdminProducts() {
       </div>
 
       <Card className="bg-white border-areia-escura overflow-hidden">
-        <div className="p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
+        <div className="p-6 border-b border-areia-escura bg-areia-clara/20">
+          <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
               placeholder="Buscar por nome ou categoria..."
@@ -293,21 +287,17 @@ export default function AdminProducts() {
                               : "bg-gray-200 text-gray-500 border-gray-300"
                           )}
                         >
-                          {product.active !== false ? (
-                            <><CheckCircle2 className="w-3 h-3" /> Ativo</>
-                          ) : (
-                            <><XCircle className="w-3 h-3" /> Inativo</>
-                          )}
+                          {product.active !== false ? <><CheckCircle2 className="w-3 h-3" /> Ativo</> : <><XCircle className="w-3 h-3" /> Inativo</>}
                         </button>
-                        {product.featured && <Sparkles className="w-4 h-4 text-caramelo-palha" title="Destaque" />}
+                        {product.featured && <Sparkles className="w-4 h-4 text-caramelo-palha" />}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-marrom-madeira hover:bg-marrom-terra/10" onClick={() => handleOpenModal(product)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-marrom-madeira" onClick={() => handleOpenModal(product)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(product.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(product.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -316,8 +306,8 @@ export default function AdminProducts() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-cinza-organico italic font-subheadline">
-                    Nenhum prato encontrado com esses filtros.
+                  <TableCell colSpan={6} className="h-32 text-center text-cinza-organico italic">
+                    Nenhum prato encontrado.
                   </TableCell>
                 </TableRow>
               )}
@@ -330,7 +320,7 @@ export default function AdminProducts() {
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-areia-clara border-none shadow-2xl">
           <DialogHeader className="p-8 bg-marrom-escuro text-areia-clara">
             <DialogTitle className="font-headline text-2xl tracking-widest uppercase">
-              {editingProduct ? 'Editar Prato' : 'Novo Prato Amazônico'}
+              {editingProduct ? 'Editar Prato' : 'Novo Prato'}
             </DialogTitle>
           </DialogHeader>
           
@@ -342,8 +332,6 @@ export default function AdminProducts() {
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="bg-white border-areia-escura"
-                  placeholder="Ex: Filé Marajoara"
-                  required
                 />
               </div>
               
@@ -351,13 +339,13 @@ export default function AdminProducts() {
                 <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Categoria *</Label>
                 <Select 
                   value={formData.category} 
-                  onValueChange={(v: Category) => setFormData({...formData, category: v})}
+                  onValueChange={(v) => setFormData({...formData, category: v as any})}
                 >
                   <SelectTrigger className="bg-white border-areia-escura">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-areia-clara">
-                    {CATEGORIES.map(cat => (
+                    {categories.map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -372,7 +360,6 @@ export default function AdminProducts() {
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
                     className="bg-white border-areia-escura"
-                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -382,21 +369,16 @@ export default function AdminProducts() {
                     value={formData.stock}
                     onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})}
                     className="bg-white border-areia-escura"
-                    required
                   />
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-areia-escura">
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-sm border border-areia-escura">
-                  <Label htmlFor="active-toggle" className="text-xs font-bold text-marrom-madeira">Status do Prato (Ativo/Inativo)</Label>
-                  <Switch 
-                    id="active-toggle" 
-                    checked={formData.active !== false}
-                    onCheckedChange={(v) => setFormData({...formData, active: v})}
-                  />
-                </div>
-                <p className="text-[9px] text-cinza-organico italic uppercase">Produtos inativos não aparecem no cardápio digital para os clientes.</p>
+              <div className="flex items-center justify-between p-3 bg-white/50 rounded-sm border border-areia-escura">
+                <Label className="text-xs font-bold text-marrom-madeira">Status Ativo</Label>
+                <Switch 
+                  checked={formData.active !== false}
+                  onCheckedChange={(v) => setFormData({...formData, active: v})}
+                />
               </div>
             </div>
 
@@ -407,8 +389,6 @@ export default function AdminProducts() {
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className="bg-white border-areia-escura resize-none h-24"
-                  placeholder="Breve descrição para o card..."
-                  required
                 />
               </div>
 
@@ -418,18 +398,17 @@ export default function AdminProducts() {
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
                   className="bg-white border-areia-escura"
-                  placeholder="Link da imagem Unsplash/Picsum"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="flex gap-6 pt-2">
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="featured" 
                     checked={formData.featured}
                     onCheckedChange={(v) => setFormData({...formData, featured: v})}
                   />
-                  <Label htmlFor="featured" className="text-xs font-bold text-marrom-madeira">Destaque?</Label>
+                  <Label htmlFor="featured" className="text-xs font-bold text-marrom-madeira">Destaque</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch 
@@ -437,7 +416,7 @@ export default function AdminProducts() {
                     checked={formData.promotion}
                     onCheckedChange={(v) => setFormData({...formData, promotion: v})}
                   />
-                  <Label htmlFor="promo" className="text-xs font-bold text-marrom-madeira">Promoção?</Label>
+                  <Label htmlFor="promo" className="text-xs font-bold text-marrom-madeira">Promoção</Label>
                 </div>
               </div>
             </div>
@@ -445,11 +424,8 @@ export default function AdminProducts() {
 
           <DialogFooter className="p-8 bg-white border-t border-areia-escura">
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="uppercase tracking-widest text-[10px] font-bold">Cancelar</Button>
-            <Button 
-              onClick={handleSave}
-              className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-10 py-6 font-bold uppercase tracking-widest text-[10px]"
-            >
-              Salvar Prato
+            <Button onClick={handleSave} className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-10 py-6 font-bold uppercase tracking-widest text-[10px]">
+              Salvar
             </Button>
           </DialogFooter>
         </DialogContent>

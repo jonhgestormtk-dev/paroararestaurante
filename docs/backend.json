@@ -8,6 +8,7 @@
       "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
+        "longDescription": { "type": "string" },
         "price": { "type": "number" },
         "imageUrl": { "type": "string" },
         "category": { "type": "string" },
@@ -15,18 +16,23 @@
         "promotion": { "type": "boolean" },
         "active": { "type": "boolean" },
         "stock": { "type": "number" },
-        "emoji": { "type": "string" }
+        "emoji": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "object" },
+        "updatedAt": { "type": "object" }
       },
       "required": ["name", "price", "category", "description"]
     },
     "Category": {
       "title": "Category",
-      "description": "A menu category for organization.",
+      "description": "A menu category.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
         "active": { "type": "boolean" },
-        "order": { "type": "number" }
+        "order": { "type": "number" },
+        "createdAt": { "type": "object" },
+        "updatedAt": { "type": "object" }
       },
       "required": ["name", "active", "order"]
     },
@@ -39,11 +45,12 @@
           "type": "object",
           "properties": {
             "name": { "type": "string" },
-            "phone": { "type": "string" }
+            "phone": { "type": "string" },
+            "address": { "type": "string" }
           }
         },
         "total": { "type": "number" },
-        "status": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pendente", "Em Preparo", "Saiu para Entrega", "Finalizado"] },
         "items": {
           "type": "array",
           "items": {
@@ -55,7 +62,8 @@
               "quantity": { "type": "number" }
             }
           }
-        }
+        },
+        "createdAt": { "type": "object" }
       }
     }
   },
@@ -64,15 +72,15 @@
   },
   "firestore": {
     "/products/{productId}": {
-      "schema": "Product",
+      "schema": { "$ref": "#/entities/Product" },
       "description": "Collection of menu products."
     },
     "/categories/{categoryId}": {
-      "schema": "Category",
+      "schema": { "$ref": "#/entities/Category" },
       "description": "Collection of menu categories."
     },
     "/orders/{orderId}": {
-      "schema": "Order",
+      "schema": { "$ref": "#/entities/Order" },
       "description": "Collection of customer orders."
     }
   }

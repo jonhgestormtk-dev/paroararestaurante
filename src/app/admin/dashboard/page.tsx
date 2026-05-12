@@ -77,7 +77,6 @@ export default function AdminDashboard() {
       const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
       
       const catPromises = validCategories.map((catName, index) => {
-        // Criar um ID amigável para a categoria
         const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
         const catRef = doc(categoriesCol, catId);
         return setDoc(catRef, {
@@ -104,7 +103,7 @@ export default function AdminDashboard() {
       
       toast({
         title: "Sincronização Concluída",
-        description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados.`,
+        description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados para o Firestore.`,
       });
     } catch (error) {
       console.error(error);
