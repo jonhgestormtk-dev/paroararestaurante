@@ -175,7 +175,14 @@ export default function AdminDashboard() {
 
     const totalRev = allOrders.reduce((acc, order) => acc + (order.total || 0), 0);
     const monthly = allOrders.filter(order => {
-      const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000);
+      let date;
+      if (order.createdAt instanceof Timestamp) {
+        date = order.createdAt.toDate();
+      } else if (order.createdAt?.seconds) {
+        date = new Date(order.createdAt.seconds * 1000);
+      } else {
+        date = new Date(order.createdAt);
+      }
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     }).length;
 
@@ -188,23 +195,36 @@ export default function AdminDashboard() {
   }, [allOrders, allProducts]);
 
   const chartData = useMemo(() => {
-    if (!allOrders || allOrders.length === 0) return [];
+    if (!allOrders) return [];
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const dataMap: Record<string, number> = {};
+    const result = [];
+    
+    // Gera os últimos 6 meses cronologicamente, incluindo o mês atual
     for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const label = months[d.getMonth()];
-      dataMap[label] = 0;
+      const date = new Date();
+      date.setDate(1); // Evita problemas com virada de mês (ex: 31 de Março para Fevereiro)
+      date.setMonth(date.getMonth() - i);
+      
+      const monthIdx = date.getMonth();
+      const year = date.getFullYear();
+      const label = months[monthIdx];
+      
+      const pedidosNoMes = allOrders.filter(order => {
+        let orderDate;
+        if (order.createdAt instanceof Timestamp) {
+          orderDate = order.createdAt.toDate();
+        } else if (order.createdAt?.seconds) {
+          orderDate = new Date(order.createdAt.seconds * 1000);
+        } else {
+          orderDate = new Date(order.createdAt);
+        }
+        return orderDate.getMonth() === monthIdx && orderDate.getFullYear() === year;
+      }).length;
+      
+      result.push({ name: label, pedidos: pedidosNoMes });
     }
-    allOrders.forEach(order => {
-      const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000);
-      const label = months[date.getMonth()];
-      if (dataMap[label] !== undefined) {
-        dataMap[label]++;
-      }
-    });
-    return Object.entries(dataMap).map(([name, pedidos]) => ({ name, pedidos }));
+    
+    return result;
   }, [allOrders]);
 
   const metrics = [
