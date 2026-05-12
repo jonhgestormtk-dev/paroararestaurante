@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -192,7 +191,7 @@ export default function AdminOrders() {
               <div key={order.id} className="p-5 space-y-4 bg-white hover:bg-areia-clara/10 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-marrom-terra font-black">
+                    <p className="text-sm font-mono text-marrom-terra font-black tracking-widest bg-marrom-terra/5 px-2 py-0.5 rounded-sm">
                       #{order.orderNumber || order.id.substring(0, 8)}
                     </p>
                     <div className="flex items-center gap-1.5 text-xs font-bold text-marrom-madeira">

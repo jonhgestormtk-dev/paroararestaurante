@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -312,9 +311,11 @@ export default function AdminDashboard() {
                   <div key={order.id} className="flex items-center justify-between group">
                     <div className="space-y-1">
                       <p className="text-sm font-bold text-marrom-terra truncate max-w-[120px]">{order.customer.name}</p>
-                      <div className="flex items-center gap-1.5 text-[10px] text-cinza-organico italic">
+                      <div className="flex items-center gap-1.5 text-xs text-cinza-organico">
                         <Calendar className="w-3 h-3" />
-                        <span className="font-mono font-bold text-marrom-terra">#{order.orderNumber || order.id.substring(0, 8)}</span>
+                        <span className="font-mono font-black text-marrom-terra bg-marrom-terra/5 px-1.5 py-0.5 rounded-sm tracking-tighter">
+                          #{order.orderNumber || order.id.substring(0, 8)}
+                        </span>
                       </div>
                     </div>
                     <Badge variant="outline" className={cn(
