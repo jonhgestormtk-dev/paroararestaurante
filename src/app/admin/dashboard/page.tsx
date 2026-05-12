@@ -14,7 +14,16 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, limit, orderBy, Timestamp, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { 
+  collection, 
+  query, 
+  limit, 
+  orderBy, 
+  Timestamp, 
+  doc, 
+  writeBatch, 
+  serverTimestamp 
+} from 'firebase/firestore';
 import { Order, Product } from '@/lib/types';
 import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { 
@@ -57,14 +66,14 @@ export default function AdminDashboard() {
     if (!db) return null;
     return collection(db, 'products');
   }, [db]);
-  const { data: allProducts } = useCollection<Product>(productsQuery);
+  const { data: allProducts, loading: loadingProducts } = useCollection<Product>(productsQuery);
 
   // Buscar categorias
   const catQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'categories');
   }, [db]);
-  const { data: allCategories } = useCollection(catQuery);
+  const { data: allCategories, loading: loadingCategories } = useCollection(catQuery);
 
   // Função para popular o banco de dados (Produtos e Categorias)
   const seedDatabase = async () => {
@@ -72,14 +81,15 @@ export default function AdminDashboard() {
     setIsSeeding(true);
     
     try {
+      const batch = writeBatch(db);
+      
       // 1. Migrar Categorias
-      const categoriesCol = collection(db, 'categories');
       const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
       
-      const catPromises = validCategories.map((catName, index) => {
+      validCategories.forEach((catName, index) => {
         const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-        const catRef = doc(categoriesCol, catId);
-        return setDoc(catRef, {
+        const catRef = doc(db, 'categories', catId);
+        batch.set(catRef, {
           name: catName,
           active: true,
           order: index * 10,
@@ -89,11 +99,10 @@ export default function AdminDashboard() {
       });
 
       // 2. Migrar Produtos
-      const productsCol = collection(db, 'products');
-      const productPromises = PRODUCTS.map((product) => {
-        const productRef = doc(productsCol, product.id);
+      PRODUCTS.forEach((product) => {
+        const productRef = doc(db, 'products', product.id);
         const { id, ...productData } = product;
-        return setDoc(productRef, {
+        batch.set(productRef, {
           ...productData,
           active: productData.active ?? true,
           createdAt: serverTimestamp(),
@@ -101,18 +110,18 @@ export default function AdminDashboard() {
         }, { merge: true });
       });
 
-      await Promise.all([...catPromises, ...productPromises]);
+      await batch.commit();
       
       toast({
         title: "Banco de Dados Criado",
         description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados com sucesso.`,
       });
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao popular banco:', error);
       toast({
         variant: "destructive",
         title: "Erro na Migração",
-        description: "Não foi possível popular o banco de dados.",
+        description: "Não foi possível popular o banco de dados. Verifique sua conexão.",
       });
     } finally {
       setIsSeeding(false);
@@ -172,7 +181,8 @@ export default function AdminDashboard() {
     { label: 'Pedidos do Mês', value: stats.monthlyOrders, icon: TrendingUp, color: 'text-marrom-madeira' },
   ];
 
-  const needsMigration = (!allProducts || allProducts.length === 0) || (!allCategories || allCategories.length === 0);
+  // Só mostra que precisa de migração se o carregamento terminou e as coleções estão vazias
+  const needsMigration = !loadingProducts && !loadingCategories && ((!allProducts || allProducts.length === 0) || (!allCategories || allCategories.length === 0));
 
   return (
     <div className="space-y-10">
