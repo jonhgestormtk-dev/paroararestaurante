@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -17,10 +16,10 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
 
   const handleSendToWhatsApp = () => {
-    const whatsappNumber = '+559184541085';
+    const whatsappNumber = '559184541085';
     
     let orderText = `Olá, gostaria de fazer este pedido:\n\n🛒 PEDIDO — PAROARA\n\n`;
     
@@ -35,7 +34,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     orderText += `-------------------\nNome:\nEndereço:\nForma de pagamento:\n-------------------`;
 
     const encodedText = encodeURIComponent(orderText);
-    window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedText}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodedText}`, '_blank');
+    
+    // Limpa o carrinho e fecha a gaveta após enviar
+    clearCart();
+    onClose();
   };
 
   return (
