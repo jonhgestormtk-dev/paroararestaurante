@@ -11,7 +11,7 @@ Como sou um assistente de IA, não posso realizar o login e o push diretamente n
 3. **Execute os seguintes comandos:**
 
 ```bash
-# Inicie o repositório local
+# Inicie o repositório local (se ainda não o fez)
 git init
 
 # Adicione todos os arquivos
@@ -23,12 +23,17 @@ git commit -m "Initial commit: Paroara Menu"
 # Renomeie a branch para main (padrão GitHub)
 git branch -M main
 
-# Conecte ao seu repositório remoto (substitua pela sua URL)
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+# Conecte ao seu repositório remoto
+# Se der erro "remote origin already exists", rode: git remote remove origin
+git remote add origin https://github.com/jonhgestormtk-dev/paroararestaurante.git
 
 # Envie os arquivos
 git push -u origin main
 ```
+
+### Problemas Comuns
+- **Erro: "remote origin already exists"**: Rode `git remote remove origin` antes de tentar adicionar novamente ou use `git remote set-url origin <sua-url>`.
+- **Permissão negada (403)**: Verifique se você está logado no terminal com as credenciais corretas do GitHub.
 
 ## Tecnologias Utilizadas
 
