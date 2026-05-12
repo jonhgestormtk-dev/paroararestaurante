@@ -7,7 +7,7 @@
  * para o projeto 'restaurante-paroara'.
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyC-ffccYES59UMeXV6kG4751gIPQsMVr4c", // Temporário: Atualize após criar o projeto
+  apiKey: "AIzaSyC-ffccYES59UMeXV6kG4751gIPQsMVr4c", // Substitua pela sua apiKey real
   authDomain: "restaurante-paroara.firebaseapp.com",
   projectId: "restaurante-paroara",
   storageBucket: "restaurante-paroara.firebasestorage.app",
