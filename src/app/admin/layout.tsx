@@ -11,7 +11,8 @@ import {
   LogOut, 
   Star,
   Menu,
-  X
+  X,
+  Tags
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -50,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { label: 'Produtos', icon: Package, path: '/admin/produtos' },
+    { label: 'Categorias', icon: Tags, path: '/admin/categorias' },
     { label: 'Pedidos', icon: ShoppingBag, path: '/admin/pedidos' },
     { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
   ];
