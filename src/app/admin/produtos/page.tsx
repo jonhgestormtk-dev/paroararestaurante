@@ -114,52 +114,59 @@ export default function AdminProducts() {
   const handleSave = () => {
     if (!db) return;
 
-    // Validação de campos obrigatórios
-    if (!formData.name?.trim() || !formData.price || formData.price <= 0 || !formData.stock || formData.stock < 0 || !formData.description?.trim()) {
+    // Validação aprimorada de campos obrigatórios
+    const isInvalid = !formData.name?.trim() || 
+                      formData.price === undefined || formData.price <= 0 || 
+                      formData.stock === undefined || formData.stock < 0 || 
+                      !formData.description?.trim();
+
+    if (isInvalid) {
       toast({ 
         variant: "destructive", 
         title: "Campos Obrigatórios", 
-        description: "Nome, preço (positivo), estoque (mínimo 0) e descrição curta são necessários." 
+        description: "Certifique-se de preencher Nome, Preço (positivo), Estoque (mínimo 0) e Descrição." 
       });
       return;
     }
 
     const dataToSave = { 
       ...formData,
-      active: formData.active ?? true
+      active: formData.active ?? true,
+      updatedAt: serverTimestamp()
     };
     
     const productsCol = collection(db, 'products');
 
     if (editingProduct) {
       const docRef = doc(db, 'products', editingProduct.id);
-      updateDoc(docRef, {
-        ...dataToSave,
-        updatedAt: serverTimestamp()
-      }).then(() => {
-        toast({ title: "Prato Atualizado", description: "As alterações foram salvas com sucesso." });
-      }).catch(async (error) => {
-        const permissionError = new FirestorePermissionError({
-          path: docRef.path,
-          operation: 'update',
-          requestResourceData: dataToSave,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-      });
+      updateDoc(docRef, dataToSave)
+        .then(() => {
+          toast({ title: "Prato Atualizado", description: "As alterações foram salvas com sucesso." });
+        })
+        .catch(async (error) => {
+          const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: dataToSave,
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+        });
     } else {
       addDoc(productsCol, {
         ...dataToSave,
         createdAt: serverTimestamp()
-      }).then(() => {
-        toast({ title: "Prato Adicionado", description: "O novo item já está disponível no cardápio." });
-      }).catch(async (error) => {
-        const permissionError = new FirestorePermissionError({
-          path: productsCol.path,
-          operation: 'create',
-          requestResourceData: dataToSave,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-      });
+      })
+        .then(() => {
+          toast({ title: "Prato Adicionado", description: "O novo item já está disponível no cardápio." });
+        })
+        .catch(async (error) => {
+          const permissionError = new FirestorePermissionError({
+            path: productsCol.path,
+            operation: 'create',
+            requestResourceData: dataToSave,
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+        });
     }
     
     setIsModalOpen(false);
