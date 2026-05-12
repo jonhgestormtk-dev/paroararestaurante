@@ -2,6 +2,7 @@
 
 /**
  * Configuração oficial do Firebase para o projeto Paroara.
+ * Utilizando as credenciais fornecidas para conexão direta.
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyA2oTnfv2ghHMg-gE6A8myGBHGElaQUQWU",

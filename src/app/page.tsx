@@ -149,7 +149,7 @@ export default function Home() {
             <nav className="flex flex-col gap-4 text-sm">
               <h4 className="font-headline text-xl text-caramelo-palha mb-2">Menu</h4>
               <Link href="/" className="hover:text-caramelo-palha">Home</Link>
-              <Link href="#menu" className="hover:text-caramelo-palha">Cardápio</Link>
+              <Link href="/produtos" className="hover:text-caramelo-palha">Cardápio</Link>
               <Link href="/admin/login" className="text-caramelo-palha/60">Admin</Link>
             </nav>
             <div className="space-y-4 text-sm">
