@@ -2,55 +2,41 @@
 
 Projeto de cardápio digital com temática de Rusticidade Amazônica Premium.
 
-## 🚀 Como configurar o Firebase
+## 🚀 Como configurar o NOVO Firebase (restaurante-paroara)
 
-Se você está criando um novo projeto do zero, siga estes passos:
+Siga estes passos para configurar seu novo ambiente:
 
 1. **Acesse o Console:** [console.firebase.google.com](https://console.firebase.google.com)
 2. **Crie o Projeto:**
    - Clique em "Adicionar projeto".
    - Nome: `restaurante-paroara`.
-   - Google Analytics: Pode desativar para este protótipo.
+   - Google Analytics: Desative para este protótipo.
 3. **Configure o Firestore:**
-   - No menu lateral, clique em **Firestore Database**.
+   - No menu lateral, vá em **Firestore Database**.
    - Clique em **Criar banco de dados**.
-   - Escolha o modo de teste (regras abertas) ou aplique as regras do arquivo `firestore.rules`.
+   - Escolha o modo de teste (regras abertas) para desenvolvimento inicial.
 4. **Obtenha as Credenciais:**
    - Clique no ícone de engrenagem (Configurações do projeto).
    - Na aba "Geral", role até "Seus aplicativos" e adicione um Web App.
-   - Copie o objeto `firebaseConfig` e me envie para eu atualizar o código!
+   - Copie o objeto `firebaseConfig` e cole aqui no chat para eu atualizar o código!
 
 ## 📦 Como exportar para o seu GitHub
 
-Como sou um assistente de IA, não posso realizar o login e o push diretamente na sua conta, mas você pode fazer isso facilmente seguindo estes passos no terminal do Firebase Studio:
-
-1. **Crie um repositório vazio no GitHub** (sem README ou licença).
-2. **Abra o Terminal** no Firebase Studio (ícone de terminal na barra inferior).
-3. **Execute os seguintes comandos:**
+1. **Abra o Terminal** no Firebase Studio.
+2. **Execute os comandos:**
 
 ```bash
-# Inicie o repositório local
-git init
+# Caso o origin já exista, remova-o primeiro:
+git remote remove origin
 
-# Adicione todos os arquivos
-git add .
-
-# Faça o primeiro commit
-git commit -m "Initial commit: Paroara Menu"
-
-# Renomeie a branch para main
-git branch -M main
-
-# Conecte ao seu repositório remoto
+# Conecte ao seu repositório
 git remote add origin https://github.com/jonhgestormtk-dev/paroararestaurante.git
 
-# Envie os arquivos (force se o repositório não estiver vazio)
+# Envie os arquivos (force se o repositório no GitHub não estiver vazio)
+git add .
+git commit -m "Setup: Novo projeto Firebase"
 git push -u origin main --force
 ```
-
-### Problemas Comuns
-- **Erro: "remote origin already exists"**: Rode `git remote remove origin` antes de tentar adicionar novamente.
-- **Erro: "rejected (fetch first)"**: Use a flag `--force` no push para sobrescrever o remoto.
 
 ---
 Desenvolvido como protótipo premium para culinária marajoara.
