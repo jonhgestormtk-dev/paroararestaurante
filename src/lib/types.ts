@@ -1,5 +1,5 @@
 
-export type Category = 'Todos' | 'Promoções' | 'Executivos' | 'Grelhados' | 'Massas' | 'Bebidas' | 'Regionais' | 'Sobremesas';
+export type Category = 'Todos' | 'Promoções' | 'Executivos' | 'Grelhados' | 'Massas' | 'Bebidas' | 'Regionais' | 'Sobremesas' | 'Peixes' | 'Carnes';
 
 export interface Product {
   id: string;
