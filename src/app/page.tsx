@@ -22,25 +22,36 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
 
-  // Fetch Highlights (featured == true)
+  // Buscar Destaques ativos
   const featuredQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), where('featured', '==', true));
+    return query(
+      collection(db, 'products'), 
+      where('featured', '==', true)
+    );
   }, [db]);
-  const { data: featuredProducts } = useCollection<Product>(featuredQuery);
+  const { data: featuredProductsRaw } = useCollection<Product>(featuredQuery);
 
-  // Fetch All Products (for the menu)
+  // Filtrar apenas ativos no cliente para featured
+  const featuredProducts = useMemo(() => {
+    if (!featuredProductsRaw) return [];
+    return featuredProductsRaw.filter(p => p.active !== false);
+  }, [featuredProductsRaw]);
+
+  // Buscar Todos os Produtos
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'products');
   }, [db]);
-  const { data: allProducts } = useCollection<Product>(allProductsQuery);
+  const { data: allProductsRaw } = useCollection<Product>(allProductsQuery);
 
+  // Lógica de filtragem: Apenas ativos + Categoria
   const filteredProducts = useMemo(() => {
-    if (!allProducts) return [];
-    if (activeCategory === 'Todos') return allProducts;
-    return allProducts.filter(p => p.category === activeCategory);
-  }, [activeCategory, allProducts]);
+    if (!allProductsRaw) return [];
+    const activeOnly = allProductsRaw.filter(p => p.active !== false);
+    if (activeCategory === 'Todos') return activeOnly;
+    return activeOnly.filter(p => p.category === activeCategory);
+  }, [activeCategory, allProductsRaw]);
 
   return (
     <CartProvider>
@@ -147,7 +158,7 @@ export default function Home() {
                 <a href="#menu" className="hover:text-caramelo-palha transition-colors">Nosso Cardápio</a>
                 <a href="#" className="hover:text-caramelo-palha transition-colors">Ofertas Especiais</a>
                 <a href="#" className="hover:text-caramelo-palha transition-colors">Contate-nos</a>
-                <a href="#" className="hover:text-caramelo-palha transition-colors font-bold text-caramelo-palha/80">Área Administrativa</a>
+                <a href="/admin/login" className="hover:text-caramelo-palha transition-colors font-bold text-caramelo-palha/80">Área Administrativa</a>
               </nav>
             </div>
 

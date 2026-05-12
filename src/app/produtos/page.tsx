@@ -57,18 +57,19 @@ export default function MenuPage() {
 
   const { data: allProducts, loading } = useCollection<Product>(productsQuery);
 
-  // Filtering Logic
+  // Lógica de filtragem REAL do Firestore
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
     
     return allProducts
       .filter(p => {
+        const isActive = p.active !== false; // Apenas produtos ativos
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               p.description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
         const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
         
-        return matchesSearch && matchesCategory && matchesPrice;
+        return isActive && matchesSearch && matchesCategory && matchesPrice;
       })
       .sort((a, b) => {
         if (sortBy === 'price-asc') return a.price - b.price;
@@ -79,7 +80,7 @@ export default function MenuPage() {
       });
   }, [allProducts, searchTerm, activeCategory, priceRange, sortBy]);
 
-  // Pagination Logic
+  // Lógica de Paginação
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
