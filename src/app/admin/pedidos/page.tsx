@@ -16,7 +16,8 @@ import {
   Truck,
   AlertCircle,
   User,
-  Package
+  Package,
+  Edit2
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -47,6 +48,14 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
@@ -60,9 +69,13 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [editFormData, setEditFormData] = useState({ name: '', phone: '', address: '' });
+  
   const { toast } = useToast();
-
   const db = useFirestore();
+
   const ordersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
@@ -104,6 +117,31 @@ export default function AdminOrders() {
       toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
     } catch (e) {
       toast({ variant: "destructive", title: "Erro ao Atualizar", description: "Não foi possível alterar o status do pedido." });
+    }
+  };
+
+  const handleOpenEditModal = (order: Order) => {
+    setEditingOrder(order);
+    setEditFormData({
+      name: order.customer.name,
+      phone: order.customer.phone,
+      address: order.customer.address || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!db || !editingOrder) return;
+    try {
+      await updateDoc(doc(db, 'orders', editingOrder.id), {
+        'customer.name': editFormData.name,
+        'customer.phone': editFormData.phone,
+        'customer.address': editFormData.address
+      });
+      toast({ title: "Pedido Atualizado", description: "Os dados do cliente foram salvos." });
+      setIsEditModalOpen(false);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Erro ao Editar", description: "Não foi possível salvar as alterações." });
     }
   };
 
@@ -191,7 +229,7 @@ export default function AdminOrders() {
               <div key={order.id} className="p-5 space-y-4 bg-white hover:bg-areia-clara/10 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-sm font-mono text-marrom-terra font-black tracking-widest bg-marrom-terra/5 px-2 py-0.5 rounded-sm">
+                    <p className="text-base font-mono text-marrom-terra font-black tracking-widest bg-marrom-terra/5 px-2 py-0.5 rounded-sm">
                       #{order.orderNumber || order.id.substring(0, 8)}
                     </p>
                     <div className="flex items-center gap-1.5 text-xs font-bold text-marrom-madeira">
@@ -250,6 +288,11 @@ export default function AdminOrders() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura w-56">
+                        {order.status === 'Pendente' && (
+                          <DropdownMenuItem onClick={() => handleOpenEditModal(order)} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
+                            <Edit2 className="w-4 h-4 text-marrom-madeira" /> Editar Dados
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="py-3 text-xs uppercase font-bold tracking-widest gap-2">
                           <Clock className="w-4 h-4 text-caramelo-palha" /> Pendente
                         </DropdownMenuItem>
@@ -298,7 +341,7 @@ export default function AdminOrders() {
                 filteredOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-areia-media/5 border-areia-escura group transition-colors">
                     <TableCell>
-                      <p className="text-[10px] font-mono text-marrom-terra font-black">
+                      <p className="text-xs font-mono text-marrom-terra font-black">
                         #{order.orderNumber || order.id.substring(0, 8)}
                       </p>
                     </TableCell>
@@ -336,6 +379,11 @@ export default function AdminOrders() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura">
+                          {order.status === 'Pendente' && (
+                            <DropdownMenuItem onClick={() => handleOpenEditModal(order)} className="text-xs uppercase font-bold tracking-widest gap-2">
+                              <Edit2 className="w-3 h-3 text-marrom-madeira" /> Editar Dados
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="text-xs uppercase font-bold tracking-widest gap-2">
                             <Clock className="w-3 h-3 text-caramelo-palha" /> Pendente
                           </DropdownMenuItem>
@@ -368,6 +416,53 @@ export default function AdminOrders() {
           </Table>
         </div>
       </Card>
+
+      {/* Modal de Edição */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="bg-areia-clara border-none shadow-2xl p-0 overflow-hidden max-w-md">
+          <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara">
+            <DialogTitle className="font-headline tracking-widest uppercase">
+              Editar Dados do Cliente
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Nome do Cliente</Label>
+              <Input 
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                className="bg-white border-areia-escura"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">WhatsApp / Telefone</Label>
+              <Input 
+                value={editFormData.phone}
+                onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                className="bg-white border-areia-escura"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Endereço de Entrega</Label>
+              <Input 
+                value={editFormData.address}
+                onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                className="bg-white border-areia-escura"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 bg-white border-t border-areia-escura">
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="text-[10px] uppercase font-bold tracking-widest">Cancelar</Button>
+            <Button onClick={handleSaveEdit} className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-6 font-bold uppercase tracking-widest text-[10px]">
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
