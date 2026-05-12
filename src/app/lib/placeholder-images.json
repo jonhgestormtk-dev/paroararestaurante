@@ -1,0 +1,41 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-banner",
+      "description": "Amazonian sunset with river and palm trees",
+      "imageUrl": "https://picsum.photos/seed/paroara-hero/1200/600",
+      "imageHint": "amazon forest"
+    },
+    {
+      "id": "tacaca",
+      "description": "Traditional Tacacá soup in a gourd",
+      "imageUrl": "https://picsum.photos/seed/tacaca/600/600",
+      "imageHint": "amazon soup"
+    },
+    {
+      "id": "file-marajoara",
+      "description": "Gourmet steak with buffalo cheese and regional sauce",
+      "imageUrl": "https://picsum.photos/seed/steak/600/600",
+      "imageHint": "grilled steak"
+    },
+    {
+      "id": "fish-tambaqui",
+      "description": "Grilled Tambaqui fish ribs",
+      "imageUrl": "https://picsum.photos/seed/tambaqui/600/600",
+      "imageHint": "grilled fish"
+    },
+    {
+      "id": "dessert-cupuacu",
+      "description": "Cupuaçu cream with chocolate crumble",
+      "imageUrl": "https://picsum.photos/seed/cupuacu/600/600",
+      "imageHint": "tropical dessert"
+    },
+    {
+      "id": "drink-caipirinha",
+      "description": "Amazonian fruit caipirinha with jambu",
+      "imageUrl": "https://picsum.photos/seed/drink/600/600",
+      "imageHint": "tropical cocktail"
+    }
+  ]
+}
