@@ -2,7 +2,7 @@
 
 /**
  * Configuração oficial do Firebase para o projeto Paroara.
- * Integrado em: restaurante-paroara
+ * Substituído pelos valores reais do projeto: restaurante-paroara
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyA_vPp-IuTfHyepKsRRnllHGMQfgzaNHZc",
