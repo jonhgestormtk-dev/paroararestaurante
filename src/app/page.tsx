@@ -120,18 +120,18 @@ export default function Home() {
           <Hero />
           <PromoBanner />
           
-          <section className="container mx-auto px-4 py-20">
-            <div className="text-center mb-16 space-y-4">
-              <div className="flex items-center justify-center gap-3 text-caramelo-palha mb-2">
-                <Sparkles className="w-5 h-5 fill-caramelo-palha" />
-                <span className="text-xs font-body uppercase tracking-[0.4em] font-bold">Favoritos</span>
-                <Sparkles className="w-5 h-5 fill-caramelo-palha" />
+          <section className="container mx-auto px-4 py-12 md:py-20">
+            <div className="text-center mb-10 md:mb-16 space-y-2 md:space-y-4">
+              <div className="flex items-center justify-center gap-2 md:gap-3 text-caramelo-palha mb-1">
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5 fill-caramelo-palha" />
+                <span className="text-[10px] md:text-xs font-body uppercase tracking-[0.3em] font-bold">Favoritos</span>
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5 fill-caramelo-palha" />
               </div>
-              <h2 className="text-4xl md:text-5xl font-headline text-marrom-terra">Destaques da Casa</h2>
-              <div className="w-24 h-1 bg-caramelo-palha mx-auto mt-6 rounded-full opacity-60"></div>
+              <h2 className="text-3xl md:text-5xl font-headline text-marrom-terra">Destaques da Casa</h2>
+              <div className="w-16 md:w-24 h-1 bg-caramelo-palha mx-auto mt-4 rounded-full opacity-60"></div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
                   <ProductCard 
@@ -142,7 +142,7 @@ export default function Home() {
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-cinza-organico italic">
-                  {productsLoading ? <Loader2 className="w-8 h-8 animate-spin mx-auto opacity-20" /> : "Preparando destaques..."}
+                  {productsLoading ? <Loader2 className="w-6 h-6 md:w-8 md:h-8 animate-spin mx-auto opacity-20" /> : "Preparando destaques..."}
                 </div>
               )}
             </div>
@@ -150,9 +150,9 @@ export default function Home() {
 
           <ExperienceSection />
           
-          <div id="menu" className="relative scroll-mt-[130px]">
-            <div className="container mx-auto px-4 pt-20 text-center">
-              <h2 className="text-4xl font-headline text-marrom-terra mb-12">Nosso Cardápio</h2>
+          <div id="menu" className="relative scroll-mt-[100px] md:scroll-mt-[130px]">
+            <div className="container mx-auto px-4 pt-12 md:pt-20 text-center">
+              <h2 className="text-3xl md:text-4xl font-headline text-marrom-terra mb-8 md:mb-12">Nosso Cardápio</h2>
             </div>
             
             <CategoryFilter 
@@ -161,10 +161,10 @@ export default function Home() {
               onSelect={setActiveCategory as any} 
             />
 
-            <section className="container mx-auto px-4 py-16">
+            <section className="container mx-auto px-4 py-12 md:py-16">
               {productsLoading ? (
-                <div className="flex justify-center py-20">
-                  <Loader2 className="w-10 h-10 animate-spin text-marrom-terra opacity-20" />
+                <div className="flex justify-center py-12 md:py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-marrom-terra opacity-20" />
                 </div>
               ) : filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
@@ -177,8 +177,8 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 bg-areia-media/10 rounded-2xl border border-dashed border-areia-escura/40">
-                  <p className="text-cinza-organico italic">Nenhum prato nesta categoria.</p>
+                <div className="text-center py-12 md:py-20 bg-areia-media/10 rounded-2xl border border-dashed border-areia-escura/40">
+                  <p className="text-sm md:text-base text-cinza-organico italic">Nenhum prato nesta categoria.</p>
                 </div>
               )}
             </section>
@@ -187,20 +187,20 @@ export default function Home() {
           <WhatsAppCTA />
         </main>
 
-        <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-24 pb-36">
-          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-16">
-            <div className="space-y-4">
-              <h3 className="font-headline text-4xl text-caramelo-palha">PAROARA</h3>
-              <p className="text-sm italic opacity-80">O verdadeiro restaurante marajoara no coração de Belém.</p>
+        <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-16 md:py-24 pb-32">
+          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16">
+            <div className="space-y-4 text-center md:text-left">
+              <h3 className="font-headline text-3xl md:text-4xl text-caramelo-palha">PAROARA</h3>
+              <p className="text-xs md:text-sm italic opacity-80">O verdadeiro restaurante marajoara no coração de Belém.</p>
             </div>
-            <nav className="flex flex-col gap-4 text-sm">
-              <h4 className="font-headline text-xl text-caramelo-palha mb-2">Menu</h4>
+            <nav className="flex flex-col items-center md:items-start gap-3 md:gap-4 text-xs md:text-sm">
+              <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-1 md:mb-2">Menu</h4>
               <Link href="/" className="hover:text-caramelo-palha">Home</Link>
               <Link href="/produtos" className="hover:text-caramelo-palha">Cardápio</Link>
               <Link href="/admin/login" className="text-caramelo-palha/60">Admin</Link>
             </nav>
-            <div className="space-y-4 text-sm">
-              <h4 className="font-headline text-xl text-caramelo-palha mb-2">Visite-nos</h4>
+            <div className="space-y-3 md:space-y-4 text-xs md:text-sm text-center md:text-left">
+              <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-1 md:mb-2">Visite-nos</h4>
               <p>Av. Gentil Bittencourt, 2231 - Belém/PA</p>
               <p>Terça a Domingo: 11h às 15h e 18h às 23h30</p>
             </div>
