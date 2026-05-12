@@ -7,6 +7,7 @@ import {
   LayoutDashboard, 
   Package, 
   ShoppingBag, 
+  Settings,
   LogOut, 
   Star,
   Menu,
@@ -50,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { label: 'Produtos', icon: Package, path: '/admin/produtos' },
     { label: 'Pedidos', icon: ShoppingBag, path: '/admin/pedidos' },
+    { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
   ];
 
   if (pathname === '/admin/login') return <>{children}</>;
