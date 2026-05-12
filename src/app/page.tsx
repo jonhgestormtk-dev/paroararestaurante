@@ -23,6 +23,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
 
+  // Buscar categorias ordenadas
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -37,12 +38,12 @@ export default function Home() {
     return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Executivos', 'Bebidas'];
   }, [firestoreCategories]);
 
+  // Buscar produtos em destaque
   const featuredQuery = useMemo(() => {
     if (!db) return null;
     return query(
       collection(db, 'products'), 
-      where('featured', '==', true),
-      orderBy('createdAt', 'desc')
+      where('featured', '==', true)
     );
   }, [db]);
   const { data: featuredProductsRaw } = useCollection<Product>(featuredQuery);
@@ -52,9 +53,10 @@ export default function Home() {
     return featuredProductsRaw.filter(p => p.active !== false);
   }, [featuredProductsRaw]);
 
+  // Buscar todos os produtos
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    return collection(db, 'products');
   }, [db]);
   const { data: allProductsRaw, loading: productsLoading } = useCollection<Product>(allProductsQuery);
 

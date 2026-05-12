@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
   DollarSign, 
@@ -36,7 +36,7 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -77,8 +77,14 @@ export default function AdminDashboard() {
 
   // Função para popular o banco de dados (Produtos e Categorias)
   const seedDatabase = async () => {
-    if (!db) return;
+    if (!db) {
+      console.error("Firestore não inicializado");
+      toast({ variant: "destructive", title: "Erro", description: "Banco de dados não conectado." });
+      return;
+    }
+    
     setIsSeeding(true);
+    console.log("Iniciando migração de dados...");
     
     try {
       const batch = writeBatch(db);
@@ -111,17 +117,18 @@ export default function AdminDashboard() {
       });
 
       await batch.commit();
+      console.log("Migração concluída com sucesso!");
       
       toast({
         title: "Banco de Dados Criado",
         description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados com sucesso.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao popular banco:', error);
       toast({
         variant: "destructive",
         title: "Erro na Migração",
-        description: "Não foi possível popular o banco de dados. Verifique sua conexão.",
+        description: error.message || "Não foi possível popular o banco de dados.",
       });
     } finally {
       setIsSeeding(false);
@@ -155,7 +162,7 @@ export default function AdminDashboard() {
   }, [allOrders, allProducts]);
 
   const chartData = useMemo(() => {
-    if (!allOrders) return [];
+    if (!allOrders || allOrders.length === 0) return [];
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const dataMap: Record<string, number> = {};
     for (let i = 5; i >= 0; i--) {
@@ -181,8 +188,10 @@ export default function AdminDashboard() {
     { label: 'Pedidos do Mês', value: stats.monthlyOrders, icon: TrendingUp, color: 'text-marrom-madeira' },
   ];
 
-  // Só mostra que precisa de migração se o carregamento terminou e as coleções estão vazias
-  const needsMigration = !loadingProducts && !loadingCategories && ((!allProducts || allProducts.length === 0) || (!allCategories || allCategories.length === 0));
+  // Mostra que precisa de migração se o carregamento terminou e as coleções estão vazias
+  const needsMigration = !loadingProducts && !loadingCategories && 
+    (!allProducts || allProducts.length === 0) && 
+    (!allCategories || allCategories.length === 0);
 
   return (
     <div className="space-y-10">
@@ -203,8 +212,14 @@ export default function AdminDashboard() {
           </Button>
         ) : (
           <div className="flex items-center gap-2 text-verde-folha bg-verde-folha/10 px-4 py-2 rounded-sm border border-verde-folha/20">
-            <Package className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Banco de Dados Ativo</span>
+            {loadingProducts || loadingCategories ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Package className="w-4 h-4" />
+            )}
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              {loadingProducts || loadingCategories ? 'Verificando dados...' : 'Banco de Dados Ativo'}
+            </span>
           </div>
         )}
       </div>
@@ -260,7 +275,9 @@ export default function AdminDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-cinza-organico italic">Aguardando dados de pedidos...</div>
+              <div className="flex items-center justify-center h-full text-cinza-organico italic">
+                {allOrders ? "Aguardando primeiro pedido..." : "Carregando dados..."}
+              </div>
             )}
           </CardContent>
         </Card>
