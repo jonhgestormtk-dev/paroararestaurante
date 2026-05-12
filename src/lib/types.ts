@@ -13,6 +13,8 @@ export interface Product {
   featured?: boolean;
   ingredients?: string[];
   emoji?: string;
+  stock?: number;
+  createdAt?: any;
 }
 
 export interface CartItem extends Product {
@@ -20,9 +22,22 @@ export interface CartItem extends Product {
   observations?: string;
 }
 
-export interface RestaurantConfig {
-  whatsappNumber: string;
-  deliveryFee: number;
-  isOpen: boolean;
-  openingHours: string;
+export type OrderStatus = 'Pendente' | 'Em Preparo' | 'Saiu para Entrega' | 'Finalizado';
+
+export interface Order {
+  id: string;
+  customer: {
+    name: string;
+    phone: string;
+    address?: string;
+  };
+  items: {
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }[];
+  total: number;
+  status: OrderStatus;
+  createdAt: any;
 }

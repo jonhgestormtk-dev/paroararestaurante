@@ -16,9 +16,42 @@
         "featured": { "type": "boolean" },
         "promotion": { "type": "boolean" },
         "ingredients": { "type": "array", "items": { "type": "string" } },
-        "emoji": { "type": "string" }
+        "emoji": { "type": "string" },
+        "stock": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "price", "category"]
+    },
+    "Order": {
+      "title": "Pedido",
+      "description": "Um pedido realizado por um cliente.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customer": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "phone": { "type": "string" },
+            "address": { "type": "string" }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "number" }
+            }
+          }
+        },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pendente", "Em Preparo", "Saiu para Entrega", "Finalizado"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -28,6 +61,10 @@
     "/products/{productId}": {
       "schema": "Product",
       "description": "Coleção de produtos do cardápio."
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Coleção de pedidos do restaurante."
     }
   }
 }
