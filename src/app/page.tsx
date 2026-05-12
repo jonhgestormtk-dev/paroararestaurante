@@ -22,7 +22,6 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
 
-  // Buscar Categorias dinâmicas
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -37,7 +36,6 @@ export default function Home() {
     return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Executivos', 'Bebidas'];
   }, [firestoreCategories]);
 
-  // Buscar Destaques
   const featuredQuery = useMemo(() => {
     if (!db) return null;
     return query(
@@ -53,7 +51,6 @@ export default function Home() {
     return featuredProductsRaw.filter(p => p.active !== false);
   }, [featuredProductsRaw]);
 
-  // Buscar Todos os Produtos
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
@@ -76,7 +73,6 @@ export default function Home() {
           <Hero />
           <PromoBanner />
           
-          {/* Highlights Section */}
           <section className="container mx-auto px-4 py-20">
             <div className="text-center mb-16 space-y-4">
               <div className="flex items-center justify-center gap-3 text-caramelo-palha mb-2">

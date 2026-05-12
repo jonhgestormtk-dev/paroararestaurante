@@ -2,7 +2,6 @@
 
 /**
  * Configuração oficial do Firebase para o projeto Paroara.
- * Estes valores conectam o app diretamente aos serviços do Google Cloud.
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyA2oTnfv2ghHMg-gE6A8myGBHGElaQUQWU",
