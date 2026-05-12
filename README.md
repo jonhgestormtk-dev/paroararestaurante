@@ -6,7 +6,7 @@ Projeto de cardápio digital com temática de Rusticidade Amazônica Premium.
 
 Como sou um assistente de IA, não posso realizar o login e o push diretamente na sua conta, mas você pode fazer isso facilmente seguindo estes passos no terminal do Firebase Studio:
 
-1. **Crie um repositório vazio no GitHub** (não adicione README ou licença ainda).
+1. **Crie um repositório vazio no GitHub** (recomenda-se não adicionar README ou licença ainda).
 2. **Abra o Terminal** no Firebase Studio (ícone de terminal na barra inferior).
 3. **Execute os seguintes comandos:**
 
@@ -28,11 +28,13 @@ git branch -M main
 git remote add origin https://github.com/jonhgestormtk-dev/paroararestaurante.git
 
 # Envie os arquivos
-git push -u origin main
+# Se o push for rejeitado (rejected), use a flag --force conforme abaixo:
+git push -u origin main --force
 ```
 
 ### Problemas Comuns
-- **Erro: "remote origin already exists"**: Rode `git remote remove origin` antes de tentar adicionar novamente ou use `git remote set-url origin <sua-url>`.
+- **Erro: "remote origin already exists"**: Rode `git remote remove origin` antes de tentar adicionar novamente.
+- **Erro: "rejected (fetch first)"**: Isso ocorre se o repositório remoto tiver arquivos que você não tem localmente. Use `git push -u origin main --force` para sobrescrever o remoto com seu código atual.
 - **Permissão negada (403)**: Verifique se você está logado no terminal com as credenciais corretas do GitHub.
 
 ## Tecnologias Utilizadas
