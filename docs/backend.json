@@ -72,15 +72,15 @@
   },
   "firestore": {
     "/products/{productId}": {
-      "schema": { "$ref": "#/backend/entities/Product" },
+      "schema": "Product",
       "description": "Collection of menu products."
     },
     "/categories/{categoryId}": {
-      "schema": { "$ref": "#/backend/entities/Category" },
+      "schema": "Category",
       "description": "Collection of menu categories."
     },
     "/orders/{orderId}": {
-      "schema": { "$ref": "#/backend/entities/Order" },
+      "schema": "Order",
       "description": "Collection of customer orders."
     }
   }
