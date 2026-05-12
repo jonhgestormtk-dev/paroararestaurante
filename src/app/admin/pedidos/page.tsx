@@ -208,6 +208,22 @@ export default function AdminOrders() {
     }
   };
 
+  const handleResendToWhatsApp = (order: Order) => {
+    const phone = order.customer.phone.replace(/\D/g, '');
+    let message = `Olá *${order.customer.name}*, seu pedido *#${order.orderNumber || order.id.substring(0, 8)}* no Paroara foi atualizado.\n\n`;
+    message += `🛒 *RESUMO ATUALIZADO:*\n`;
+    
+    order.items.forEach(item => {
+      message += `• ${item.quantity}x *${item.name}* - R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
+    });
+
+    message += `\n*Novo Total: R$ ${order.total.toFixed(2).replace('.', ',')}*\n\n`;
+    message += `Acompanhamos seu pedido! Qualquer dúvida, estamos à disposição.`;
+
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+  };
+
   const exportToCSV = () => {
     if (!orders) return;
     const headers = ['ID', 'Num Pedido', 'Data', 'Cliente', 'Telefone', 'Total', 'Status'];
@@ -340,7 +356,7 @@ export default function AdminOrders() {
                       variant="ghost" 
                       size="icon" 
                       className="h-10 w-10 text-verde-folha bg-verde-folha/5 rounded-full"
-                      onClick={() => window.open(`https://wa.me/${order.customer.phone.replace(/\D/g,'')}`, '_blank')}
+                      onClick={() => handleResendToWhatsApp(order)}
                     >
                       <MessageCircle className="w-5 h-5" />
                     </Button>
@@ -460,7 +476,7 @@ export default function AdminOrders() {
                             <CheckCircle className="w-3 h-3 text-marrom-escuro" /> Finalizado
                           </DropdownMenuItem>
                           <Separator className="my-1 bg-areia-escura" />
-                          <DropdownMenuItem className="text-xs uppercase font-bold tracking-widest gap-2 text-verde-folha" onClick={() => window.open(`https://wa.me/${order.customer.phone.replace(/\D/g,'')}`, '_blank')}>
+                          <DropdownMenuItem className="text-xs uppercase font-bold tracking-widest gap-2 text-verde-folha" onClick={() => handleResendToWhatsApp(order)}>
                             <MessageCircle className="w-3 h-3" /> WhatsApp
                           </DropdownMenuItem>
                         </DropdownMenuContent>
