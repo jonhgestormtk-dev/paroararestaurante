@@ -9,7 +9,6 @@ import {
   ShoppingBag, 
   Settings,
   LogOut, 
-  Star,
   Menu,
   X,
   Tags
@@ -21,8 +20,7 @@ import { Separator } from '@/components/ui/separator';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -35,8 +33,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -61,92 +62,123 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-areia-clara flex overflow-hidden">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] lg:hidden transition-opacity duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-marrom-escuro text-areia-clara transition-transform duration-300 shadow-2xl",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-marrom-escuro text-areia-clara transition-all duration-300 ease-in-out shadow-2xl flex flex-col",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
           "lg:relative lg:translate-x-0"
         )}
       >
-        <div className="h-full flex flex-col p-6">
-          <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col h-full p-6">
+          {/* Logo Section */}
+          <div className="flex items-center justify-between mb-8">
             <div className="space-y-1">
-              <h2 className="font-headline text-3xl text-caramelo-palha tracking-widest">PAROARA</h2>
+              <h2 className="font-headline text-2xl text-caramelo-palha tracking-widest leading-none">PAROARA</h2>
               <p className="text-[8px] uppercase tracking-[0.4em] font-bold opacity-40">Admin Panel</p>
             </div>
-            <Button variant="ghost" size="icon" className="lg:hidden text-areia-clara" onClick={() => setIsSidebarOpen(false)}>
-              <X className="w-6 h-6" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="lg:hidden text-areia-clara hover:bg-white/10" 
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <X className="w-5 h-5" />
             </Button>
           </div>
 
-          <Separator className="bg-marrom-madeira/20 mb-10" />
+          <Separator className="bg-marrom-madeira/20 mb-8" />
 
-          <nav className="flex-1 space-y-2">
-            {menuItems.map((item) => (
-              <Button
-                key={item.path}
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start gap-4 py-6 rounded-sm text-xs uppercase tracking-widest font-bold transition-all",
-                  pathname === item.path 
-                    ? "bg-marrom-terra text-white shadow-lg border-l-4 border-caramelo-palha" 
-                    : "hover:bg-white/5 opacity-60 hover:opacity-100"
-                )}
-                onClick={() => {
-                  router.push(item.path);
-                  if (isMobile) setIsSidebarOpen(false);
-                }}
-              >
-                <item.icon className="w-5 h-5" />
-                {item.label}
-              </Button>
-            ))}
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1">
+            {menuItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-4 py-6 rounded-sm text-[10px] uppercase tracking-widest font-bold transition-all border-l-2",
+                    isActive 
+                      ? "bg-marrom-terra/40 text-white border-caramelo-palha shadow-md" 
+                      : "hover:bg-white/5 opacity-60 hover:opacity-100 border-transparent"
+                  )}
+                  onClick={() => {
+                    router.push(item.path);
+                    if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                  }}
+                >
+                  <item.icon className={cn("w-4 h-4", isActive ? "text-caramelo-palha" : "text-areia-media/60")} />
+                  {item.label}
+                </Button>
+              );
+            })}
           </nav>
 
-          <Separator className="bg-marrom-madeira/20 mb-6" />
+          <Separator className="bg-marrom-madeira/20 my-6" />
 
-          <div className="space-y-2">
-            <div className="bg-marrom-terra/30 p-4 rounded-sm border border-marrom-madeira/10 flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-caramelo-palha flex items-center justify-center text-marrom-escuro font-bold">A</div>
+          {/* Footer Section */}
+          <div className="space-y-4">
+            <div className="bg-marrom-terra/20 p-4 rounded-md border border-marrom-madeira/20 flex items-center gap-3">
+              <div className="w-9 h-9 shrink-0 rounded-full bg-caramelo-palha flex items-center justify-center text-marrom-escuro font-black text-sm shadow-inner">
+                A
+              </div>
               <div className="overflow-hidden">
-                <p className="text-xs font-bold truncate">Administrador</p>
-                <p className="text-[10px] opacity-40 truncate">admin@paroara.com</p>
+                <p className="text-[10px] font-black uppercase tracking-wider truncate">Administrador</p>
+                <p className="text-[9px] font-body italic opacity-40 truncate">admin@paroara.com</p>
               </div>
             </div>
 
             <Button 
               variant="ghost" 
-              className="w-full justify-start gap-4 text-destructive hover:bg-destructive/10 hover:text-destructive py-6 rounded-sm text-xs uppercase tracking-widest font-bold"
+              className="w-full justify-start gap-4 text-destructive hover:bg-destructive/10 hover:text-destructive py-6 rounded-sm text-[10px] uppercase tracking-widest font-bold"
               onClick={handleLogout}
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
               Sair do Sistema
             </Button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-20 bg-white border-b border-areia-escura flex items-center justify-between px-6 lg:px-10 z-30">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-            <Menu className="w-6 h-6" />
-          </Button>
-
+        <header className="h-20 bg-white border-b border-areia-escura flex items-center justify-between px-4 lg:px-10 z-40">
           <div className="flex items-center gap-4">
-            <div className="flex flex-col items-end opacity-90 hover:opacity-100 transition-opacity">
-              <h1 className="text-2xl font-headline tracking-[0.2em] text-marrom-terra leading-none uppercase">
-                PAROARA
-              </h1>
-              <p className="text-[9px] font-subheadline italic text-marrom-madeira tracking-widest uppercase mt-1">
-                Restaurante Marajoara
-              </p>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="lg:hidden text-marrom-terra" 
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu className="w-6 h-6" />
+            </Button>
+            
+            <div className="flex flex-col lg:hidden">
+              <h1 className="text-lg font-headline tracking-widest text-marrom-terra leading-none">PAROARA</h1>
+              <p className="text-[7px] font-black tracking-widest uppercase opacity-40">Admin Area</p>
             </div>
+          </div>
+
+          <div className="hidden lg:flex flex-col items-end opacity-90">
+            <h1 className="text-2xl font-headline tracking-[0.2em] text-marrom-terra leading-none uppercase">
+              PAROARA
+            </h1>
+            <p className="text-[9px] font-subheadline italic text-marrom-madeira tracking-widest uppercase mt-1">
+              Restaurante Marajoara
+            </p>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-10 relative bg-areia-clara/50">
           <div className="absolute inset-0 bg-rustic-texture opacity-[0.01] pointer-events-none"></div>
           <div className="max-w-7xl mx-auto relative z-10">
             {children}
