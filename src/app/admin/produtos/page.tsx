@@ -9,18 +9,16 @@ import {
   Edit2, 
   Trash2, 
   Image as ImageIcon,
-  CheckCircle2,
-  XCircle,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight
+  Sparkles
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { Product, Category } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { 
   Table, 
   TableBody, 
@@ -105,38 +103,64 @@ export default function AdminProducts() {
     setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!db) return;
-    
-    try {
-      if (editingProduct) {
-        await updateDoc(doc(db, 'products', editingProduct.id), {
-          ...formData,
-          updatedAt: serverTimestamp()
-        });
-        toast({ title: "Prato Atualizado", description: "As alterações foram salvas com sucesso." });
-      } else {
-        await addDoc(collection(db, 'products'), {
-          ...formData,
-          createdAt: serverTimestamp()
-        });
-        toast({ title: "Prato Adicionado", description: "O novo item já está disponível no cardápio." });
-      }
-      setIsModalOpen(false);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Erro ao Salvar", description: "Ocorreu um erro na comunicação com o banco de dados." });
+
+    const dataToSave = { ...formData };
+    if (!dataToSave.name || !dataToSave.price) {
+      toast({ variant: "destructive", title: "Campos Obrigatórios", description: "Nome e preço são necessários." });
+      return;
     }
+
+    const productsCol = collection(db, 'products');
+
+    if (editingProduct) {
+      const docRef = doc(db, 'products', editingProduct.id);
+      updateDoc(docRef, {
+        ...dataToSave,
+        updatedAt: serverTimestamp()
+      }).then(() => {
+        toast({ title: "Prato Atualizado", description: "As alterações foram salvas com sucesso." });
+      }).catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: dataToSave,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+    } else {
+      addDoc(productsCol, {
+        ...dataToSave,
+        createdAt: serverTimestamp()
+      }).then(() => {
+        toast({ title: "Prato Adicionado", description: "O novo item já está disponível no cardápio." });
+      }).catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: productsCol.path,
+          operation: 'create',
+          requestResourceData: dataToSave,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+    }
+    
+    setIsModalOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!db || !window.confirm('Deseja realmente excluir este prato?')) return;
     
-    try {
-      await deleteDoc(doc(db, 'products', id));
+    const docRef = doc(db, 'products', id);
+    deleteDoc(docRef).then(() => {
       toast({ title: "Prato Removido", description: "O item foi excluído permanentemente." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Erro ao Excluir", description: "Não foi possível remover o prato." });
-    }
+    }).catch(async (error) => {
+      const permissionError = new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'delete',
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
   return (
@@ -241,7 +265,6 @@ export default function AdminProducts() {
         </div>
       </Card>
 
-      {/* Modal Novo/Editar Prato */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-areia-clara border-none shadow-2xl">
           <DialogHeader className="p-8 bg-marrom-escuro text-areia-clara">
