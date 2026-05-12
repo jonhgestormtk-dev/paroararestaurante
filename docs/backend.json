@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -7,12 +8,16 @@
       "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
+        "longDescription": { "type": "string" },
         "price": { "type": "number" },
         "category": { "type": "string" },
         "imageUrl": { "type": "string" },
         "featured": { "type": "boolean" },
+        "promotion": { "type": "boolean" },
         "active": { "type": "boolean" },
-        "stock": { "type": "number" }
+        "stock": { "type": "number" },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "emoji": { "type": "string" }
       },
       "required": ["name", "price", "category"]
     },
@@ -35,7 +40,8 @@
         "total": { "type": "number" },
         "status": { "type": "string" },
         "customer": { "type": "object" },
-        "items": { "type": "array" }
+        "items": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -45,7 +51,7 @@
   "firestore": {
     "/products/{productId}": {
       "schema": "Product",
-      "description": "Coleção de produtos."
+      "description": "Coleção de produtos do cardápio."
     },
     "/categories/{categoryId}": {
       "schema": "Category",
@@ -53,7 +59,7 @@
     },
     "/orders/{orderId}": {
       "schema": "Order",
-      "description": "Coleção de pedidos."
+      "description": "Coleção de pedidos realizados."
     }
   }
 }

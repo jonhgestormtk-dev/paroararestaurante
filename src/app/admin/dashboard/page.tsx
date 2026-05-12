@@ -8,9 +8,9 @@ import {
   Package, 
   TrendingUp,
   Clock,
-  ArrowRight,
   Database,
   Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
 
-  // Buscar categorias para verificar se precisa migrar
+  // Buscar categorias
   const catQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'categories');
@@ -92,8 +92,10 @@ export default function AdminDashboard() {
       const productsCol = collection(db, 'products');
       const productPromises = PRODUCTS.map((product) => {
         const productRef = doc(productsCol, product.id);
+        const { id, ...productData } = product;
         return setDoc(productRef, {
-          ...product,
+          ...productData,
+          active: productData.active ?? true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         }, { merge: true });
@@ -102,8 +104,8 @@ export default function AdminDashboard() {
       await Promise.all([...catPromises, ...productPromises]);
       
       toast({
-        title: "Sincronização Concluída",
-        description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados para o Firestore.`,
+        title: "Banco de Dados Criado",
+        description: `${validCategories.length} categorias e ${PRODUCTS.length} pratos foram migrados com sucesso.`,
       });
     } catch (error) {
       console.error(error);
@@ -180,17 +182,34 @@ export default function AdminDashboard() {
           <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
         </div>
         
-        {needsMigration && (
+        {needsMigration ? (
           <Button 
             onClick={seedDatabase} 
             disabled={isSeeding}
             className="bg-caramelo-palha hover:bg-marrom-madeira text-white gap-2 py-6 px-8 rounded-sm font-bold uppercase tracking-widest text-xs shadow-lg transition-all"
           >
             {isSeeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-            {isSeeding ? 'Sincronizando...' : 'Migrar Cardápio e Categorias'}
+            {isSeeding ? 'Criando Banco de Dados...' : 'Criar Banco de Dados do Cardápio'}
           </Button>
+        ) : (
+          <div className="flex items-center gap-2 text-verde-folha bg-verde-folha/10 px-4 py-2 rounded-sm border border-verde-folha/20">
+            <Package className="w-4 h-4" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Banco de Dados Ativo</span>
+          </div>
         )}
       </div>
+
+      {needsMigration && (
+        <Card className="bg-amber-50 border-amber-200 shadow-none">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-amber-900">Configuração Inicial Necessária</p>
+              <p className="text-xs text-amber-700">Seu banco de dados no Firestore está vazio. Clique no botão acima para carregar automaticamente as categorias e os pratos iniciais do restaurante.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((stat, i) => (
@@ -231,7 +250,7 @@ export default function AdminDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-cinza-organico italic">Aguardando dados...</div>
+              <div className="flex items-center justify-center h-full text-cinza-organico italic">Aguardando dados de pedidos...</div>
             )}
           </CardContent>
         </Card>
