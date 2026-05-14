@@ -45,7 +45,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     const whatsappNumber = '559184541085';
     
-    // Preparar dados base
     const baseOrderData = {
       customer: customerInfo,
       items: cart.map(item => ({
