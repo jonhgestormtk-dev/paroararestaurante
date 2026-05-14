@@ -1,8 +1,7 @@
-
 'use client';
 
 import React from 'react';
-import { MessageCircle, ShoppingBag } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function WhatsAppCTA() {
@@ -20,11 +19,11 @@ export function WhatsAppCTA() {
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
           <div className="space-y-6">
-            <h2 className="text-4xl md:text-6xl font-headline text-caramelo-palha leading-tight tracking-widest uppercase">
+            <h2 className="text-4xl md:text-6xl font-headline text-caramelo-palha leading-tight tracking-tight uppercase italic">
               Peça agora pelo <br className="hidden md:block" /> WhatsApp
             </h2>
             <div className="w-20 h-1 bg-caramelo-palha/30 mx-auto rounded-full"></div>
-            <p className="text-areia-clara text-lg md:text-3xl font-body opacity-80 max-w-2xl mx-auto leading-relaxed font-light">
+            <p className="text-areia-clara text-lg md:text-2xl font-body opacity-80 max-w-2xl mx-auto leading-relaxed font-light italic">
               Seu pedido chega rápido, fresco e preparado na hora com todo o vigor e sabor do Marajó.
             </p>
           </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -52,7 +51,8 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-areia-clara text-marrom-texto max-h-[90vh] overflow-y-auto">
-        <div className="relative h-[250px] md:h-[350px]">
+        {/* A imagem do produto agora ocupa o topo do modal */}
+        <div className="relative h-[250px] md:h-[350px] w-full">
           <Image
             src={product.imageUrl}
             alt={product.name}
@@ -63,65 +63,65 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
         <div className="p-6 md:p-8">
           <DialogHeader className="mb-4">
-            <div className="flex justify-between items-end">
-              <div>
-                <DialogTitle className="text-3xl font-headline text-marrom-terra mb-2">
+            <div className="flex justify-between items-end gap-4">
+              <div className="flex-1">
+                <DialogTitle className="text-2xl md:text-3xl font-headline text-marrom-terra mb-1 uppercase tracking-tight">
                   {product.name}
                 </DialogTitle>
-                <p className="text-marrom-madeira font-subheadline text-lg italic">
+                <p className="text-marrom-madeira font-subheadline text-base md:text-lg italic opacity-80">
                   {product.category}
                 </p>
               </div>
-              <span className="text-2xl font-bold text-marrom-escuro">
+              <span className="text-xl md:text-2xl font-body font-black text-marrom-escuro whitespace-nowrap">
                 R$ {product.price.toFixed(2).replace('.', ',')}
               </span>
             </div>
           </DialogHeader>
 
           <div className="space-y-6">
-            <div className="prose prose-stone">
-              <p className="text-marrom-texto/80 font-body leading-relaxed">
+            <div className="prose prose-stone max-w-none">
+              <p className="text-marrom-texto/90 font-body leading-relaxed text-sm md:text-base italic">
                 {aiDesc || product.longDescription || product.description}
               </p>
               {!aiDesc && (
                 <Button 
                   variant="link" 
                   size="sm" 
-                  className="text-verde-folha p-0 h-auto gap-1 font-semibold hover:text-verde-escuro"
+                  className="text-verde-folha p-0 h-auto gap-2 font-bold hover:text-verde-escuro mt-2"
                   onClick={handleEnrich}
                   disabled={isEnriching}
                 >
-                  <Sparkles className="w-3 h-3" />
+                  <Sparkles className="w-4 h-4" />
                   {isEnriching ? 'Tecendo a história...' : 'Conhecer a tradição deste prato'}
                 </Button>
               )}
             </div>
 
-            <div>
-              <h4 className="font-headline text-sm uppercase tracking-widest text-marrom-madeira mb-3">Observações</h4>
+            <div className="space-y-3">
+              <h4 className="font-headline text-[10px] uppercase tracking-[0.3em] text-marrom-madeira font-black">Observações</h4>
               <Textarea 
                 placeholder="Ex: Sem cebola, ponto da carne mal passado..."
-                className="bg-white/50 border-areia-escura resize-none focus:ring-marrom-terra"
+                className="bg-white/60 border-areia-escura/50 resize-none focus:ring-marrom-terra rounded-lg min-h-[100px]"
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
               />
             </div>
 
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-4 border-t border-areia-escura">
-              <div className="flex items-center bg-white rounded-md border border-areia-escura p-1">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-areia-escura/30">
+              <div className="flex items-center bg-white rounded-xl border border-areia-escura/50 p-1 shadow-sm">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-10 w-10 text-marrom-terra"
+                  className="h-10 w-10 text-marrom-terra hover:bg-areia-clara"
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
-                <span className="w-12 text-center font-bold text-lg">{quantity}</span>
+                <span className="w-12 text-center font-black text-lg text-marrom-escuro">{quantity}</span>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-10 w-10 text-marrom-terra"
+                  className="h-10 w-10 text-marrom-terra hover:bg-areia-clara"
                   onClick={() => setQuantity(q => q + 1)}
                 >
                   <Plus className="w-4 h-4" />
@@ -129,7 +129,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               </div>
 
               <Button 
-                className="w-full md:w-auto min-w-[200px] bg-marrom-terra text-areia-clara hover:bg-marrom-escuro py-6 text-lg font-bold shadow-lg"
+                className="w-full md:w-auto min-w-[240px] bg-marrom-terra text-areia-clara hover:bg-marrom-escuro h-14 text-base font-bold shadow-xl uppercase tracking-widest rounded-xl"
                 onClick={handleAddToCart}
               >
                 Adicionar • R$ {(product.price * quantity).toFixed(2).replace('.', ',')}
