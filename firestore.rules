@@ -19,6 +19,12 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Regras para Configurações
+    // Permite leitura e escrita para gestão global do restaurante
+    match /settings/{settingsId} {
+      allow read, write: if true;
+    }
+
     // Regra de segurança para o protótipo: 
     // Permite leitura de qualquer documento, mas bloqueia escrita em coleções não mapeadas
     match /{document=**} {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -27,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, setDoc, collection, query, orderBy } from 'firebase/firestore';
 import { Product } from '@/lib/types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function AdminSettings() {
   const { toast } = useToast();
@@ -61,25 +62,32 @@ export default function AdminSettings() {
     }
   }, [firestoreSettings]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!db) return;
     setIsLoading(true);
     
-    try {
-      await setDoc(doc(db, 'settings', 'global'), settings, { merge: true });
-      toast({
-        title: "Configurações Salvas",
-        description: "As informações do restaurante foram atualizadas com sucesso.",
+    const docRef = doc(db, 'settings', 'global');
+    
+    // Seguindo as diretrizes de não usar await direto em mutações
+    setDoc(docRef, settings, { merge: true })
+      .then(() => {
+        toast({
+          title: "Configurações Salvas",
+          description: "As informações do restaurante foram atualizadas com sucesso.",
+        });
+        setIsLoading(false);
+      })
+      .catch(async (error) => {
+        setIsLoading(false);
+        // Emite erro contextual para o listener global
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'write',
+          requestResourceData: settings,
+        } satisfies SecurityRuleContext);
+
+        errorEmitter.emit('permission-error', permissionError);
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao Salvar",
-        description: "Não foi possível atualizar as configurações.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   if (settingsLoading) {
@@ -124,7 +132,7 @@ export default function AdminSettings() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Prato em Destaque (Banner Home)</Label>
                 </div>
                 <Select 
-                  value={settings.promoProductId} 
+                  value={settings.promoProductId || "none"} 
                   onValueChange={(v) => setSettings({...settings, promoProductId: v})}
                 >
                   <SelectTrigger className="bg-areia-clara/20 border-areia-escura">
