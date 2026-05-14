@@ -2,12 +2,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Trash2, Minus, Plus, MessageSquare, ShoppingBag as ShoppingBagIcon, User, Phone, MapPin, ClipboardList } from 'lucide-react';
+import { Trash2, Minus, Plus, MessageSquare, ShoppingBag as ShoppingBagIcon, User, Phone, MapPin, ClipboardList } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore } from '@/firebase';
@@ -15,7 +14,6 @@ import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 const ShoppingBag = ShoppingBagIcon;
 
@@ -116,16 +114,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-areia-clara text-marrom-texto border-l-0 sm:border-l border-marrom-madeira/20">
         <SheetHeader className="p-4 md:p-6 bg-marrom-escuro text-areia-clara flex-shrink-0 shadow-lg z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-caramelo-palha/20 p-2 rounded-full">
-                <ShoppingBag className="w-5 h-5 text-caramelo-palha" />
-              </div>
-              <SheetTitle className="text-areia-clara font-headline text-lg tracking-wider uppercase">Sua Sacola</SheetTitle>
+          <div className="flex items-center gap-3">
+            <div className="bg-caramelo-palha/20 p-2 rounded-full">
+              <ShoppingBag className="w-5 h-5 text-caramelo-palha" />
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="text-areia-clara hover:bg-white/10 rounded-full">
-              <X className="w-6 h-6" />
-            </Button>
+            <SheetTitle className="text-areia-clara font-headline text-lg tracking-wider uppercase">Sua Sacola</SheetTitle>
           </div>
         </SheetHeader>
 

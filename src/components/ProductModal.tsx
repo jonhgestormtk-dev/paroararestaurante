@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { X, Minus, Plus, Sparkles } from 'lucide-react';
+import { Minus, Plus, Sparkles } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -59,14 +59,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
             fill
             className="object-cover"
           />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute top-4 right-4 bg-marrom-escuro/20 text-white hover:bg-marrom-escuro/40 backdrop-blur-sm rounded-full"
-            onClick={onClose}
-          >
-            <X className="w-5 h-5" />
-          </Button>
         </div>
 
         <div className="p-6 md:p-8">
