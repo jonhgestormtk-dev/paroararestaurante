@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, ShoppingCart, MessageCircle, Menu } from 'lucide-react';
+import { ShoppingCart, MessageCircle, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
@@ -39,11 +39,6 @@ export function Header() {
               <p className="text-[7px] md:text-[10px] font-subheadline text-areia-media/80 tracking-widest uppercase mt-0.5">
                 O Restaurante Marajoara
               </p>
-            </div>
-            
-            <div className="hidden sm:flex items-center bg-marrom-terra/40 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-caramelo-palha/20 ml-2 shadow-inner">
-              <Star className="w-3 h-3 fill-caramelo-palha text-caramelo-palha mr-1.5" />
-              4.9
             </div>
           </Link>
 
