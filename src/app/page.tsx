@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -118,9 +119,10 @@ export default function Home() {
         
         <main className="flex-1">
           <Hero />
-          <PromoBanner />
           
-          <section className="container mx-auto px-4 py-12 md:py-20">
+          <PromoBanner onProductClick={(p) => setSelectedProduct(p)} />
+          
+          <section className="container mx-auto px-4 py-8 md:py-16">
             <div className="text-center mb-10 md:mb-16 space-y-2 md:space-y-4">
               <div className="flex items-center justify-center gap-2 md:gap-3 text-caramelo-palha mb-1">
                 <Sparkles className="w-4 h-4 md:w-5 md:h-5 fill-caramelo-palha" />
@@ -151,7 +153,7 @@ export default function Home() {
           <ExperienceSection />
           
           <div id="menu" className="relative scroll-mt-[100px] md:scroll-mt-[130px]">
-            <div className="container mx-auto px-4 pt-12 md:pt-20 text-center">
+            <div className="container mx-auto px-4 pt-12 md:pt-16 text-center">
               <h2 className="text-3xl md:text-4xl font-headline text-marrom-terra mb-8 md:mb-12">Nosso Cardápio</h2>
             </div>
             
@@ -161,7 +163,7 @@ export default function Home() {
               onSelect={setActiveCategory as any} 
             />
 
-            <section className="container mx-auto px-4 py-12 md:py-16">
+            <section className="container mx-auto px-4 py-8 md:py-16">
               {productsLoading ? (
                 <div className="flex justify-center py-12 md:py-20">
                   <Loader2 className="w-8 h-8 animate-spin text-marrom-terra opacity-20" />

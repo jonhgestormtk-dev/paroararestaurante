@@ -43,6 +43,18 @@
         "items": { "type": "array" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Configurações globais do restaurante.",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "address": { "type": "string" },
+        "openingHours": { "type": "string" },
+        "promoProductId": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -60,6 +72,10 @@
     "/orders/{orderId}": {
       "schema": "Order",
       "description": "Coleção de pedidos realizados."
+    },
+    "/settings/{settingsId}": {
+      "schema": "Settings",
+      "description": "Configurações gerais do sistema."
     }
   }
 }

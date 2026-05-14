@@ -1,46 +1,94 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Settings, 
   Save, 
   MessageSquare, 
   MapPin, 
   Clock, 
-  Store 
+  Store,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
+import { useFirestore, useDoc, useCollection } from '@/firebase';
+import { doc, setDoc, collection, query, orderBy } from 'firebase/firestore';
+import { Product } from '@/lib/types';
 
 export default function AdminSettings() {
   const { toast } = useToast();
+  const db = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Buscar configurações reais
+  const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
+  const { data: firestoreSettings, loading: settingsLoading } = useDoc<any>(settingsRef);
+
+  // Buscar produtos para o seletor de promoção
+  const productsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'products'), orderBy('name', 'asc'));
+  }, [db]);
+  const { data: products } = useCollection<Product>(productsQuery);
 
   const [settings, setSettings] = useState({
     storeName: 'Paroara | Restaurante | Beer Drik’s',
     whatsapp: '559184541085',
     address: 'Av. Gentil Bittencourt, 2231 - Belém, PA',
     openingHours: 'Terça a Domingo: 11h às 15h e 18h às 23h30',
-    promoText: 'Filé Marajoara na Brasa + Refresco Regional cortesia'
+    promoProductId: ''
   });
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (firestoreSettings) {
+      setSettings(prev => ({
+        ...prev,
+        ...firestoreSettings
+      }));
+    }
+  }, [firestoreSettings]);
+
+  const handleSave = async () => {
+    if (!db) return;
     setIsLoading(true);
-    // Simulação de salvamento (em um cenário real, salvaríamos no Firestore em uma coleção 'config')
-    setTimeout(() => {
-      setIsLoading(false);
+    
+    try {
+      await setDoc(doc(db, 'settings', 'global'), settings, { merge: true });
       toast({
         title: "Configurações Salvas",
         description: "As informações do restaurante foram atualizadas com sucesso.",
       });
-    }, 1000);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao Salvar",
+        description: "Não foi possível atualizar as configurações.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (settingsLoading) {
+    return (
+      <div className="h-96 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-marrom-terra opacity-20" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -58,7 +106,7 @@ export default function AdminSettings() {
                 <Store className="w-5 h-5 text-marrom-terra" />
                 <CardTitle className="text-lg font-headline text-marrom-terra">Perfil do Restaurante</CardTitle>
               </div>
-              <CardDescription>Nome e descrição principal que aparecem no site.</CardDescription>
+              <CardDescription>Nome e destaque promocional da página inicial.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -69,13 +117,29 @@ export default function AdminSettings() {
                   className="bg-areia-clara/20 border-areia-escura"
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Texto Promocional (Banner Home)</Label>
-                <Input 
-                  value={settings.promoText}
-                  onChange={(e) => setSettings({...settings, promoText: e.target.value})}
-                  className="bg-areia-clara/20 border-areia-escura"
-                />
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-3 h-3 text-caramelo-palha" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Prato em Destaque (Banner Home)</Label>
+                </div>
+                <Select 
+                  value={settings.promoProductId} 
+                  onValueChange={(v) => setSettings({...settings, promoProductId: v})}
+                >
+                  <SelectTrigger className="bg-areia-clara/20 border-areia-escura">
+                    <SelectValue placeholder="Selecione um produto para promover..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-areia-clara">
+                    <SelectItem value="none">Nenhum (Ocultar Banner)</SelectItem>
+                    {products?.filter(p => p.active !== false).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.emoji} {p.name} - R$ {p.price.toFixed(2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[9px] text-cinza-organico italic">O cliente poderá clicar no banner e ver os detalhes deste item imediatamente.</p>
               </div>
             </CardContent>
           </Card>
@@ -147,7 +211,7 @@ export default function AdminSettings() {
               disabled={isLoading}
               className="w-full bg-marrom-terra text-areia-clara hover:bg-marrom-escuro py-8 rounded-sm font-bold uppercase tracking-[0.2em] text-xs shadow-xl transition-all active:scale-95 flex items-center gap-3"
             >
-              <Save className="w-5 h-5" />
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               {isLoading ? 'Salvando Alterações...' : 'Salvar Configurações'}
             </Button>
             <p className="text-center mt-4 text-[9px] text-cinza-organico uppercase tracking-widest opacity-60">
