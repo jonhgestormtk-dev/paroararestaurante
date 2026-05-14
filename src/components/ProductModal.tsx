@@ -51,7 +51,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-areia-clara text-marrom-texto max-h-[90vh] overflow-y-auto">
-        {/* A imagem do produto agora ocupa o topo do modal */}
         <div className="relative h-[250px] md:h-[350px] w-full">
           <Image
             src={product.imageUrl}
@@ -65,7 +64,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
           <DialogHeader className="mb-4">
             <div className="flex justify-between items-end gap-4">
               <div className="flex-1">
-                <DialogTitle className="text-2xl md:text-3xl font-headline text-marrom-terra mb-1 uppercase tracking-tight">
+                <DialogTitle className="text-2xl md:text-3xl font-subheadline font-bold italic text-marrom-terra mb-1">
                   {product.name}
                 </DialogTitle>
                 <p className="text-marrom-madeira font-subheadline text-base md:text-lg italic opacity-80">

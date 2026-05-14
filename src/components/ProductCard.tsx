@@ -47,8 +47,8 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       
       <div className="p-2.5 md:p-4 flex flex-col flex-grow bg-areia-clara/20">
         <div className="flex justify-between items-start mb-1.5">
-          <h3 className="font-headline text-[11px] md:text-base text-marrom-terra leading-tight line-clamp-2 uppercase tracking-wide">
-            {product.emoji && <span className="mr-1 opacity-80">{product.emoji}</span>}
+          <h3 className="font-subheadline text-sm md:text-lg font-bold text-marrom-terra leading-tight line-clamp-2 italic">
+            {product.emoji && <span className="mr-1 not-italic opacity-80">{product.emoji}</span>}
             {product.name}
           </h3>
         </div>
