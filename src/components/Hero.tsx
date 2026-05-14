@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -11,56 +10,56 @@ export function Hero() {
   const heroImg = PlaceHolderImages.find(img => img.id === 'hero-banner');
   
   return (
-    <section className="relative w-full min-h-[450px] md:min-h-[600px] bg-areia-clara pt-20 md:pt-32 pb-8 md:pb-20 overflow-hidden flex items-center">
+    <section className="relative w-full min-h-[350px] md:min-h-[500px] bg-areia-clara pt-16 md:pt-24 pb-6 md:pb-16 overflow-hidden flex items-center">
       {/* Texture Layer */}
       <div className="absolute inset-0 bg-rustic-texture opacity-[0.02] pointer-events-none"></div>
       
-      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
         {/* Text Content */}
-        <div className="space-y-4 md:space-y-8 text-center lg:text-left z-10 animate-in fade-in slide-in-from-left-8 duration-1000 order-2 lg:order-1">
-          <div className="space-y-2 md:space-y-4">
+        <div className="space-y-3 md:space-y-6 text-center lg:text-left z-10 animate-in fade-in slide-in-from-left-8 duration-1000 order-2 lg:order-1">
+          <div className="space-y-1 md:space-y-3">
             <div className="flex items-center justify-center lg:justify-start gap-2 md:gap-4">
               <div className="h-[1px] w-6 md:w-8 bg-verde-folha/40 hidden lg:block"></div>
-              <p className="text-verde-folha font-subheadline text-sm md:text-xl italic tracking-wide">
+              <p className="text-verde-folha font-subheadline text-xs md:text-lg italic tracking-wide">
                 Sabor autêntico da Amazônia
               </p>
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-7xl font-headline text-marrom-terra leading-[1.1] md:leading-[1] tracking-tight">
+            <h2 className="text-2xl md:text-4xl lg:text-6xl font-headline text-marrom-terra leading-[1.1] tracking-tight">
               Sinta o verdadeiro <br className="hidden md:block" /> sabor marajoara
             </h2>
           </div>
           
-          <div className="w-16 md:w-32 h-[1px] bg-areia-escura mx-auto lg:mx-0 opacity-60"></div>
+          <div className="w-12 md:w-24 h-[1px] bg-areia-escura mx-auto lg:mx-0 opacity-40"></div>
 
-          <p className="text-marrom-texto/70 font-body text-sm md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-light italic">
+          <p className="text-marrom-texto/70 font-body text-xs md:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed font-light italic">
             Uma experiência gastronômica inspirada na tradição amazônica, preparada com ingredientes regionais e sabores inesquecíveis.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-2 md:pt-4">
+          <div className="flex flex-col sm:flex-row gap-2.5 justify-center lg:justify-start pt-1 md:pt-2">
             <Button 
               size="lg" 
-              className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro px-6 md:px-10 py-5 md:py-6 text-xs md:text-sm font-bold rounded-none shadow-2xl transition-all hover:scale-105 group uppercase tracking-widest"
+              className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro px-5 md:px-8 py-4 md:py-6 text-[10px] md:text-sm font-bold rounded-none shadow-xl transition-all hover:scale-105 group uppercase tracking-widest"
               onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Ver Cardápio
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
               variant="outline"
               size="lg" 
-              className="border-marrom-terra text-marrom-terra hover:bg-marrom-terra/5 px-6 md:px-10 py-5 md:py-6 text-xs md:text-sm font-bold rounded-none transition-all gap-2 md:gap-3 border-opacity-30 uppercase tracking-widest"
+              className="border-marrom-terra text-marrom-terra hover:bg-marrom-terra/5 px-5 md:px-8 py-4 md:py-6 text-[10px] md:text-sm font-bold rounded-none transition-all gap-2 border-opacity-30 uppercase tracking-widest"
               onClick={() => window.open('https://wa.me/559184541085', '_blank')}
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5" />
               WhatsApp
             </Button>
           </div>
         </div>
 
         {/* Image Content */}
-        <div className="relative h-[250px] md:h-[400px] lg:h-[500px] w-full z-10 animate-in fade-in slide-in-from-right-8 duration-1000 order-1 lg:order-2">
-          <div className="absolute inset-1 md:inset-4 border-2 border-marrom-terra/10 rounded-tr-[40px] md:rounded-tr-[80px] rounded-bl-[40px] md:rounded-bl-[80px] -z-10 transform translate-x-1 md:translate-x-4 translate-y-1 md:translate-y-4"></div>
-          <div className="relative h-full w-full rounded-tr-[40px] md:rounded-tr-[80px] rounded-bl-[40px] md:rounded-bl-[80px] overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.1)] border-[4px] md:border-[8px] border-white">
+        <div className="relative h-[180px] md:h-[350px] lg:h-[450px] w-full z-10 animate-in fade-in slide-in-from-right-8 duration-1000 order-1 lg:order-2">
+          <div className="absolute inset-1 md:inset-3 border-2 border-marrom-terra/10 rounded-tr-[30px] md:rounded-tr-[60px] rounded-bl-[30px] md:rounded-bl-[60px] -z-10 transform translate-x-1 md:translate-x-3 translate-y-1 md:translate-y-3"></div>
+          <div className="relative h-full w-full rounded-tr-[30px] md:rounded-tr-[60px] rounded-bl-[30px] md:rounded-bl-[60px] overflow-hidden shadow-lg border-[4px] md:border-[6px] border-white">
             <Image
               src={heroImg?.imageUrl || ''}
               alt="Paroara Experiência Amazônica"
@@ -69,22 +68,9 @@ export function Hero() {
               priority
               data-ai-hint="amazon food"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-marrom-escuro/20 via-transparent to-transparent"></div>
-          </div>
-          
-          {/* Floating badge */}
-          <div className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 bg-marrom-terra p-3 md:p-6 rounded-full shadow-2xl border-4 md:border-6 border-areia-clara z-20 hidden sm:block animate-bounce-slow">
-            <div className="flex flex-col items-center justify-center text-areia-clara">
-              <span className="font-headline text-base md:text-xl">100%</span>
-              <span className="text-[6px] md:text-[8px] uppercase tracking-widest font-bold text-center">Artesanal</span>
-            </div>
           </div>
         </div>
       </div>
-      
-      {/* Decorative background elements */}
-      <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-caramelo-palha/5 rounded-full blur-[60px] md:blur-[120px] pointer-events-none"></div>
-      <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-verde-folha/5 rounded-full blur-[50px] md:blur-[100px] pointer-events-none"></div>
     </section>
   );
 }

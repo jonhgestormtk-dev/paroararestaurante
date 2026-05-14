@@ -24,14 +24,14 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
   return (
     <div 
       onClick={onClick}
-      className="group bg-white rounded-lg overflow-hidden border border-areia-escura/30 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 cursor-pointer flex flex-col h-full transform hover:-translate-y-2"
+      className="group bg-white rounded-lg overflow-hidden border border-areia-escura/30 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 cursor-pointer flex flex-col h-full transform hover:-translate-y-1"
     >
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <div className="relative aspect-[3/2] overflow-hidden">
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
           data-ai-hint={product.category}
         />
         
@@ -39,50 +39,39 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-marrom-escuro/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         
         {product.promotion && (
-          <Badge className="absolute top-2 left-2 md:top-4 md:left-4 bg-verde-folha text-areia-clara border-none font-black tracking-widest text-[8px] md:text-[9px] px-2 py-0.5 md:px-3 md:py-1 shadow-lg">
+          <Badge className="absolute top-2 left-2 md:top-3 md:left-3 bg-verde-folha text-areia-clara border-none font-black tracking-widest text-[7px] md:text-[8px] px-1.5 py-0.5 md:px-2 md:py-1 shadow-lg">
             PROMOÇÃO
           </Badge>
         )}
-        
-        <Badge className="absolute top-2 right-2 md:top-4 md:right-4 bg-marrom-escuro/60 backdrop-blur-md text-areia-clara border-none font-bold text-[8px] md:text-[9px] px-2 py-0.5 md:px-3 md:py-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-          {product.category}
-        </Badge>
       </div>
       
-      <div className="p-3 md:p-6 flex flex-col flex-grow bg-areia-clara/20">
-        <div className="flex justify-between items-start mb-2 md:mb-3">
-          <h3 className="font-headline text-[13px] md:text-xl text-marrom-terra leading-tight line-clamp-2 uppercase tracking-wide">
+      <div className="p-2.5 md:p-4 flex flex-col flex-grow bg-areia-clara/20">
+        <div className="flex justify-between items-start mb-1.5">
+          <h3 className="font-headline text-[11px] md:text-base text-marrom-terra leading-tight line-clamp-2 uppercase tracking-wide">
             {product.emoji && <span className="mr-1 opacity-80">{product.emoji}</span>}
             {product.name}
           </h3>
         </div>
         
-        <p className="text-[10px] md:text-sm text-cinza-organico font-body italic line-clamp-2 mb-3 md:mb-6 flex-grow opacity-80 leading-relaxed">
+        <p className="text-[9px] md:text-xs text-cinza-organico font-body italic line-clamp-2 mb-2 md:mb-4 flex-grow opacity-80 leading-relaxed">
           {product.description}
         </p>
         
-        <div className="flex items-center justify-between mt-auto pt-2 md:pt-4 border-t border-areia-escura/20">
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-areia-escura/20">
           <div className="flex flex-col">
-            <span className="text-[7px] md:text-[10px] uppercase tracking-widest text-marrom-madeira/60 font-bold mb-0.5">A partir de</span>
-            <span className="font-body font-black text-marrom-escuro text-sm md:text-xl">
-              R$ {product.price.toFixed(2).replace('.', ',')}
+            <span className="text-[7px] md:text-[9px] uppercase tracking-widest text-marrom-madeira/60 font-bold">R$</span>
+            <span className="font-body font-black text-marrom-escuro text-sm md:text-lg">
+              {product.price.toFixed(2).replace('.', ',')}
             </span>
           </div>
           
-          <div className="flex gap-1 md:gap-2">
+          <div className="flex gap-1">
             <Button
               size="icon"
-              className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-marrom-terra text-areia-clara hover:bg-caramelo-palha transition-all duration-300 shadow-md group/btn"
+              className="h-7 w-7 md:h-9 md:w-9 rounded-full bg-marrom-terra text-areia-clara hover:bg-caramelo-palha transition-all duration-300 shadow-md group/btn"
               onClick={handleQuickAdd}
             >
-              <Plus className="w-4 h-4 md:w-5 md:h-5 group-hover/btn:rotate-90 transition-transform" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="hidden md:flex rounded-full border-marrom-terra/20 text-marrom-terra hover:bg-marrom-terra hover:text-areia-clara text-[10px] font-bold uppercase tracking-widest px-4"
-            >
-              Adicionar
+              <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/btn:rotate-90 transition-transform" />
             </Button>
           </div>
         </div>
