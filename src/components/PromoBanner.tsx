@@ -31,7 +31,7 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
   if (!promoProductId || promoProductId === 'none') return null;
 
   return (
-    <section className="container mx-auto px-4 -mt-6 md:-mt-12 relative z-30">
+    <section className="container mx-auto px-4 mt-4 md:-mt-12 relative z-30">
       <div className="relative overflow-hidden bg-marrom-terra rounded-xl p-6 md:p-10 border border-caramelo-palha/30 shadow-[0_20px_50px_rgba(40,26,20,0.3)] flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-10">
         {/* Pattern overlay */}
         <div className="absolute inset-0 bg-rustic-texture opacity-10 pointer-events-none"></div>
