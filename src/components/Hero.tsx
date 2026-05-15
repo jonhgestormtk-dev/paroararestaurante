@@ -11,7 +11,7 @@ export function Hero() {
   const heroImg = PlaceHolderImages.find(img => img.id === 'hero-banner');
   
   return (
-    <section className="relative w-full min-h-[450px] md:min-h-[500px] bg-areia-clara pt-24 md:pt-32 pb-12 md:pb-20 overflow-hidden flex items-center">
+    <section className="relative w-full min-h-[480px] md:min-h-[500px] bg-areia-clara pt-24 md:pt-32 pb-12 md:pb-20 overflow-hidden flex items-center">
       {/* Texture Layer */}
       <div className="absolute inset-0 bg-rustic-texture opacity-[0.02] pointer-events-none"></div>
       
@@ -49,7 +49,7 @@ export function Hero() {
         </div>
 
         {/* Image Content */}
-        <div className="relative h-[200px] md:h-[350px] lg:h-[450px] w-full z-10 animate-in fade-in slide-in-from-right-8 duration-1000 order-1 lg:order-2">
+        <div className="relative h-[280px] md:h-[350px] lg:h-[450px] w-full z-10 animate-in fade-in slide-in-from-right-8 duration-1000 order-1 lg:order-2">
           <div className="absolute inset-1 md:inset-3 border-2 border-marrom-terra/10 rounded-tr-[30px] md:rounded-tr-[60px] rounded-bl-[30px] md:rounded-bl-[60px] -z-10 transform translate-x-1 md:translate-x-3 translate-y-1 md:translate-y-3"></div>
           <div className="relative h-full w-full rounded-tr-[30px] md:rounded-tr-[60px] rounded-bl-[30px] md:rounded-bl-[60px] overflow-hidden shadow-lg border-[4px] md:border-[6px] border-white">
             <Image

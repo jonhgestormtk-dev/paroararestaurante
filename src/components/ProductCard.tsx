@@ -1,8 +1,9 @@
+
 'use client';
 
 import React from 'react';
 import Image from 'next/image';
-import { Plus, ShoppingBag } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       onClick={onClick}
       className="group bg-white rounded-lg overflow-hidden border border-areia-escura/30 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 cursor-pointer flex flex-col h-full transform hover:-translate-y-1"
     >
-      <div className="relative aspect-[3/2] overflow-hidden">
+      <div className="relative aspect-square overflow-hidden">
         <Image
           src={product.imageUrl}
           alt={product.name}
@@ -47,7 +48,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       
       <div className="p-2.5 md:p-4 flex flex-col flex-grow bg-areia-clara/20">
         <div className="flex justify-between items-start mb-1.5">
-          <h3 className="font-subheadline text-sm md:text-lg font-bold text-marrom-terra leading-tight line-clamp-2 italic">
+          <h3 className="font-subheadline text-[11px] md:text-lg font-bold text-marrom-terra leading-tight line-clamp-2 italic">
             {product.emoji && <span className="mr-1 not-italic opacity-80">{product.emoji}</span>}
             {product.name}
           </h3>
