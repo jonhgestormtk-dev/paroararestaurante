@@ -19,7 +19,7 @@ export function WhatsAppCTA() {
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
           <div className="space-y-6">
-            <h2 className="text-4xl md:text-6xl font-headline text-caramelo-palha leading-tight tracking-tight uppercase italic">
+            <h2 className="text-4xl md:text-6xl font-subheadline font-bold italic text-caramelo-palha leading-tight tracking-tight uppercase">
               Peça agora pelo <br className="hidden md:block" /> WhatsApp
             </h2>
             <div className="w-20 h-1 bg-caramelo-palha/30 mx-auto rounded-full"></div>
