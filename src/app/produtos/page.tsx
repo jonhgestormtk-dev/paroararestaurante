@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -6,6 +5,7 @@ import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { CartTray } from '@/components/CartTray';
+import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -104,21 +104,21 @@ export default function MenuPage() {
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
         
-        <main className="flex-1 pt-24 md:pt-24">
-          <section className="bg-areia-clara py-16 md:py-24 border-b border-areia-escura/30 relative overflow-hidden">
+        <main className="flex-1 pt-20 md:pt-24">
+          <section className="bg-areia-clara py-12 md:py-20 border-b border-areia-escura/30 relative overflow-hidden">
             <div className="absolute inset-0 bg-rustic-texture opacity-[0.03] pointer-events-none"></div>
             <div className="container mx-auto px-4 relative z-10 text-center space-y-4">
-              <Badge variant="outline" className="border-marrom-madeira/30 text-marrom-madeira font-bold tracking-widest uppercase text-[10px] px-4 py-1">
+              <Badge variant="outline" className="border-marrom-madeira/30 text-marrom-madeira font-bold tracking-widest uppercase text-[9px] px-3 py-1">
                 Sabores da Amazônia
               </Badge>
-              <h1 className="text-4xl md:text-6xl font-headline text-marrom-terra tracking-tight">Nosso Cardápio</h1>
-              <p className="text-cinza-organico font-subheadline italic text-lg md:text-xl max-w-2xl mx-auto opacity-80">
+              <h1 className="text-3xl md:text-6xl font-headline text-marrom-terra tracking-tight">Nosso Cardápio</h1>
+              <p className="text-cinza-organico font-subheadline italic text-base md:text-xl max-w-2xl mx-auto opacity-80">
                 Explore pratos regionais preparados com autenticidade, ingredientes frescos e tradição marajoara.
               </p>
             </div>
           </section>
 
-          <div className="container mx-auto px-4 py-8 md:py-12">
+          <div className="container mx-auto px-4 py-8 md:py-16">
             <div className="flex flex-col lg:flex-row gap-8">
               
               <aside className="hidden lg:block w-72 space-y-10 sticky top-32 h-fit">
@@ -180,27 +180,27 @@ export default function MenuPage() {
               <div className="lg:hidden flex gap-3 mb-6">
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button variant="outline" className="flex-1 gap-2 border-areia-escura text-marrom-terra">
+                    <Button variant="outline" className="flex-1 gap-2 border-areia-escura text-marrom-terra h-12">
                       <Filter className="w-4 h-4" />
-                      Filtrar e Buscar
+                      Filtros
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="top" className="h-[90vh] bg-areia-clara p-0 overflow-y-auto">
+                  <SheetContent side="bottom" className="h-[80vh] bg-areia-clara p-0 overflow-y-auto rounded-t-3xl">
                     <SheetHeader className="p-6 bg-marrom-escuro text-areia-clara">
-                      <SheetTitle className="text-areia-clara font-headline">Filtros</SheetTitle>
+                      <SheetTitle className="text-areia-clara font-headline uppercase tracking-widest">Ajustar Busca</SheetTitle>
                     </SheetHeader>
                     <div className="p-6 space-y-8">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-widest text-marrom-madeira">Busca</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Palavra-chave</label>
                         <Input 
                           placeholder="Ex: Filé Marajoara..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="bg-white border-areia-escura"
+                          className="bg-white border-areia-escura h-12"
                         />
                       </div>
                       <div className="space-y-4">
-                        <label className="text-xs font-bold uppercase tracking-widest text-marrom-madeira">Categorias</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Categorias</label>
                         <div className="grid grid-cols-2 gap-2">
                           {categories.map((cat) => (
                             <Button
@@ -209,7 +209,7 @@ export default function MenuPage() {
                               size="sm"
                               onClick={() => setActiveCategory(cat)}
                               className={cn(
-                                "justify-start text-xs rounded-sm",
+                                "justify-center text-[10px] font-bold uppercase tracking-wider h-10 rounded-full",
                                 activeCategory === cat ? "bg-marrom-terra" : "border-areia-escura"
                               )}
                             >
@@ -219,7 +219,7 @@ export default function MenuPage() {
                         </div>
                       </div>
                       <div className="space-y-6">
-                        <label className="text-xs font-bold uppercase tracking-widest text-marrom-madeira">Preço (R$ {priceRange[0]} - R$ {priceRange[1]})</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Preço Máximo (R$ {priceRange[1]})</label>
                         <Slider 
                           value={priceRange} 
                           onValueChange={setPriceRange} 
@@ -227,12 +227,15 @@ export default function MenuPage() {
                           step={1}
                         />
                       </div>
+                      <Button onClick={clearFilters} variant="ghost" className="w-full text-marrom-terra font-black uppercase tracking-widest text-[10px]">
+                        Limpar Todos
+                      </Button>
                     </div>
                   </SheetContent>
                 </Sheet>
                 
                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                  <SelectTrigger className="flex-1 border-areia-escura text-marrom-terra">
+                  <SelectTrigger className="flex-1 border-areia-escura text-marrom-terra h-12">
                     <div className="flex items-center gap-2">
                       <ArrowUpDown className="w-4 h-4" />
                       <SelectValue placeholder="Ordenar" />
@@ -270,10 +273,10 @@ export default function MenuPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-10">
                   {loading ? (
                     Array(8).fill(0).map((_, i) => (
-                      <div key={i} className="aspect-[4/6] bg-areia-media/10 animate-pulse rounded-lg border border-areia-escura/20"></div>
+                      <div key={i} className="aspect-[4/5] bg-areia-media/10 animate-pulse rounded-lg border border-areia-escura/20"></div>
                     ))
                   ) : paginatedProducts.length > 0 ? (
                     paginatedProducts.map((product) => (
@@ -295,7 +298,7 @@ export default function MenuPage() {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 pt-12 pb-20">
+                  <div className="flex justify-center items-center gap-2 pt-12 pb-24">
                     <Button 
                       variant="outline" 
                       disabled={currentPage === 1}
@@ -341,6 +344,7 @@ export default function MenuPage() {
         />
 
         <CartTray />
+        <FloatingWhatsAppButton />
       </div>
     </CartProvider>
   );
