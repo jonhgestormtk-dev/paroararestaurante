@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function Hero() {
@@ -43,15 +43,6 @@ export function Hero() {
             >
               Ver Cardápio
               <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button 
-              variant="outline"
-              size="lg" 
-              className="border-marrom-terra text-marrom-terra hover:bg-marrom-terra/5 px-5 md:px-8 py-4 md:py-6 text-[10px] md:text-sm font-bold rounded-none transition-all gap-2 border-opacity-30 uppercase tracking-widest"
-              onClick={() => window.open('https://wa.me/559184541085', '_blank')}
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              WhatsApp
             </Button>
           </div>
         </div>
