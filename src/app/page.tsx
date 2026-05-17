@@ -36,8 +36,8 @@ export default function SplashPage() {
       
       <div className="max-w-6xl w-full z-10 space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-6xl font-headline text-marrom-terra tracking-widest uppercase">Grupo Gastronômico</h1>
-          <p className="text-cinza-organico font-subheadline italic text-lg md:text-xl">Escolha uma de nossas experiências para começar.</p>
+          <h1 className="text-5xl md:text-8xl font-subheadline font-bold italic text-marrom-terra leading-tight">Grupo Gastronômico</h1>
+          <p className="text-cinza-organico font-body text-[10px] md:text-sm max-w-2xl mx-auto opacity-60 uppercase tracking-[0.4em] font-bold">Escolha uma de nossas experiências para começar.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
