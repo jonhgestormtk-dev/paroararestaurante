@@ -1,14 +1,17 @@
 
+export type RestaurantSlug = 'paroara' | 'egua-da-panela';
+
 export type Category = 'Todos' | 'Promoções' | 'Executivos' | 'Grelhados' | 'Massas' | 'Bebidas' | 'Regionais' | 'Sobremesas' | 'Peixes' | 'Carnes';
 
 export interface Product {
   id: string;
+  restaurantId: RestaurantSlug;
   name: string;
   description: string;
   longDescription?: string;
   price: number;
   imageUrl: string;
-  category: Category;
+  category: string;
   promotion?: boolean;
   featured?: boolean;
   active?: boolean;
@@ -28,6 +31,7 @@ export type OrderStatus = 'Pendente' | 'Em Preparo' | 'Saiu para Entrega' | 'Fin
 
 export interface Order {
   id: string;
+  restaurantId: RestaurantSlug;
   orderNumber?: string;
   customer: {
     name: string;

@@ -1,222 +1,90 @@
+
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Header } from '@/components/Header';
-import { Hero } from '@/components/Hero';
-import { PromoBanner } from '@/components/PromoBanner';
-import { CategoryFilter } from '@/components/CategoryFilter';
-import { ProductCard } from '@/components/ProductCard';
-import { ProductModal } from '@/components/ProductModal';
-import { ExperienceSection } from '@/components/ExperienceSection';
-import { WhatsAppCTA } from '@/components/WhatsAppCTA';
-import { CartTray } from '@/components/CartTray';
-import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
-import { CartProvider } from '@/context/CartContext';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
-import { Product } from '@/lib/types';
-import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
-import { Sparkles, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Utensils, ChefHat, ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export default function Home() {
-  const [activeCategory, setActiveCategory] = useState<string>('Todos');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const db = useFirestore();
-  const { toast } = useToast();
-
-  // Buscar categorias ordenadas
-  const categoriesQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, 'categories'), orderBy('order', 'asc'));
-  }, [db]);
-  const { data: firestoreCategories, loading: categoriesLoading } = useCollection<{id: string, name: string}>(categoriesQuery);
-
-  const dynamicCategories = useMemo(() => {
-    const base = ['Todos'];
-    if (firestoreCategories && firestoreCategories.length > 0) {
-      return [...base, ...firestoreCategories.map(c => c.name)];
+export default function SplashPage() {
+  const restaurants = [
+    {
+      id: 'paroara',
+      name: 'PAROARA',
+      tagline: 'O Restaurante Marajoara',
+      description: 'Rusticidade Amazônica Premium com sabores tradicionais da Ilha do Marajó.',
+      color: 'bg-marrom-terra',
+      hoverColor: 'hover:bg-marrom-escuro',
+      icon: <ChefHat className="w-12 h-12 text-caramelo-palha" />,
+      image: 'https://i.ibb.co/rKvQHQHj/file.jpg'
+    },
+    {
+      id: 'egua-da-panela',
+      name: 'ÉGUA DA PANELA',
+      tagline: 'Culinária Regional e Afetiva',
+      description: 'Pratos com gostinho de casa, preparados com os melhores temperos do Pará.',
+      color: 'bg-verde-folha',
+      hoverColor: 'hover:bg-verde-escuro',
+      icon: <Utensils className="w-12 h-12 text-areia-clara" />,
+      image: 'https://picsum.photos/seed/egua/1200/800'
     }
-    return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Executivos', 'Bebidas'];
-  }, [firestoreCategories]);
-
-  // Buscar produtos em destaque
-  const featuredQuery = useMemo(() => {
-    if (!db) return null;
-    return query(
-      collection(db, 'products'), 
-      where('featured', '==', true)
-    );
-  }, [db]);
-  const { data: featuredProductsRaw } = useCollection<Product>(featuredQuery);
-
-  const featuredProducts = useMemo(() => {
-    if (!featuredProductsRaw) return [];
-    return featuredProductsRaw.filter(p => p.active !== false);
-  }, [featuredProductsRaw]);
-
-  // Buscar todos os produtos
-  const allProductsQuery = useMemo(() => {
-    if (!db) return null;
-    return collection(db, 'products');
-  }, [db]);
-  const { data: allProductsRaw, loading: productsLoading } = useCollection<Product>(allProductsQuery);
-
-  // Lógica de Auto-Seed
-  useEffect(() => {
-    const autoSeed = async () => {
-      if (!db || productsLoading || categoriesLoading) return;
-      
-      if ((!allProductsRaw || allProductsRaw.length === 0) && (!firestoreCategories || firestoreCategories.length === 0)) {
-        const batch = writeBatch(db);
-        
-        const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
-        validCategories.forEach((catName, index) => {
-          const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-          const catRef = doc(db, 'categories', catId);
-          batch.set(catRef, {
-            name: catName,
-            active: true,
-            order: index * 10,
-            createdAt: serverTimestamp()
-          });
-        });
-
-        PRODUCTS.forEach((product) => {
-          const productRef = doc(db, 'products', product.id);
-          const { id, ...productData } = product;
-          batch.set(productRef, {
-            ...productData,
-            active: true,
-            createdAt: serverTimestamp()
-          });
-        });
-
-        try {
-          await batch.commit();
-          toast({ title: "Cardápio Sincronizado", description: "Os pratos tradicionais foram carregados." });
-        } catch (e) {
-          console.error('Erro ao sincronizar banco:', e);
-        }
-      }
-    };
-
-    autoSeed();
-  }, [allProductsRaw, firestoreCategories, productsLoading, categoriesLoading, db, toast]);
-
-  const filteredProducts = useMemo(() => {
-    if (!allProductsRaw) return [];
-    const activeOnly = allProductsRaw.filter(p => p.active !== false);
-    if (activeCategory === 'Todos') return activeOnly;
-    return activeOnly.filter(p => p.category === activeCategory);
-  }, [activeCategory, allProductsRaw]);
+  ];
 
   return (
-    <CartProvider>
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        
-        <main className="flex-1">
-          <Hero />
-          
-          <PromoBanner onProductClick={(p) => setSelectedProduct(p)} />
-          
-          <section className="container mx-auto px-4 py-8 md:py-16">
-            <div className="text-center mb-10 md:mb-16 space-y-3">
-              <div className="flex items-center justify-center gap-2 text-caramelo-palha">
-                <Sparkles className="w-4 h-4 fill-caramelo-palha" />
-                <span className="text-[10px] font-body uppercase tracking-[0.3em] font-bold">Favoritos</span>
-                <Sparkles className="w-4 h-4 fill-caramelo-palha" />
+    <div className="min-h-screen bg-areia-clara flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-rustic-texture opacity-[0.03] pointer-events-none"></div>
+      
+      <div className="max-w-6xl w-full z-10 space-y-12">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-6xl font-headline text-marrom-terra tracking-widest uppercase">Grupo Gastronômico</h1>
+          <p className="text-cinza-organico font-subheadline italic text-lg md:text-xl">Escolha uma de nossas experiências para começar.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+          {restaurants.map((res) => (
+            <Link 
+              key={res.id} 
+              href={`/restaurante/${res.id}`}
+              className="group relative h-[400px] md:h-[500px] overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 hover:scale-[1.02]"
+            >
+              <div className="absolute inset-0">
+                <img 
+                  src={res.image} 
+                  alt={res.name} 
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 brightness-50"
+                />
               </div>
-              <h2 className="text-3xl md:text-5xl font-headline text-marrom-terra">Destaques da Casa</h2>
-              <div className="w-20 h-0.5 bg-caramelo-palha mx-auto rounded-full opacity-40"></div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-              {featuredProducts.length > 0 ? (
-                featuredProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id}
-                    product={product} 
-                    onClick={() => setSelectedProduct(product)}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-10 text-cinza-organico italic">
-                  {productsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto opacity-20" /> : "Preparando destaques..."}
+              
+              <div className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-opacity duration-500",
+                "bg-gradient-to-t from-black/80 via-black/20 to-transparent"
+              )}>
+                <div className="mb-6 transform transition-transform duration-500 group-hover:-translate-y-4">
+                  {res.icon}
                 </div>
-              )}
-            </div>
-          </section>
-
-          <ExperienceSection />
-          
-          <div id="menu" className="relative scroll-mt-[80px] md:scroll-mt-[100px]">
-            <div className="container mx-auto px-4 pt-12 md:pt-20 text-center">
-              <h2 className="text-3xl md:text-4xl font-headline text-marrom-terra mb-8 md:mb-12">Nosso Cardápio</h2>
-            </div>
-            
-            <CategoryFilter 
-              activeCategory={activeCategory as any} 
-              categories={dynamicCategories}
-              onSelect={setActiveCategory as any} 
-            />
-
-            <section className="container mx-auto px-4 py-8 md:py-16">
-              {productsLoading ? (
-                <div className="flex justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-marrom-terra opacity-20" />
+                
+                <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2">{res.name}</h2>
+                <p className="text-caramelo-palha font-subheadline text-lg italic mb-6">{res.tagline}</p>
+                <p className="text-white/80 font-body text-sm max-w-sm mb-8 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700">{res.description}</p>
+                
+                <div className={cn(
+                  "flex items-center gap-2 px-8 py-4 rounded-full text-white font-black uppercase tracking-widest text-xs transition-all",
+                  res.color, res.hoverColor
+                )}>
+                  Entrar no Cardápio
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
-              ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-                  {filteredProducts.map((product) => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      onClick={() => setSelectedProduct(product)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-20 bg-areia-media/10 rounded-xl border border-dashed border-areia-escura/40">
-                  <p className="text-sm text-cinza-organico italic">Nenhum prato nesta categoria.</p>
-                </div>
-              )}
-            </section>
-          </div>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-          <WhatsAppCTA />
-        </main>
-
-        <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-16 md:py-24 pb-32">
-          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
-            <div className="space-y-4 text-center md:text-left">
-              <h3 className="font-headline text-3xl md:text-4xl text-caramelo-palha">PAROARA</h3>
-              <p className="text-xs md:text-sm italic opacity-80">O verdadeiro restaurante marajoara no coração de Belém.</p>
-            </div>
-            <nav className="flex flex-col items-center md:items-start gap-3 text-xs md:text-sm">
-              <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-2">Menu</h4>
-              <Link href="/" className="hover:text-caramelo-palha transition-colors">Home</Link>
-              <Link href="/produtos" className="hover:text-caramelo-palha transition-colors">Cardápio</Link>
-              <Link href="/admin/login" className="text-caramelo-palha/60 hover:text-caramelo-palha transition-colors">Admin</Link>
-            </nav>
-            <div className="space-y-3 text-xs md:text-sm text-center md:text-left">
-              <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-2">Visite-nos</h4>
-              <p>Av. Gentil Bittencourt, 2231 - Belém/PA</p>
-              <p>Terça a Domingo: 11h às 15h e 18h às 23h30</p>
-            </div>
-          </div>
-        </footer>
-
-        <ProductModal 
-          product={selectedProduct} 
-          isOpen={!!selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-        />
-        <CartTray />
-        <FloatingWhatsAppButton />
+        <div className="text-center pt-8 opacity-40">
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-marrom-terra">
+            Qualidade & Tradição • Belém/PA
+          </p>
+        </div>
       </div>
-    </CartProvider>
+    </div>
   );
 }

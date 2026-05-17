@@ -6,6 +6,7 @@
       "description": "Item do cardápio do restaurante.",
       "type": "object",
       "properties": {
+        "restaurantId": { "type": "string", "enum": ["paroara", "egua-da-panela"] },
         "name": { "type": "string" },
         "description": { "type": "string" },
         "longDescription": { "type": "string" },
@@ -19,24 +20,26 @@
         "ingredients": { "type": "array", "items": { "type": "string" } },
         "emoji": { "type": "string" }
       },
-      "required": ["name", "price", "category"]
+      "required": ["name", "price", "category", "restaurantId"]
     },
     "Category": {
       "title": "Category",
       "description": "Categoria do cardápio.",
       "type": "object",
       "properties": {
+        "restaurantId": { "type": "string", "enum": ["paroara", "egua-da-panela"] },
         "name": { "type": "string" },
         "active": { "type": "boolean" },
         "order": { "type": "number" }
       },
-      "required": ["name", "active"]
+      "required": ["name", "active", "restaurantId"]
     },
     "Order": {
       "title": "Order",
       "description": "Pedido do cliente.",
       "type": "object",
       "properties": {
+        "restaurantId": { "type": "string" },
         "total": { "type": "number" },
         "status": { "type": "string" },
         "customer": { "type": "object" },
@@ -46,9 +49,10 @@
     },
     "Settings": {
       "title": "Settings",
-      "description": "Configurações globais do restaurante.",
+      "description": "Configurações globais por restaurante.",
       "type": "object",
       "properties": {
+        "restaurantId": { "type": "string" },
         "storeName": { "type": "string" },
         "whatsapp": { "type": "string" },
         "address": { "type": "string" },
@@ -63,7 +67,7 @@
   "firestore": {
     "/products/{productId}": {
       "schema": "Product",
-      "description": "Coleção de produtos do cardápio."
+      "description": "Coleção de produtos."
     },
     "/categories/{categoryId}": {
       "schema": "Category",
@@ -71,11 +75,11 @@
     },
     "/orders/{orderId}": {
       "schema": "Order",
-      "description": "Coleção de pedidos realizados."
+      "description": "Coleção de pedidos."
     },
     "/settings/{settingsId}": {
       "schema": "Settings",
-      "description": "Configurações gerais do sistema."
+      "description": "Configurações."
     }
   }
 }
