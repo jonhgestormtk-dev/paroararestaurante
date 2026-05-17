@@ -9,16 +9,6 @@ import { cn } from '@/lib/utils';
 export default function SplashPage() {
   const restaurants = [
     {
-      id: 'paroara',
-      name: 'PAROARA',
-      tagline: 'O Restaurante Marajoara',
-      description: 'Rusticidade Amazônica Premium com sabores tradicionais da Ilha do Marajó.',
-      color: 'bg-marrom-terra',
-      hoverColor: 'hover:bg-marrom-escuro',
-      icon: <ChefHat className="w-12 h-12 text-caramelo-palha" />,
-      image: 'https://i.ibb.co/rKvQHQHj/file.jpg'
-    },
-    {
       id: 'egua-da-panela',
       name: 'ÉGUA DA PANELA',
       tagline: 'Culinária Regional e Afetiva',
@@ -27,6 +17,16 @@ export default function SplashPage() {
       hoverColor: 'hover:bg-verde-escuro',
       icon: <Utensils className="w-12 h-12 text-areia-clara" />,
       image: 'https://picsum.photos/seed/egua/1200/800'
+    },
+    {
+      id: 'paroara',
+      name: 'PAROARA',
+      tagline: 'O Restaurante Marajoara',
+      description: 'Rusticidade Amazônica Premium com sabores tradicionais da Ilha do Marajó.',
+      color: 'bg-marrom-terra',
+      hoverColor: 'hover:bg-marrom-escuro',
+      icon: <ChefHat className="w-12 h-12 text-caramelo-palha" />,
+      image: 'https://i.ibb.co/rKvQHQHj/file.jpg'
     }
   ];
 
