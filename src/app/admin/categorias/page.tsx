@@ -3,13 +3,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-  Tags, 
   Plus, 
   Search, 
   Edit2, 
   Trash2, 
   CheckCircle2,
-  XCircle
+  XCircle,
+  Store
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
@@ -33,14 +33,23 @@ import {
   DialogTitle, 
   DialogFooter 
 } from '@/components/ui/dialog';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { RestaurantSlug } from '@/lib/types';
 
 interface CategoryDoc {
   id: string;
+  restaurantId: RestaurantSlug;
   name: string;
   active: boolean;
   order?: number;
@@ -49,6 +58,7 @@ interface CategoryDoc {
 
 export default function AdminCategories() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [restaurantFilter, setRestaurantFilter] = useState<string>('todos');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDoc | null>(null);
   const { toast } = useToast();
@@ -61,6 +71,7 @@ export default function AdminCategories() {
   const { data: categories, loading } = useCollection<CategoryDoc>(categoriesQuery);
 
   const [formData, setFormData] = useState<Partial<CategoryDoc>>({
+    restaurantId: 'paroara',
     name: '',
     active: true,
     order: 0
@@ -68,15 +79,18 @@ export default function AdminCategories() {
 
   const filteredCategories = useMemo(() => {
     if (!categories) return [];
-    return categories.filter(c => 
-      c.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [categories, searchTerm]);
+    return categories.filter(c => {
+      const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRestaurant = restaurantFilter === 'todos' || c.restaurantId === restaurantFilter;
+      return matchesSearch && matchesRestaurant;
+    });
+  }, [categories, searchTerm, restaurantFilter]);
 
   const handleOpenModal = (category?: CategoryDoc) => {
     if (category) {
       setEditingCategory(category);
       setFormData({
+        restaurantId: category.restaurantId,
         name: category.name,
         active: category.active,
         order: category.order || 0
@@ -84,9 +98,10 @@ export default function AdminCategories() {
     } else {
       setEditingCategory(null);
       setFormData({
+        restaurantId: restaurantFilter !== 'todos' ? (restaurantFilter as RestaurantSlug) : 'paroara',
         name: '',
         active: true,
-        order: categories ? categories.length : 0
+        order: categories ? categories.length * 10 : 0
       });
     }
     setIsModalOpen(true);
@@ -107,7 +122,7 @@ export default function AdminCategories() {
       const docRef = doc(db, 'categories', editingCategory.id);
       updateDoc(docRef, dataToSave)
         .then(() => {
-          toast({ title: "Categoria Atualizada", description: "As alterações foram salvas." });
+          toast({ title: "Categoria Atualizada" });
         })
         .catch(async () => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -123,7 +138,7 @@ export default function AdminCategories() {
         createdAt: serverTimestamp()
       })
         .then(() => {
-          toast({ title: "Categoria Criada", description: "Nova categoria adicionada ao cardápio." });
+          toast({ title: "Categoria Criada" });
         })
         .catch(async () => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -142,7 +157,7 @@ export default function AdminCategories() {
     
     const docRef = doc(db, 'categories', id);
     deleteDoc(docRef).then(() => {
-      toast({ title: "Removida", description: "Categoria excluída com sucesso." });
+      toast({ title: "Removida" });
     }).catch(async () => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
@@ -151,22 +166,16 @@ export default function AdminCategories() {
     });
   };
 
-  const toggleActive = (category: CategoryDoc) => {
-    if (!db) return;
-    const docRef = doc(db, 'categories', category.id);
-    updateDoc(docRef, { active: !category.active });
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-headline text-marrom-terra">Categorias</h1>
-          <p className="text-cinza-organico font-subheadline italic">Gerencie as divisões do seu cardápio.</p>
+          <p className="text-cinza-organico font-subheadline italic">Gerencie as divisões específicas por restaurante.</p>
         </div>
         <Button 
           onClick={() => handleOpenModal()} 
-          className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-6 py-6 font-bold uppercase tracking-widest text-xs gap-2 shadow-xl"
+          className="bg-marrom-terra text-areia-clara rounded-sm gap-2 uppercase tracking-widest text-xs"
         >
           <Plus className="w-4 h-4" />
           Nova Categoria
@@ -174,54 +183,64 @@ export default function AdminCategories() {
       </div>
 
       <Card className="bg-white border-areia-escura overflow-hidden">
-        <div className="p-6 border-b border-areia-escura bg-areia-clara/20">
-          <div className="relative max-w-md">
+        <div className="p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
               placeholder="Buscar categoria..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-areia-escura/50 focus:ring-marrom-terra"
+              className="pl-10"
             />
           </div>
+          <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
+            <SelectTrigger className="w-full md:w-64">
+              <div className="flex items-center gap-2">
+                <Store className="w-3 h-3" />
+                <SelectValue placeholder="Filtrar Restaurante" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os Restaurantes</SelectItem>
+              <SelectItem value="paroara">Paroara</SelectItem>
+              <SelectItem value="egua-da-panela">Égua da Panela</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-areia-clara/10">
-              <TableRow className="hover:bg-transparent border-areia-escura">
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ordem</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Nome</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Status</TableHead>
-                <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ações</TableHead>
+            <TableHeader>
+              <TableRow className="border-areia-escura">
+                <TableHead className="text-[10px] font-black uppercase tracking-widest">Restaurante</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest">Nome</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest">Ordem</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                <TableHead className="text-right text-[10px] font-black uppercase tracking-widest">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                Array(3).fill(0).map((_, i) => (
-                  <TableRow key={i} className="animate-pulse">
-                    <TableCell colSpan={4} className="h-16 bg-areia-media/5"></TableCell>
-                  </TableRow>
-                ))
+                <TableRow><TableCell colSpan={5} className="text-center py-10">Carregando...</TableCell></TableRow>
               ) : filteredCategories.length > 0 ? (
                 filteredCategories.map((cat) => (
-                  <TableRow key={cat.id} className={cn("hover:bg-areia-media/5 border-areia-escura group transition-colors", !cat.active && "opacity-60")}>
+                  <TableRow key={cat.id} className={cn("hover:bg-areia-media/5 border-areia-escura transition-colors", !cat.active && "opacity-60")}>
+                    <TableCell>
+                      <Badge variant="outline" className={cn(
+                        "text-[9px] font-black uppercase tracking-widest",
+                        cat.restaurantId === 'paroara' ? "border-marrom-terra text-marrom-terra" : "border-fogo-vibrante text-fogo-vibrante"
+                      )}>
+                        {cat.restaurantId.replace('-', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-bold text-marrom-terra">{cat.name}</TableCell>
                     <TableCell className="font-mono text-xs">{cat.order || 0}</TableCell>
                     <TableCell>
-                      <span className="text-sm font-bold text-marrom-terra">{cat.name}</span>
-                    </TableCell>
-                    <TableCell>
-                      <button 
-                        onClick={() => toggleActive(cat)}
-                        className={cn(
-                          "flex items-center gap-1.5 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter border transition-all",
-                          cat.active 
-                            ? "bg-verde-folha/10 text-verde-folha border-verde-folha/20" 
-                            : "bg-gray-200 text-gray-500 border-gray-300"
-                        )}
-                      >
-                        {cat.active ? <><CheckCircle2 className="w-3 h-3" /> Ativa</> : <><XCircle className="w-3 h-3" /> Inativa</>}
-                      </button>
+                      {cat.active ? (
+                        <Badge className="bg-verde-folha/10 text-verde-folha border-verde-folha/20 text-[8px]">ATIVA</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-[8px]">INATIVA</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -237,8 +256,8 @@ export default function AdminCategories() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-32 text-center text-cinza-organico italic">
-                    Nenhuma categoria encontrada.
+                  <TableCell colSpan={5} className="h-32 text-center text-cinza-organico italic">
+                    Nenhuma categoria encontrada para este filtro.
                   </TableCell>
                 </TableRow>
               )}
@@ -257,7 +276,23 @@ export default function AdminCategories() {
           
           <div className="p-6 space-y-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Nome da Categoria</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Restaurante</Label>
+              <Select 
+                value={formData.restaurantId} 
+                onValueChange={(v) => setFormData({...formData, restaurantId: v as RestaurantSlug})}
+              >
+                <SelectTrigger className="bg-white border-areia-escura">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paroara">Paroara</SelectItem>
+                  <SelectItem value="egua-da-panela">Égua da Panela</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest">Nome da Categoria</Label>
               <Input 
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -267,7 +302,7 @@ export default function AdminCategories() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ordem de Exibição</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Ordem de Exibição</Label>
               <Input 
                 type="number"
                 value={formData.order}
