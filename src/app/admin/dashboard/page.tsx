@@ -177,17 +177,30 @@ export default function AdminDashboard() {
       </div>
 
       <Card className="p-6">
-        <CardTitle className="mb-6">Últimos Pedidos (Centralizado)</CardTitle>
+        <CardTitle className="mb-6 text-lg font-headline text-marrom-terra">Últimos Pedidos (Centralizado)</CardTitle>
         <div className="space-y-4">
           {recentOrders?.map(order => (
-            <div key={order.id} className="flex items-center justify-between border-b pb-2">
+            <div key={order.id} className="flex items-center justify-between border-b border-areia-escura/30 pb-3">
               <div>
-                <p className="font-bold">{order.customer.name}</p>
-                <Badge variant="outline" className="text-[8px]">{order.restaurantId.toUpperCase()}</Badge>
+                <p className="font-bold text-marrom-terra text-sm">{order.customer.name}</p>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline" className="text-[8px] font-black tracking-widest uppercase">
+                    {(order.restaurantId || 'Geral').toUpperCase()}
+                  </Badge>
+                  <span className="text-[10px] text-cinza-organico font-mono">
+                    #{order.orderNumber || order.id.substring(0, 5)}
+                  </span>
+                </div>
               </div>
-              <p className="font-mono text-sm">R$ {order.total.toFixed(2)}</p>
+              <div className="text-right">
+                <p className="font-mono text-xs font-bold text-marrom-escuro">R$ {order.total.toFixed(2).replace('.', ',')}</p>
+                <p className="text-[9px] text-cinza-organico italic">{order.status}</p>
+              </div>
             </div>
           ))}
+          {(!recentOrders || recentOrders.length === 0) && (
+            <p className="text-center py-6 text-sm italic text-cinza-organico">Nenhum pedido registrado.</p>
+          )}
         </div>
       </Card>
     </div>
