@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -25,7 +26,7 @@ import {
   writeBatch, 
   serverTimestamp
 } from 'firebase/firestore';
-import { Order, Product } from '@/lib/types';
+import { Order, Product, RestaurantSlug } from '@/lib/types';
 import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { 
   BarChart, 
@@ -42,8 +43,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -52,35 +51,30 @@ export default function AdminDashboard() {
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'checking' | 'migrating' | 'completed'>('idle');
   const hasAttemptedMigration = useRef(false);
 
-  // Buscar todos os pedidos para estatísticas
   const allOrdersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   }, [db]);
   const { data: allOrders } = useCollection<Order>(allOrdersQuery);
 
-  // Buscar últimos 5 para a lista lateral
   const recentOrdersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(5));
   }, [db]);
   const { data: recentOrders } = useCollection<Order>(recentOrdersQuery);
 
-  // Buscar todos os produtos para contagem
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'products');
   }, [db]);
   const { data: allProducts, loading: loadingProducts } = useCollection<Product>(productsQuery);
 
-  // Buscar categorias
   const catQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'categories');
   }, [db]);
   const { data: allCategories, loading: loadingCategories } = useCollection(catQuery);
 
-  // Função para popular o banco de dados
   const seedDatabase = async (force = false) => {
     if (!db || (hasAttemptedMigration.current && !force)) return;
     
@@ -90,28 +84,34 @@ export default function AdminDashboard() {
     
     try {
       const batch = writeBatch(db);
+      const restaurants: RestaurantSlug[] = ['paroara', 'egua-da-panela'];
       
-      // 1. Migrar Categorias
+      // 1. Migrar Categorias para ambos os restaurantes
       const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
       
-      validCategories.forEach((catName, index) => {
-        const catId = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-        const catRef = doc(db, 'categories', catId);
-        batch.set(catRef, {
-          name: catName,
-          active: true,
-          order: index * 10,
-          updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
-        }, { merge: true });
+      restaurants.forEach(resId => {
+        validCategories.forEach((catName, index) => {
+          const catId = `${resId}-${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')}`;
+          const catRef = doc(db, 'categories', catId);
+          batch.set(catRef, {
+            restaurantId: resId,
+            name: catName,
+            active: true,
+            order: index * 10,
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp()
+          }, { merge: true });
+        });
       });
 
-      // 2. Migrar Produtos
-      PRODUCTS.forEach((product) => {
+      // 2. Migrar Produtos (distribuir entre restaurantes)
+      PRODUCTS.forEach((product, idx) => {
+        const resId = idx % 2 === 0 ? 'paroara' : 'egua-da-panela';
         const productRef = doc(db, 'products', product.id);
         const { id, ...productData } = product;
         batch.set(productRef, {
           ...productData,
+          restaurantId: resId,
           active: productData.active ?? true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -119,275 +119,77 @@ export default function AdminDashboard() {
       });
 
       await batch.commit();
-      
       setMigrationStatus('completed');
-      toast({
-        title: "Sincronização Concluída",
-        description: "Os pratos e categorias foram carregados no Firestore.",
-      });
+      toast({ title: "Sincronização Concluída", description: "Dados migrados para multi-restaurante." });
     } catch (error: any) {
-      console.error('Erro na migração:', error);
+      console.error(error);
       setMigrationStatus('idle');
       hasAttemptedMigration.current = false;
-      toast({ variant: "destructive", title: "Erro na Sincronização", description: "Verifique sua conexão ou permissões." });
+      toast({ variant: "destructive", title: "Erro na Sincronização" });
     } finally {
       setIsSeeding(false);
     }
   };
 
-  // Efeito para disparar a migração automática se o banco estiver vazio
   useEffect(() => {
     if (!loadingProducts && !loadingCategories && db) {
       if ((!allProducts || allProducts.length === 0) && (!allCategories || allCategories.length === 0)) {
         seedDatabase();
-      } else if ((allProducts && allProducts.length > 0) || (allCategories && allCategories.length > 0)) {
+      } else {
         setMigrationStatus('completed');
       }
     }
   }, [loadingProducts, loadingCategories, allProducts, allCategories, db]);
 
-  const formatDate = (createdAt: any) => {
-    if (!createdAt) return '...';
-    try {
-      if (createdAt instanceof Timestamp) {
-        return createdAt.toDate().toLocaleDateString('pt-BR');
-      }
-      if (createdAt.seconds) {
-        return new Date(createdAt.seconds * 1000).toLocaleDateString('pt-BR');
-      }
-      return new Date(createdAt).toLocaleDateString('pt-BR');
-    } catch (e) {
-      return 'Data Inválida';
-    }
-  };
-
-  const currentMonthName = useMemo(() => {
-    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    return months[new Date().getMonth()];
-  }, []);
-
   const stats = useMemo(() => {
-    if (!allOrders) return {
-      totalOrders: '0',
-      totalRevenue: 'R$ 0,00',
-      activeProducts: allProducts?.length.toString() || '0',
-      monthlyOrders: '0'
-    };
-
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
+    if (!allOrders) return { totalOrders: '0', totalRevenue: 'R$ 0,00', activeProducts: '0' };
     const totalRev = allOrders.reduce((acc, order) => acc + (order.total || 0), 0);
-    const monthly = allOrders.filter(order => {
-      let date;
-      if (order.createdAt instanceof Timestamp) {
-        date = order.createdAt.toDate();
-      } else if (order.createdAt?.seconds) {
-        date = new Date(order.createdAt.seconds * 1000);
-      } else {
-        date = new Date(order.createdAt);
-      }
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    }).length;
-
     return {
       totalOrders: allOrders.length.toLocaleString(),
       totalRevenue: `R$ ${totalRev.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      activeProducts: allProducts?.length.toString() || '0',
-      monthlyOrders: monthly.toString()
+      activeProducts: allProducts?.length.toString() || '0'
     };
   }, [allOrders, allProducts]);
 
-  const chartData = useMemo(() => {
-    if (!allOrders) return [];
-    
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    // Obter último dia do mês atual
-    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
-    const result = [];
-    
-    // Gerar dados para cada dia do mês atual
-    for (let day = 1; day <= lastDayOfMonth; day++) {
-      const pedidosNoDia = allOrders.filter(order => {
-        let orderDate;
-        if (order.createdAt instanceof Timestamp) {
-          orderDate = order.createdAt.toDate();
-        } else if (order.createdAt?.seconds) {
-          orderDate = new Date(order.createdAt.seconds * 1000);
-        } else {
-          orderDate = new Date(order.createdAt);
-        }
-        
-        return (
-          orderDate.getDate() === day && 
-          orderDate.getMonth() === currentMonth && 
-          orderDate.getFullYear() === currentYear
-        );
-      }).length;
-      
-      result.push({ 
-        name: day.toString().padStart(2, '0'), 
-        pedidos: pedidosNoDia 
-      });
-    }
-    
-    return result;
-  }, [allOrders]);
-
-  const metrics = [
-    { label: 'Total de Pedidos', value: stats.totalOrders, icon: ShoppingBag, color: 'text-marrom-terra' },
-    { label: 'Receita Total', value: stats.totalRevenue, icon: DollarSign, color: 'text-verde-folha' },
-    { label: 'Produtos Ativos', value: stats.activeProducts, icon: Package, color: 'text-caramelo-palha' },
-    { label: 'Pedidos do Mês', value: stats.monthlyOrders, icon: TrendingUp, color: 'text-marrom-madeira' },
-  ];
-
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
+    <div className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-headline text-marrom-terra uppercase tracking-wider">Dashboard Admin</h1>
-          <p className="text-cinza-organico font-subheadline italic">Dados sincronizados em tempo real com o Firestore.</p>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => seedDatabase(true)}
-            disabled={isSeeding}
-            className="text-[10px] uppercase font-bold tracking-widest gap-2 border-areia-escura"
-          >
-            <RefreshCw className={cn("w-3 h-3", isSeeding && "animate-spin")} />
-            Forçar Sincronia
-          </Button>
-
-          {migrationStatus === 'migrating' || isSeeding ? (
-            <div className="flex items-center gap-2 text-caramelo-palha bg-caramelo-palha/10 px-4 py-2 rounded-sm border border-caramelo-palha/20">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Sincronizando...</span>
-            </div>
-          ) : migrationStatus === 'completed' ? (
-            <div className="flex items-center gap-2 text-verde-folha bg-verde-folha/10 px-4 py-2 rounded-sm border border-verde-folha/20">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Banco Ativo</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-cinza-organico bg-areia-clara px-4 py-2 rounded-sm border border-areia-escura">
-              <Database className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Aguardando...</span>
-            </div>
-          )}
-        </div>
+        <h1 className="text-3xl font-headline text-marrom-terra">Dashboard Admin</h1>
+        <Button variant="outline" size="sm" onClick={() => seedDatabase(true)} disabled={isSeeding}>
+          {isSeeding ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+          Sincronizar Dados
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((stat, i) => (
-          <Card key={i} className="bg-white border-areia-escura hover:shadow-lg transition-all group overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira/60">{stat.label}</p>
-                  <p className="text-2xl font-bold text-marrom-escuro">{stat.value}</p>
-                </div>
-                <div className={cn("p-3 rounded-sm bg-areia-clara", stat.color)}>
-                  <stat.icon className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 bg-white border-areia-escura">
-          <CardHeader>
-            <CardTitle className="font-headline text-lg text-marrom-terra">
-              Volume de Vendas - <span className="text-caramelo-palha">{currentMonthName}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px]">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 9, fill: '#6A432D' }}
-                    interval={window?.innerWidth < 768 ? 2 : 0}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6A432D' }} />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(75, 46, 31, 0.05)' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                  <Bar dataKey="pedidos" radius={[4, 4, 0, 0]}>
-                    {chartData.map((entry, index) => {
-                      const isToday = new Date().getDate().toString().padStart(2, '0') === entry.name;
-                      return (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={isToday ? '#A87442' : '#4B2E1F'} 
-                        />
-                      );
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-cinza-organico italic">
-                {allOrders ? "Aguardando primeiro pedido..." : "Carregando dados..."}
-              </div>
-            )}
-          </CardContent>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6">
+          <p className="text-xs font-bold uppercase text-marrom-madeira opacity-60">Pedidos Totais</p>
+          <p className="text-3xl font-bold">{stats.totalOrders}</p>
         </Card>
-
-        <Card className="bg-white border-areia-escura">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-headline text-lg text-marrom-terra">Últimos Pedidos</CardTitle>
-            <Clock className="w-4 h-4 text-marrom-madeira/40" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {recentOrders && recentOrders.length > 0 ? (
-                recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between group">
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold text-marrom-terra truncate max-w-[120px]">{order.customer.name}</p>
-                      <div className="flex items-center gap-1.5 text-xs text-cinza-organico">
-                        <Calendar className="w-3 h-3" />
-                        <span className="font-mono font-black text-marrom-terra bg-marrom-terra/5 px-1.5 py-0.5 rounded-sm tracking-tighter">
-                          #{order.orderNumber || order.id.substring(0, 8)}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className={cn(
-                      "text-[8px] uppercase font-bold tracking-widest",
-                      order.status === 'Pendente' ? "text-caramelo-palha border-caramelo-palha/20" : 
-                      order.status === 'Finalizado' ? "text-verde-folha border-verde-folha/20" : "text-marrom-madeira"
-                    )}>
-                      {order.status}
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-10 text-cinza-organico text-xs italic">Nenhum pedido recente.</div>
-              )}
-              <Link href="/admin/pedidos">
-                <Button variant="outline" className="w-full mt-4 text-[10px] uppercase tracking-[0.2em] font-bold border-areia-escura text-marrom-madeira">
-                  Ver todos os pedidos
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
+        <Card className="p-6">
+          <p className="text-xs font-bold uppercase text-marrom-madeira opacity-60">Faturamento</p>
+          <p className="text-3xl font-bold">{stats.totalRevenue}</p>
+        </Card>
+        <Card className="p-6">
+          <p className="text-xs font-bold uppercase text-marrom-madeira opacity-60">Pratos Ativos</p>
+          <p className="text-3xl font-bold">{stats.activeProducts}</p>
         </Card>
       </div>
+
+      <Card className="p-6">
+        <CardTitle className="mb-6">Últimos Pedidos (Centralizado)</CardTitle>
+        <div className="space-y-4">
+          {recentOrders?.map(order => (
+            <div key={order.id} className="flex items-center justify-between border-b pb-2">
+              <div>
+                <p className="font-bold">{order.customer.name}</p>
+                <Badge variant="outline" className="text-[8px]">{order.restaurantId.toUpperCase()}</Badge>
+              </div>
+              <p className="font-mono text-sm">R$ {order.total.toFixed(2)}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect, use } from 'react';
+import React, { useState, useMemo, use } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { PromoBanner } from '@/components/PromoBanner';
@@ -14,12 +14,9 @@ import { CartTray } from '@/components/CartTray';
 import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
 import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, where, orderBy, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Product, RestaurantSlug } from '@/lib/types';
-import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
 
 export default function RestaurantHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -27,26 +24,28 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
-  const { toast } = useToast();
 
+  // Consultar todas as categorias e filtrar em memória para evitar erros de índice composto em protótipos
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
-    return query(
-      collection(db, 'categories'), 
-      where('restaurantId', '==', restaurantId),
-      orderBy('order', 'asc')
-    );
-  }, [db, restaurantId]);
-  const { data: firestoreCategories, loading: categoriesLoading } = useCollection<{id: string, name: string}>(categoriesQuery);
+    return query(collection(db, 'categories'), orderBy('order', 'asc'));
+  }, [db]);
+  const { data: allCategoriesRaw, loading: categoriesLoading } = useCollection<any>(categoriesQuery);
 
   const dynamicCategories = useMemo(() => {
     const base = ['Todos'];
-    if (firestoreCategories && firestoreCategories.length > 0) {
-      return [...base, ...firestoreCategories.map(c => c.name)];
+    if (!allCategoriesRaw) return base;
+    
+    // Filtrar categorias pertencentes ao restaurante atual
+    const filtered = allCategoriesRaw.filter((c: any) => c.restaurantId === restaurantId);
+    if (filtered.length > 0) {
+      return [...base, ...filtered.map((c: any) => c.name)];
     }
-    return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Executivos', 'Bebidas'];
-  }, [firestoreCategories]);
+    
+    return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Bebidas'];
+  }, [allCategoriesRaw, restaurantId]);
 
+  // Produtos em destaque
   const featuredQuery = useMemo(() => {
     if (!db) return null;
     return query(
@@ -62,6 +61,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     return featuredProductsRaw.filter(p => p.active !== false);
   }, [featuredProductsRaw]);
 
+  // Todos os produtos do restaurante
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
     return query(
@@ -88,7 +88,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
           
           <PromoBanner onProductClick={(p) => setSelectedProduct(p)} />
           
-          <section className="container mx-auto px-4 py-8 md:py-16">
+          <section className="container mx-auto px-4 py-12 md:py-20">
             <div className="text-center mb-10 md:mb-16 space-y-3">
               <div className="flex items-center justify-center gap-2 text-caramelo-palha">
                 <Sparkles className="w-4 h-4 fill-caramelo-palha" />
@@ -110,7 +110,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-cinza-organico italic">
-                  {productsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto opacity-20" /> : "Preparando destaques..."}
+                  {productsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto opacity-20" /> : "Nenhum destaque configurado."}
                 </div>
               )}
             </div>
@@ -160,15 +160,11 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
             <div className="space-y-4 text-center md:text-left">
               <h3 className="font-headline text-3xl md:text-4xl text-caramelo-palha uppercase">{restaurantId.replace('-', ' ')}</h3>
               <p className="text-xs md:text-sm italic opacity-80">Sabor e tradição no coração de Belém.</p>
-              <Link href="/" className="inline-block text-[10px] uppercase font-bold tracking-widest text-caramelo-palha/60 hover:text-caramelo-palha transition-all">
-                Voltar para Seleção de Restaurantes
-              </Link>
             </div>
             <nav className="flex flex-col items-center md:items-start gap-3 text-xs md:text-sm">
               <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-2">Menu</h4>
-              <Link href={`/restaurante/${restaurantId}`} className="hover:text-caramelo-palha transition-colors">Home</Link>
-              <Link href={`/restaurante/${restaurantId}/produtos`} className="hover:text-caramelo-palha transition-colors">Cardápio</Link>
-              <Link href="/admin/login" className="text-caramelo-palha/60 hover:text-caramelo-palha transition-colors">Admin</Link>
+              <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="hover:text-caramelo-palha transition-colors">Início</button>
+              <button onClick={() => document.getElementById('menu')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-caramelo-palha transition-colors">Cardápio</button>
             </nav>
             <div className="space-y-3 text-xs md:text-sm text-center md:text-left">
               <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-2">Visite-nos</h4>
