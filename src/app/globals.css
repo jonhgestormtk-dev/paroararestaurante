@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Custom Brand Variables (HSL) */
+    /* Paroara Theme Variables */
     --marrom-terra: 20 41% 21%;
     --marrom-escuro: 20 44% 13%;
     --marrom-madeira: 21 40% 30%;
@@ -19,10 +19,16 @@
     --marrom-texto: 23 18% 26%;
     --cinza-organico: 26 12% 49%;
     --branco-quente: 43 100% 99%;
-    --sombra-natural: rgba(35, 26, 21, 0.06);
-    --sombra-hover: rgba(35, 26, 21, 0.12);
 
-    /* ShadCN Integration */
+    /* Égua da Panela Theme Variables */
+    --fogo-vibrante: 0 84% 55%;
+    --fogo-escuro: 0 84% 35%;
+    --preto-carvao: 0 0% 7%;
+    --preto-panela: 0 0% 12%;
+    --creme-suave: 30 30% 95%;
+    --creme-legivel: 30 20% 85%;
+
+    /* Default ShadCN Integration (Mapped to Paroara as base) */
     --background: var(--branco-quente);
     --foreground: var(--marrom-texto);
     --card: var(--areia-clara);
@@ -44,26 +50,6 @@
     --ring: var(--marrom-terra);
     --radius: 0.375rem;
   }
-
-  .dark {
-    --background: var(--marrom-escuro);
-    --foreground: var(--areia-clara);
-    --card: var(--grafite-amadeirado);
-    --card-foreground: var(--areia-clara);
-    --popover: var(--grafite-amadeirado);
-    --popover-foreground: var(--areia-clara);
-    --primary: var(--caramelo-palha);
-    --primary-foreground: var(--marrom-escuro);
-    --secondary: var(--marrom-madeira);
-    --secondary-foreground: var(--areia-clara);
-    --muted: var(--grafite-amadeirado);
-    --muted-foreground: var(--cinza-organico);
-    --accent: var(--verde-folha);
-    --accent-foreground: var(--branco-quente);
-    --border: var(--marrom-madeira);
-    --input: var(--marrom-madeira);
-    --ring: var(--caramelo-palha);
-  }
 }
 
 @layer base {
@@ -79,7 +65,16 @@
   }
 }
 
-/* Custom Scrollbar styling using variables directly to avoid build issues */
+/* Custom Textures */
+.bg-rustic-texture {
+  background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+}
+
+.bg-carbon-texture {
+  background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 10px;
 }

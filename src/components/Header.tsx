@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -22,7 +21,6 @@ export function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const pathname = usePathname();
 
-  // Detectar qual restaurante estamos acessando via URL
   const restaurantSlug = useMemo(() => {
     const parts = pathname.split('/');
     if (parts[1] === 'restaurante' && parts[2]) {
@@ -31,11 +29,10 @@ export function Header() {
     return null;
   }, [pathname]);
 
-  const navLinks = useMemo(() => {
-    const base = [
-      { label: 'Início', path: '/' },
-    ];
+  const isEgua = restaurantSlug === 'egua-da-panela';
 
+  const navLinks = useMemo(() => {
+    const base = [{ label: 'Início', path: '/' }];
     if (restaurantSlug) {
       return [
         ...base,
@@ -43,24 +40,31 @@ export function Header() {
         { label: 'Contato', path: '#contato' },
       ];
     }
-
-    return [
-      ...base,
-      { label: 'Cardápio Global', path: '/produtos' },
-    ];
+    return [...base, { label: 'Cardápio Global', path: '/produtos' }];
   }, [restaurantSlug]);
 
   return (
     <>
-      <header className="fixed top-0 z-50 w-full h-16 md:h-20 bg-marrom-escuro text-areia-clara shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-b border-marrom-madeira/40 transition-all duration-500 backdrop-blur-sm bg-opacity-95 flex items-center">
+      <header className={cn(
+        "fixed top-0 z-50 w-full h-16 md:h-20 shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500 backdrop-blur-sm bg-opacity-95 flex items-center border-b",
+        isEgua 
+          ? "bg-preto-carvao text-creme-suave border-fogo-vibrante/20" 
+          : "bg-marrom-escuro text-areia-clara border-marrom-madeira/40"
+      )}>
         <div className="container mx-auto px-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 md:gap-5">
             <div className="flex flex-col items-start">
-              <h1 className="text-lg md:text-3xl font-headline tracking-[0.2em] text-caramelo-palha leading-none uppercase">
+              <h1 className={cn(
+                "text-lg md:text-3xl font-headline tracking-[0.2em] leading-none uppercase",
+                isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
+              )}>
                 {restaurantSlug ? restaurantSlug.replace('-', ' ') : 'PAROARA'}
               </h1>
-              <p className="text-[7px] md:text-[10px] font-subheadline text-areia-media/80 tracking-widest uppercase mt-0.5">
-                {restaurantSlug === 'egua-da-panela' ? 'Culinária Regional e Afetiva' : 'O Restaurante Marajoara'}
+              <p className={cn(
+                "text-[7px] md:text-[10px] font-subheadline tracking-widest uppercase mt-0.5",
+                isEgua ? "text-creme-legivel/80" : "text-areia-media/80"
+              )}>
+                {isEgua ? 'Culinária Regional e Afetiva' : 'O Restaurante Marajoara'}
               </p>
             </div>
           </Link>
@@ -70,7 +74,10 @@ export function Header() {
               <Link 
                 key={link.path} 
                 href={link.path} 
-                className="hover:text-caramelo-palha transition-all duration-300 border-b-2 border-transparent hover:border-caramelo-palha pb-1"
+                className={cn(
+                  "transition-all duration-300 border-b-2 border-transparent pb-1",
+                  isEgua ? "hover:text-fogo-vibrante hover:border-fogo-vibrante" : "hover:text-caramelo-palha hover:border-caramelo-palha"
+                )}
               >
                 {link.label}
               </Link>
@@ -82,16 +89,29 @@ export function Header() {
               className="relative cursor-pointer group p-2 hover:bg-white/5 rounded-full transition-colors" 
               onClick={() => setIsCartOpen(true)}
             >
-              <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-areia-clara group-hover:text-caramelo-palha transition-all duration-300" />
+              <ShoppingCart className={cn(
+                "w-5 h-5 md:w-6 md:h-6 transition-all duration-300",
+                isEgua ? "text-creme-suave group-hover:text-fogo-vibrante" : "text-areia-clara group-hover:text-caramelo-palha"
+              )} />
               {totalItems > 0 && (
-                <span className="absolute top-0 right-0 bg-caramelo-palha text-marrom-escuro text-[8px] md:text-[9px] font-black h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center border-2 border-marrom-escuro">
+                <span className={cn(
+                  "absolute top-0 right-0 text-[8px] md:text-[9px] font-black h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center border-2",
+                  isEgua 
+                    ? "bg-fogo-vibrante text-creme-suave border-preto-carvao" 
+                    : "bg-caramelo-palha text-marrom-escuro border-marrom-escuro"
+                )}>
                   {totalItems}
                 </span>
               )}
             </div>
 
             <Button 
-              className="hidden md:flex bg-caramelo-palha border-none text-marrom-escuro hover:bg-areia-clara hover:scale-105 transition-all duration-500 gap-2 font-black uppercase text-[10px] tracking-[0.1em] px-5 py-5 rounded shadow-xl"
+              className={cn(
+                "hidden md:flex border-none hover:scale-105 transition-all duration-500 gap-2 font-black uppercase text-[10px] tracking-[0.1em] px-5 py-5 rounded shadow-xl",
+                isEgua 
+                  ? "bg-fogo-vibrante text-creme-suave hover:bg-fogo-escuro" 
+                  : "bg-caramelo-palha text-marrom-escuro hover:bg-areia-clara"
+              )}
               onClick={() => window.open('https://wa.me/559184541085', '_blank')}
             >
               <MessageCircle className="w-4 h-4" />
@@ -100,13 +120,22 @@ export function Header() {
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-areia-clara hover:bg-white/10 p-0 h-10 w-10">
+                <Button variant="ghost" size="icon" className={cn(
+                  "lg:hidden p-0 h-10 w-10",
+                  isEgua ? "text-creme-suave hover:bg-white/5" : "text-areia-clara hover:bg-white/10"
+                )}>
                   <Menu className="w-6 h-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="bg-marrom-escuro border-r border-marrom-madeira/40 text-areia-clara p-0 w-[80%] max-w-[300px]">
-                <SheetHeader className="p-8 border-b border-marrom-madeira/20">
-                  <SheetTitle className="text-caramelo-palha font-headline text-2xl tracking-widest text-left">
+              <SheetContent side="left" className={cn(
+                "border-r p-0 w-[80%] max-w-[300px]",
+                isEgua ? "bg-preto-carvao text-creme-suave border-fogo-vibrante/20" : "bg-marrom-escuro text-areia-clara border-marrom-madeira/40"
+              )}>
+                <SheetHeader className="p-8 border-b border-white/5">
+                  <SheetTitle className={cn(
+                    "font-headline text-2xl tracking-widest text-left",
+                    isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
+                  )}>
                     {restaurantSlug ? restaurantSlug.replace('-', ' ') : 'MENU'}
                   </SheetTitle>
                 </SheetHeader>

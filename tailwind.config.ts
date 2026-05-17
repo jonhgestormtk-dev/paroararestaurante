@@ -17,7 +17,7 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
-        /* Brand Colors mapped to HSL variables */
+        /* Paroara Branding */
         'marrom-terra': 'hsl(var(--marrom-terra))',
         'marrom-escuro': 'hsl(var(--marrom-escuro))',
         'marrom-madeira': 'hsl(var(--marrom-madeira))',
@@ -26,12 +26,15 @@ export default {
         'areia-media': 'hsl(var(--areia-media))',
         'areia-escura': 'hsl(var(--areia-escura))',
         'verde-folha': 'hsl(var(--verde-folha))',
-        'verde-escuro': 'hsl(var(--verde-escuro))',
-        'oliva-suave': 'hsl(var(--oliva-suave))',
-        'grafite-amadeirado': 'hsl(var(--grafite-amadeirado))',
         'marrom-texto': 'hsl(var(--marrom-texto))',
         'cinza-organico': 'hsl(var(--cinza-organico))',
-        'branco-quente': 'hsl(var(--branco-quente))',
+        /* Égua da Panela Branding */
+        'fogo-vibrante': 'hsl(var(--fogo-vibrante))',
+        'fogo-escuro': 'hsl(var(--fogo-escuro))',
+        'preto-carvao': 'hsl(var(--preto-carvao))',
+        'preto-panela': 'hsl(var(--preto-panela))',
+        'creme-suave': 'hsl(var(--creme-suave))',
+        'creme-legivel': 'hsl(var(--creme-legivel))',
         brand: {
           earth: '#4B2E1F',
           espresso: '#2E1B12',
@@ -76,9 +79,6 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
-      },
-      backgroundImage: {
-        'rustic-texture': "url('https://www.transparenttextures.com/patterns/wood-pattern.png')",
       },
     },
   },
