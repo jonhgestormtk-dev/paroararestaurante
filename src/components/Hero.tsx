@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -90,7 +91,7 @@ export function Hero() {
             isEgua ? "border-preto-panela" : "border-white"
           )}>
             <Image
-              src={isEgua ? 'https://picsum.photos/seed/egua-panela/1200/800' : (heroImg?.imageUrl || '')}
+              src={isEgua ? 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg' : (heroImg?.imageUrl || '')}
               alt="Restaurante Regional"
               fill
               className="object-cover scale-105 hover:scale-100 transition-transform duration-[15s] ease-linear"

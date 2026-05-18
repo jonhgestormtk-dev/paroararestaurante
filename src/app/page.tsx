@@ -16,7 +16,7 @@ export default function SplashPage() {
       color: 'bg-fogo-vibrante',
       hoverColor: 'hover:bg-fogo-escuro',
       icon: <Utensils className="w-12 h-12 text-creme-suave" />,
-      image: 'https://picsum.photos/seed/egua/1200/800'
+      image: 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg'
     },
     {
       id: 'paroara',
