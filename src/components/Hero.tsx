@@ -31,9 +31,9 @@ export function Hero() {
         isEgua ? "bg-carbon-texture" : "bg-rustic-texture opacity-[0.02]"
       )}></div>
       
-      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center">
+      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
         {/* Text Content */}
-        <div className="space-y-3 md:space-y-4 text-center lg:text-left z-10 animate-in fade-in slide-in-from-left-8 duration-1000 order-2 lg:order-1">
+        <div className="space-y-3 md:space-y-6 text-center lg:text-left z-10 animate-in fade-in slide-in-from-left-8 duration-1000 order-2 lg:order-1">
           <div className="space-y-1 md:space-y-2">
             <div className="flex items-center justify-center lg:justify-start gap-2 md:gap-3">
               <div className={cn("h-[1px] w-4 md:w-6 hidden lg:block", isEgua ? "bg-fogo-vibrante/40" : "bg-verde-folha/40")}></div>
@@ -45,7 +45,7 @@ export function Hero() {
               </p>
             </div>
             <h2 className={cn(
-              "text-2xl md:text-3xl lg:text-4xl font-headline leading-[1.1] tracking-tight",
+              "text-3xl md:text-5xl lg:text-6xl font-headline leading-[1.1] tracking-tight",
               isEgua ? "text-white" : "text-marrom-terra"
             )}>
               {isEgua ? <>O tempero que<br/>faz a gente pirar</> : <>Sinta o verdadeiro<br className="hidden md:block" /> sabor marajoara</>}
@@ -55,7 +55,7 @@ export function Hero() {
           <div className={cn("w-10 md:w-16 h-[1px] mx-auto lg:mx-0 opacity-40", isEgua ? "bg-fogo-vibrante" : "bg-areia-escura")}></div>
 
           <p className={cn(
-            "font-body text-[10px] md:text-sm max-w-lg mx-auto lg:mx-0 leading-relaxed font-light italic",
+            "font-body text-[10px] md:text-base max-w-lg mx-auto lg:mx-0 leading-relaxed font-light italic",
             isEgua ? "text-creme-legivel/80" : "text-marrom-texto/70"
           )}>
             {isEgua 
@@ -67,7 +67,7 @@ export function Hero() {
             <Button 
               size="lg" 
               className={cn(
-                "px-5 md:px-8 py-4 md:py-5 text-[9px] md:text-[10px] font-bold rounded-none shadow-xl transition-all hover:scale-105 group uppercase tracking-widest",
+                "px-5 md:px-10 py-4 md:py-6 text-[10px] md:text-xs font-bold rounded-none shadow-xl transition-all hover:scale-105 group uppercase tracking-widest",
                 isEgua 
                   ? "bg-fogo-vibrante text-creme-suave hover:bg-fogo-escuro" 
                   : "bg-marrom-terra text-areia-clara hover:bg-marrom-escuro"
@@ -75,15 +75,15 @@ export function Hero() {
               onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Ver Cardápio
-              <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         </div>
 
         {/* Image Content */}
         <div className={cn(
-          "relative w-full max-w-[450px] mx-auto z-10 animate-in fade-in slide-in-from-right-8 duration-1000 order-1 lg:order-2",
-          isEgua ? "h-[160px] md:h-[220px] lg:h-[280px]" : "h-[200px] md:h-[260px] lg:h-[340px]"
+          "relative w-full max-w-[450px] lg:max-w-[550px] mx-auto z-10 animate-in fade-in slide-in-from-right-8 duration-1000 order-1 lg:order-2",
+          isEgua ? "h-[250px] md:h-[350px] lg:h-[450px]" : "h-[220px] md:h-[320px] lg:h-[400px]"
         )}>
           <div className={cn(
             "absolute inset-1 md:inset-2 border-2 rounded-tr-[20px] md:rounded-tr-[40px] rounded-bl-[20px] md:rounded-bl-[40px] -z-10 transform translate-x-1 md:translate-x-2 translate-y-1 md:translate-y-2",
@@ -99,7 +99,7 @@ export function Hero() {
               fill
               className={cn(
                 "transition-all duration-700",
-                isEgua ? "object-contain p-2 md:p-4" : "object-cover scale-105 hover:scale-100 transition-transform duration-[15s] ease-linear"
+                isEgua ? "object-contain p-0" : "object-cover scale-105 hover:scale-100 transition-transform duration-[15s] ease-linear"
               )}
               priority
               data-ai-hint={isEgua ? "regional food" : "amazon food"}
