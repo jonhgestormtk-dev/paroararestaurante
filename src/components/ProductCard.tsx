@@ -72,7 +72,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       )}>
         <div className="flex justify-between items-start mb-1.5">
           <h3 className={cn(
-            "font-subheadline text-sm md:text-lg font-black leading-tight line-clamp-2 italic",
+            "font-subheadline text-base md:text-xl font-black leading-tight italic",
             isEgua ? "text-white" : "text-marrom-terra"
           )}>
             {product.emoji && <span className="mr-1 not-italic opacity-80">{product.emoji}</span>}
@@ -81,8 +81,8 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         </div>
         
         <p className={cn(
-          "text-[9px] md:text-xs font-body italic line-clamp-2 mb-2 md:mb-3 flex-grow opacity-70 leading-relaxed",
-          isEgua ? "text-creme-legivel/60" : "text-cinza-organico"
+          "text-[10px] md:text-sm font-body italic whitespace-pre-wrap mb-3 flex-grow opacity-70 leading-relaxed",
+          isEgua ? "text-creme-legivel/80" : "text-cinza-organico"
         )}>
           {product.description}
         </p>
@@ -97,7 +97,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
               isEgua ? "text-fogo-vibrante/60" : "text-marrom-madeira/60"
             )}>R$</span>
             <span className={cn(
-              "font-body font-black text-xs md:text-base",
+              "font-body font-black text-sm md:text-lg",
               isEgua ? "text-white" : "text-marrom-escuro"
             )}>
               {product.price.toFixed(2).replace('.', ',')}
