@@ -70,10 +70,10 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         "p-2 md:p-3 flex flex-col flex-grow",
         isEgua ? "bg-preto-carvao/40" : "bg-areia-clara/20"
       )}>
-        <div className="flex justify-between items-start mb-1">
+        <div className="flex justify-between items-start mb-1.5">
           <h3 className={cn(
-            "font-subheadline text-[10px] md:text-base font-bold leading-tight line-clamp-2 italic",
-            isEgua ? "text-creme-suave" : "text-marrom-terra"
+            "font-subheadline text-sm md:text-lg font-black leading-tight line-clamp-2 italic",
+            isEgua ? "text-white" : "text-marrom-terra"
           )}>
             {product.emoji && <span className="mr-1 not-italic opacity-80">{product.emoji}</span>}
             {product.name}
