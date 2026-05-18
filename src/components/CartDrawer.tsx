@@ -246,12 +246,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   "p-4 rounded-xl border space-y-4",
                   isEgua ? "bg-preto-panela/50 border-white/5" : "bg-white border-marrom-madeira/10 shadow-sm"
                 )}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <CreditCard className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Forma de Pagamento</Label>
+                  <div className="flex items-center gap-2 mb-1 px-1">
+                    <CreditCard className={cn("w-3.5 h-3.5", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Forma de Pagamento</Label>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     {[
                       { id: 'Pix', icon: Wallet },
                       { id: 'Dinheiro', icon: Banknote },
@@ -262,13 +262,20 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         key={method.id}
                         onClick={() => setPaymentMethod(method.id as PaymentMethod)}
                         className={cn(
-                          "flex items-center gap-2 p-3 rounded-lg border text-[10px] font-bold uppercase transition-all",
+                          "flex items-center justify-center gap-2.5 p-3.5 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all duration-300",
                           paymentMethod === method.id 
-                            ? (isEgua ? "bg-fogo-vibrante text-white border-fogo-vibrante" : "bg-marrom-terra text-white border-marrom-terra")
-                            : (isEgua ? "bg-black/20 border-white/5 text-white/40" : "bg-areia-clara/50 border-transparent text-marrom-texto/60")
+                            ? (isEgua 
+                                ? "bg-fogo-vibrante text-white border-fogo-vibrante shadow-[0_10px_20px_rgba(230,57,70,0.3)]" 
+                                : "bg-marrom-terra text-white border-marrom-terra shadow-lg")
+                            : (isEgua 
+                                ? "bg-black/20 border-white/5 text-white/40 hover:border-white/10" 
+                                : "bg-areia-clara/60 border-transparent text-marrom-texto/60 hover:bg-areia-media/30")
                         )}
                       >
-                        <method.icon className="w-3.5 h-3.5" />
+                        <method.icon className={cn(
+                          "w-4 h-4",
+                          paymentMethod === method.id ? "text-white" : (isEgua ? "text-white/20" : "text-marrom-madeira/40")
+                        )} />
                         {method.id}
                       </button>
                     ))}
@@ -276,90 +283,114 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                   {paymentMethod === 'Pix' && (
                     <div className={cn(
-                      "p-3 rounded-lg border border-dashed flex flex-col gap-2",
-                      isEgua ? "border-fogo-vibrante/20 bg-fogo-vibrante/5" : "border-marrom-madeira/20 bg-marrom-madeira/5"
+                      "p-5 rounded-2xl border border-dashed flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300",
+                      isEgua ? "border-fogo-vibrante/30 bg-fogo-vibrante/5" : "border-marrom-madeira/30 bg-areia-media/20"
                     )}>
-                      <p className="text-[9px] uppercase font-black opacity-60">Chave Pix (Telefone)</p>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-sm font-bold">(91) 98454-1085</span>
+                      <div className="flex justify-between items-center">
+                        <p className={cn(
+                          "text-[9px] uppercase font-black tracking-widest opacity-60",
+                          isEgua ? "text-white" : "text-marrom-madeira"
+                        )}>Chave Pix (Telefone)</p>
+                        <Badge variant="outline" className={cn(
+                          "text-[8px] font-black uppercase border-none",
+                          isEgua ? "bg-fogo-vibrante text-white" : "bg-marrom-terra text-white"
+                        )}>Copia e Cola</Badge>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className={cn(
+                          "font-mono text-base md:text-lg font-black tracking-tighter",
+                          isEgua ? "text-white" : "text-marrom-escuro"
+                        )}>(91) 98454-1085</span>
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          className="h-8 px-2 gap-1.5 text-[9px] uppercase font-black"
+                          className={cn(
+                            "h-9 px-4 gap-2 text-[10px] uppercase font-black rounded-lg transition-all",
+                            isEgua ? "bg-white/10 text-white hover:bg-white/20" : "bg-marrom-terra/10 text-marrom-terra hover:bg-marrom-terra/20"
+                          )}
                           onClick={handleCopyPix}
                         >
-                          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                           {copied ? 'Copiado' : 'Copiar'}
                         </Button>
                       </div>
-                      <p className="text-[8px] italic opacity-40">Envie o comprovante no WhatsApp após o envio do pedido.</p>
+                      <p className={cn(
+                        "text-[9px] italic opacity-60 font-medium leading-relaxed",
+                        isEgua ? "text-creme-legivel" : "text-marrom-madeira"
+                      )}>⚠️ Envie o comprovante no WhatsApp após o envio do pedido para agilizarmos o preparo.</p>
                     </div>
                   )}
 
                   {paymentMethod === 'Dinheiro' && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                      <Label className="text-[9px] uppercase font-black opacity-60">Troco para quanto?</Label>
-                      <Input 
-                        type="number"
-                        value={changeFor}
-                        onChange={(e) => setChangeFor(e.target.value)}
-                        placeholder="Ex: 100"
-                        className={cn(
-                          "h-10 border-none rounded-lg text-xs",
-                          isEgua ? "bg-black/40 text-white" : "bg-areia-clara/50 text-marrom-texto"
-                        )}
-                      />
+                    <div className="space-y-2.5 animate-in fade-in slide-in-from-top-3 duration-300 px-1">
+                      <Label className={cn(
+                        "text-[10px] uppercase font-black tracking-widest opacity-60",
+                        isEgua ? "text-white" : "text-marrom-madeira"
+                      )}>Precisa de troco para quanto?</Label>
+                      <div className="relative">
+                        <Input 
+                          type="number"
+                          value={changeFor}
+                          onChange={(e) => setChangeFor(e.target.value)}
+                          placeholder="Ex: 100,00"
+                          className={cn(
+                            "h-12 border-none rounded-xl text-sm font-bold pl-10",
+                            isEgua ? "bg-black/60 text-white placeholder:text-white/10" : "bg-areia-clara text-marrom-texto placeholder:text-marrom-texto/20"
+                          )}
+                        />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black opacity-40">R$</span>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Lista de Itens */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center gap-2 px-1">
-                    <ClipboardList className={cn("w-3.5 h-3.5", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Resumo do Pedido</h3>
+                    <ClipboardList className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] opacity-60">Resumo do Pedido</h3>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {cart.map((item) => (
                       <div 
                         key={item.id} 
                         className={cn(
-                          "p-2.5 rounded-xl border flex gap-3 animate-in fade-in slide-in-from-right-4 duration-300",
-                          isEgua ? "bg-preto-panela/30 border-white/5" : "bg-white border-marrom-madeira/5"
+                          "p-3 rounded-2xl border flex gap-4 animate-in fade-in slide-in-from-right-4 duration-300",
+                          isEgua ? "bg-preto-panela/30 border-white/5" : "bg-white border-marrom-madeira/5 shadow-sm"
                         )}
                       >
-                        <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-inner">
                           <img src={item.imageUrl} alt={item.name} className="object-cover w-full h-full" />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <div className="flex justify-between items-start mb-0.5">
-                            <h4 className={cn("font-bold text-[11px] uppercase truncate", isEgua ? "text-white" : "text-marrom-texto")}>
+                            <h4 className={cn("font-bold text-xs uppercase truncate", isEgua ? "text-white" : "text-marrom-texto")}>
                               {item.name}
                             </h4>
                             <button 
                               onClick={() => removeFromCart(item.id)}
-                              className="text-destructive/40 hover:text-destructive p-0.5 transition-colors"
+                              className="text-destructive/40 hover:text-destructive p-1 transition-colors"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                          <p className="text-[8px] font-subheadline italic opacity-40 mb-1">
+                          <p className={cn("text-[9px] font-subheadline italic mb-2", isEgua ? "text-creme-legivel/40" : "text-cinza-organico/60")}>
                             {item.restaurantId === 'paroara' ? 'Paroara' : 'Égua da Panela'}
                           </p>
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mt-auto">
                             <div className={cn(
-                              "flex items-center gap-2 px-1.5 py-0.5 rounded-full",
-                              isEgua ? "bg-black/40" : "bg-areia-clara/50"
+                              "flex items-center gap-3 px-2 py-1 rounded-full",
+                              isEgua ? "bg-black/60" : "bg-areia-clara/60"
                             )}>
-                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="hover:text-fogo-vibrante transition-colors">
-                                <Minus className="w-2.5 h-2.5"/>
+                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
+                                <Minus className="w-3 h-3"/>
                               </button>
-                              <span className="text-[9px] font-black w-3 text-center">{item.quantity}</span>
-                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="hover:text-fogo-vibrante transition-colors">
-                                <Plus className="w-2.5 h-2.5"/>
+                              <span className="text-[10px] font-black w-4 text-center">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
+                                <Plus className="w-3 h-3"/>
                               </button>
                             </div>
-                            <span className={cn("font-black text-xs", isEgua ? "text-white" : "text-marrom-escuro")}>
+                            <span className={cn("font-black text-[13px] tracking-tight", isEgua ? "text-white" : "text-marrom-escuro")}>
                               R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
                             </span>
                           </div>
@@ -375,29 +406,29 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
         {cart.length > 0 && (
           <div className={cn(
-            "p-4 md:p-5 shrink-0 border-t",
-            isEgua ? "bg-black/60 border-white/5 shadow-[0_-15px_30px_rgba(0,0,0,0.4)]" : "bg-white border-marrom-madeira/10 shadow-lg"
+            "p-5 md:p-6 shrink-0 border-t",
+            isEgua ? "bg-black/80 border-white/5 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]" : "bg-white border-marrom-madeira/10 shadow-2xl"
           )}>
-            <div className="flex justify-between items-center mb-4 px-1">
-              <span className="font-headline text-[9px] uppercase tracking-[0.2em] opacity-60">Total</span>
-              <span className={cn("font-black text-xl tracking-tighter", isEgua ? "text-fogo-vibrante" : "text-marrom-escuro")}>
+            <div className="flex justify-between items-center mb-5 px-1">
+              <span className={cn("font-headline text-[10px] uppercase tracking-[0.2em] opacity-60", isEgua ? "text-white" : "text-marrom-madeira")}>Total do Pedido</span>
+              <span className={cn("font-black text-2xl tracking-tighter", isEgua ? "text-fogo-vibrante" : "text-marrom-escuro")}>
                 R$ {totalPrice.toFixed(2).replace('.', ',')}
               </span>
             </div>
             <Button 
               className={cn(
-                "w-full h-12 font-black uppercase text-[10px] tracking-[0.2em] gap-2 rounded-xl shadow-xl transition-all active:scale-95 group",
+                "w-full h-14 font-black uppercase text-xs tracking-[0.2em] gap-3 rounded-2xl shadow-2xl transition-all active:scale-95 group",
                 isEgua 
-                  ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro shadow-fogo-vibrante/20" 
+                  ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro shadow-fogo-vibrante/30" 
                   : "bg-verde-folha text-white hover:bg-verde-escuro shadow-verde-folha/20"
               )} 
               onClick={handleSendToWhatsApp}
             >
-              <MessageSquare className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <MessageSquare className="w-5 h-5 group-hover:rotate-12 transition-transform" />
               Finalizar no WhatsApp
             </Button>
-            <p className="text-[7px] text-center mt-3 opacity-40 uppercase tracking-[0.2em] font-bold">
-              Revise seus dados antes de enviar
+            <p className="text-[8px] text-center mt-4 opacity-40 uppercase tracking-[0.2em] font-black">
+              * Seu pedido será registrado e enviado para o WhatsApp
             </p>
           </div>
         )}
