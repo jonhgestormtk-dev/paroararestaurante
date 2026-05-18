@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -29,6 +28,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     addToCart(product);
   };
 
+  // Fallback image if imageUrl is empty
+  const displayImage = product.imageUrl || `https://picsum.photos/seed/${product.id}/600/600`;
+
   return (
     <div 
       onClick={onClick}
@@ -41,7 +43,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     >
       <div className="relative aspect-square overflow-hidden">
         <Image
-          src={product.imageUrl}
+          src={displayImage}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"

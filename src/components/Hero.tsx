@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -19,6 +18,11 @@ export function Hero() {
   }, [pathname]);
 
   const isEgua = restaurantSlug === 'egua-da-panela';
+
+  const displayImage = useMemo(() => {
+    if (isEgua) return 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg';
+    return heroImg?.imageUrl || 'https://picsum.photos/seed/paroara-hero/800/600';
+  }, [isEgua, heroImg]);
 
   return (
     <section className={cn(
@@ -94,7 +98,7 @@ export function Hero() {
             isEgua ? "border-preto-panela bg-black" : "border-white bg-white"
           )}>
             <Image
-              src={isEgua ? 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg' : (heroImg?.imageUrl || '')}
+              src={displayImage}
               alt="Restaurante Regional"
               fill
               className={cn(

@@ -357,7 +357,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         )}
                       >
                         <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-inner">
-                          <img src={item.imageUrl} alt={item.name} className="object-cover w-full h-full" />
+                          <img 
+                            src={item.imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                            alt={item.name} 
+                            className="object-cover w-full h-full" 
+                          />
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <div className="flex justify-between items-start mb-0.5">

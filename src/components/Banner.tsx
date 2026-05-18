@@ -7,11 +7,12 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function Banner() {
   const hero = PlaceHolderImages.find(img => img.id === 'hero-banner');
+  const displayImage = hero?.imageUrl || 'https://picsum.photos/seed/hero/1200/600';
   
   return (
     <section className="relative w-full h-[300px] md:h-[450px] overflow-hidden">
       <Image
-        src={hero?.imageUrl || ''}
+        src={displayImage}
         alt="Paroara Hero"
         fill
         className="object-cover brightness-[0.4] transition-transform duration-[10s] hover:scale-105"
