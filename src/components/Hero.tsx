@@ -58,7 +58,7 @@ export function Hero() {
             isEgua ? "text-creme-legivel/80" : "text-marrom-texto/70"
           )}>
             {isEgua 
-              ? 'Culinária regional e afetiva, com aquele gostinho de panela de barro e tempero de casa.' 
+              ? 'Culinária paraense, com sabores amazônicos e aquele tempero caseiro que lembra tradição e aconchego.' 
               : 'Uma experiência gastronômica inspirada na tradição amazônica, preparada com ingredientes regionais e sabores inesquecíveis.'}
           </p>
 
