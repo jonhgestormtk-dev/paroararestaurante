@@ -44,6 +44,7 @@ export interface Order {
     name: string;
     price: number;
     quantity: number;
+    observations?: string;
   }[];
   total: number;
   status: OrderStatus;

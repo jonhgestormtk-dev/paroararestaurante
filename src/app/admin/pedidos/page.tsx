@@ -25,7 +25,8 @@ import {
   CreditCard,
   Banknote,
   Wallet,
-  PlusCircle
+  PlusCircle,
+  StickyNote
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -194,7 +195,8 @@ export default function AdminOrders() {
           productId: product.id,
           name: product.name,
           price: product.price,
-          quantity: 1
+          quantity: 1,
+          observations: ''
         }]
       });
     }
@@ -238,6 +240,9 @@ export default function AdminOrders() {
     
     order.items.forEach(item => {
       message += `• ${item.quantity}x *${item.name}* - R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
+      if (item.observations) {
+        message += `  _Obs: ${item.observations}_\n`;
+      }
     });
 
     message += `\n*Novo Total: R$ ${order.total.toFixed(2).replace('.', ',')}*\n`;
@@ -363,6 +368,25 @@ export default function AdminOrders() {
                   )}
                 </div>
 
+                {/* Itens com Observações no Mobile */}
+                <div className="space-y-2 bg-areia-clara/5 p-3 rounded-xl border border-areia-escura/20">
+                   <p className="text-[8px] font-black uppercase tracking-widest text-marrom-madeira opacity-40">Resumo de Itens</p>
+                   {order.items.map((item, idx) => (
+                     <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span>{item.quantity}x {item.name}</span>
+                          <span className="opacity-60">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                        {item.observations && (
+                          <div className="text-[9px] italic text-marrom-terra/70 flex gap-1.5 pl-2 border-l border-marrom-terra/20">
+                            <StickyNote className="w-2.5 h-2.5 shrink-0 mt-0.5" />
+                            {item.observations}
+                          </div>
+                        )}
+                     </div>
+                   ))}
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-areia-clara/10 p-3 rounded-sm border border-areia-escura/30 space-y-1">
                     <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-marrom-madeira opacity-60">
@@ -438,7 +462,7 @@ export default function AdminOrders() {
               <TableRow className="hover:bg-transparent border-areia-escura">
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ref Pedido</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Data & Hora</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente / Itens</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Pagamento</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Status</TableHead>
@@ -469,11 +493,26 @@ export default function AdminOrders() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          <p className="text-sm font-bold text-marrom-terra">{order.customer.name}</p>
-                          <div className="flex items-center gap-2 text-[10px] text-verde-folha font-bold">
-                            <Phone className="w-3 h-3" />
-                            {order.customer.phone}
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm font-bold text-marrom-terra">{order.customer.name}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-verde-folha font-bold">
+                              <Phone className="w-3 h-3" />
+                              {order.customer.phone}
+                            </div>
+                          </div>
+                          <div className="space-y-1 pl-2 border-l-2 border-areia-escura">
+                             {order.items.map((item, idx) => (
+                               <div key={idx} className="text-[9px] flex flex-col">
+                                 <span className="font-bold text-marrom-madeira">{item.quantity}x {item.name}</span>
+                                 {item.observations && (
+                                   <span className="italic text-cinza-organico flex items-center gap-1 bg-white/50 px-1 rounded-sm w-fit">
+                                     <StickyNote className="w-2.5 h-2.5 opacity-40" />
+                                     {item.observations}
+                                   </span>
+                                 )}
+                               </div>
+                             ))}
                           </div>
                         </div>
                       </TableCell>
@@ -632,29 +671,37 @@ export default function AdminOrders() {
 
                 <div className="space-y-2">
                   {editFormData.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-white border border-areia-escura rounded-sm">
-                      <div className="flex-1 pr-2">
-                        <p className="text-[10px] font-bold text-marrom-terra truncate">{item.name}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center border border-areia-escura rounded-sm bg-areia-clara/20">
-                          <button onClick={() => handleUpdateItemQty(idx, -1)} className="p-1 hover:bg-areia-media">
-                            <Minus className="w-2.5 h-2.5" />
-                          </button>
-                          <span className="w-5 text-center text-[10px] font-black">{item.quantity}</span>
-                          <button onClick={() => handleUpdateItemQty(idx, 1)} className="p-1 hover:bg-areia-media">
-                            <Plus className="w-2.5 h-2.5" />
-                          </button>
+                    <div key={idx} className="flex flex-col gap-2 p-2 bg-white border border-areia-escura rounded-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 pr-2">
+                          <p className="text-[10px] font-bold text-marrom-terra truncate">{item.name}</p>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRemoveItem(idx)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center border border-areia-escura rounded-sm bg-areia-clara/20">
+                            <button onClick={() => handleUpdateItemQty(idx, -1)} className="p-1 hover:bg-areia-media">
+                              <Minus className="w-2.5 h-2.5" />
+                            </button>
+                            <span className="w-5 text-center text-[10px] font-black">{item.quantity}</span>
+                            <button onClick={() => handleUpdateItemQty(idx, 1)} className="p-1 hover:bg-areia-media">
+                              <Plus className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveItem(idx)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
+                      {item.observations && (
+                         <div className="text-[9px] italic text-marrom-madeira/60 px-2 py-1 bg-areia-clara/20 rounded flex items-start gap-1">
+                           <StickyNote className="w-3 h-3 shrink-0" />
+                           {item.observations}
+                         </div>
+                      )}
                     </div>
                   ))}
                 </div>

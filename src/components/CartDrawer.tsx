@@ -103,7 +103,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         productId: item.id,
         name: item.name,
         price: item.price,
-        quantity: item.quantity
+        quantity: item.quantity,
+        observations: item.observations || ''
       })),
       total: totalPrice,
       status: 'Pendente',
@@ -130,6 +131,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         
         cart.forEach(item => {
           orderText += `• ${item.quantity}x *${item.name}* — R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
+          if (item.observations) {
+            orderText += `  _Obs: ${item.observations}_\n`;
+          }
         });
 
         orderText += `\n*Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}*\n`;
@@ -353,50 +357,61 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <div 
                         key={item.id} 
                         className={cn(
-                          "p-3 rounded-2xl border flex gap-4 animate-in fade-in slide-in-from-right-4 duration-300",
+                          "p-3 rounded-2xl border flex flex-col gap-2 animate-in fade-in slide-in-from-right-4 duration-300",
                           isEgua ? "bg-preto-panela/30 border-white/5" : "bg-white border-marrom-madeira/5 shadow-sm"
                         )}
                       >
-                        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-inner">
-                          <img 
-                            src={item.imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
-                            alt={item.name} 
-                            className="object-cover w-full h-full" 
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <div className="flex justify-between items-start mb-0.5">
-                            <h4 className={cn("font-bold text-xs uppercase truncate", isEgua ? "text-white" : "text-marrom-texto")}>
-                              {item.name}
-                            </h4>
-                            <button 
-                              onClick={() => removeFromCart(item.id)}
-                              className="text-destructive/40 hover:text-destructive p-1 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                        <div className="flex gap-4">
+                          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-inner">
+                            <img 
+                              src={item.imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
+                              alt={item.name} 
+                              className="object-cover w-full h-full" 
+                            />
                           </div>
-                          <p className={cn("text-[9px] font-subheadline italic mb-2", isEgua ? "text-creme-legivel/40" : "text-cinza-organico/60")}>
-                            {item.restaurantId === 'paroara' ? 'Paroara' : 'Égua na Panela'}
-                          </p>
-                          <div className="flex items-center justify-between mt-auto">
-                            <div className={cn(
-                              "flex items-center gap-3 px-2 py-1 rounded-full",
-                              isEgua ? "bg-black/60" : "bg-areia-clara/60"
-                            )}>
-                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
-                                <Minus className="w-3 h-3"/>
-                              </button>
-                              <span className="text-[10px] font-black w-4 text-center">{item.quantity}</span>
-                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
-                                <Plus className="w-3 h-3"/>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="flex justify-between items-start mb-0.5">
+                              <h4 className={cn("font-bold text-xs uppercase truncate", isEgua ? "text-white" : "text-marrom-texto")}>
+                                {item.name}
+                              </h4>
+                              <button 
+                                onClick={() => removeFromCart(item.id)}
+                                className="text-destructive/40 hover:text-destructive p-1 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                            <span className={cn("font-black text-[13px] tracking-tight", isEgua ? "text-white" : "text-marrom-escuro")}>
-                              R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
-                            </span>
+                            <p className={cn("text-[9px] font-subheadline italic mb-2", isEgua ? "text-creme-legivel/40" : "text-cinza-organico/60")}>
+                              {item.restaurantId === 'paroara' ? 'Paroara' : 'Égua na Panela'}
+                            </p>
+                            <div className="flex items-center justify-between mt-auto">
+                              <div className={cn(
+                                "flex items-center gap-3 px-2 py-1 rounded-full",
+                                isEgua ? "bg-black/60" : "bg-areia-clara/60"
+                              )}>
+                                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
+                                  <Minus className="w-3 h-3"/>
+                                </button>
+                                <span className="text-[10px] font-black w-4 text-center">{item.quantity}</span>
+                                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
+                                  <Plus className="w-3 h-3"/>
+                                </button>
+                              </div>
+                              <span className={cn("font-black text-[13px] tracking-tight", isEgua ? "text-white" : "text-marrom-escuro")}>
+                                R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        {item.observations && (
+                          <div className={cn(
+                            "px-3 py-2 rounded-lg text-[10px] italic",
+                            isEgua ? "bg-white/5 text-white/60" : "bg-areia-clara/50 text-marrom-madeira/70"
+                          )}>
+                            <span className="font-bold not-italic uppercase tracking-widest text-[8px] opacity-40 mr-2">Obs:</span>
+                            {item.observations}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
