@@ -61,8 +61,10 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2 md:gap-5 group">
             <div className="flex flex-col items-start">
               <h1 className={cn(
-                "text-xl md:text-3xl font-headline leading-none uppercase flex items-center gap-2",
-                isEgua ? "text-fogo-vibrante tracking-tighter" : "text-caramelo-palha tracking-[0.2em]"
+                "text-2xl md:text-4xl leading-none flex items-center gap-2",
+                isEgua 
+                  ? "text-fogo-vibrante tracking-tighter font-subheadline font-bold italic" 
+                  : "font-headline text-caramelo-palha tracking-[0.2em] uppercase"
               )}>
                 {isEgua && <Flame className="w-5 h-5 animate-pulse" />}
                 {restaurantName}
@@ -140,7 +142,7 @@ export function Header() {
               )}>
                 <SheetHeader className="p-8 border-b border-white/5">
                   <SheetTitle className={cn(
-                    "font-headline text-2xl tracking-tight text-left",
+                    "font-subheadline font-bold italic text-2xl tracking-tight text-left",
                     isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
                   )}>
                     {restaurantName}
