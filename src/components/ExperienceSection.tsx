@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -25,7 +24,7 @@ export function ExperienceSection() {
         },
         {
           icon: <Zap className="w-10 h-10 text-fogo-vibrante" />,
-          title: "Entrega Expressa",
+          title: "Entrega Rápida",
           description: "O calor da nossa panela direto para sua mesa. Garantimos que seu pedido chegue rápido e fumegante."
         }
       ];
