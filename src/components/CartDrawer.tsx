@@ -1,8 +1,18 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Trash2, Minus, Plus, MessageSquare, ShoppingBag as ShoppingBagIcon, User, Phone, MapPin, X } from 'lucide-react';
+import { 
+  Trash2, 
+  Minus, 
+  Plus, 
+  MessageSquare, 
+  ShoppingBag as ShoppingBagIcon, 
+  User, 
+  Phone, 
+  MapPin, 
+  X,
+  ClipboardList
+} from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
