@@ -125,13 +125,15 @@ export default function AdminOrders() {
   const formatDate = (createdAt: any) => {
     if (!createdAt) return '...';
     try {
+      let date: Date;
       if (createdAt instanceof Timestamp) {
-        return createdAt.toDate().toLocaleDateString('pt-BR');
+        date = createdAt.toDate();
+      } else if (createdAt.seconds) {
+        date = new Date(createdAt.seconds * 1000);
+      } else {
+        date = new Date(createdAt);
       }
-      if (createdAt.seconds) {
-        return new Date(createdAt.seconds * 1000).toLocaleDateString('pt-BR');
-      }
-      return new Date(createdAt).toLocaleDateString('pt-BR');
+      return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     } catch (e) {
       return 'Data Inválida';
     }
@@ -422,7 +424,7 @@ export default function AdminOrders() {
             <TableHeader className="bg-areia-clara/10">
               <TableRow className="hover:bg-transparent border-areia-escura">
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ref Pedido</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Data</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Data & Hora</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Pagamento</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total</TableHead>
