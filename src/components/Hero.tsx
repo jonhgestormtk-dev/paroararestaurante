@@ -88,13 +88,16 @@ export function Hero() {
           )}></div>
           <div className={cn(
             "relative h-full w-full rounded-tr-[30px] md:rounded-tr-[60px] rounded-bl-[30px] md:rounded-bl-[60px] overflow-hidden shadow-lg border-[4px] md:border-[6px]",
-            isEgua ? "border-preto-panela" : "border-white"
+            isEgua ? "border-preto-panela bg-black" : "border-white bg-white"
           )}>
             <Image
               src={isEgua ? 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg' : (heroImg?.imageUrl || '')}
               alt="Restaurante Regional"
               fill
-              className="object-cover scale-105 hover:scale-100 transition-transform duration-[15s] ease-linear"
+              className={cn(
+                "transition-all duration-700",
+                isEgua ? "object-contain p-4" : "object-cover scale-105 hover:scale-100 transition-transform duration-[15s] ease-linear"
+              )}
               priority
               data-ai-hint={isEgua ? "regional food" : "amazon food"}
             />
