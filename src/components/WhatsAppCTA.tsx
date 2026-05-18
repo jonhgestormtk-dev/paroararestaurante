@@ -39,8 +39,8 @@ export function WhatsAppCTA() {
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
           <div className="space-y-6">
             <h2 className={cn(
-              "text-4xl md:text-6xl font-subheadline font-bold italic leading-tight tracking-tight uppercase",
-              isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
+              "text-4xl md:text-6xl font-bold italic leading-tight tracking-tight uppercase",
+              isEgua ? "text-fogo-vibrante font-subheadline" : "text-caramelo-palha font-subheadline"
             )}>
               {isEgua ? <>Temperou,<br className="hidden md:block" /> pediu, pirou!</> : <>Peça agora pelo <br className="hidden md:block" /> WhatsApp</>}
             </h2>

@@ -49,8 +49,8 @@ export function Hero() {
               </p>
             </div>
             <h2 className={cn(
-              "text-3xl md:text-5xl lg:text-6xl font-headline leading-[1.1] tracking-tight",
-              isEgua ? "text-white" : "text-marrom-terra"
+              "text-3xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight",
+              isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
             )}>
               {isEgua ? <>O tempero que<br/>faz a gente pirar</> : <>Sinta o verdadeiro<br className="hidden md:block" /> sabor marajoara</>}
             </h2>

@@ -74,8 +74,8 @@ export function ExperienceSection() {
             <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
           </div>
           <h2 className={cn(
-            "text-4xl md:text-6xl font-headline",
-            isEgua ? "text-white" : "text-marrom-terra"
+            "text-4xl md:text-6xl",
+            isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
           )}>
             {isEgua ? 'Por que a Égua?' : 'Experiência Paroara'}
           </h2>
@@ -106,8 +106,8 @@ export function ExperienceSection() {
                 {exp.icon}
               </div>
               <h4 className={cn(
-                "font-headline text-2xl mb-6 tracking-wide",
-                isEgua ? "text-white" : "text-marrom-terra"
+                "text-2xl mb-6 tracking-wide",
+                isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
               )}>{exp.title}</h4>
               <p className={cn(
                 "font-body leading-relaxed text-base italic opacity-80",

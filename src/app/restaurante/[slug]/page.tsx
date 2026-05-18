@@ -33,7 +33,6 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     return restaurantId.replace('-', ' ');
   }, [restaurantId, isEgua]);
 
-  // Consultar todas as categorias e filtrar em memória
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -50,7 +49,6 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Bebidas'];
   }, [allCategoriesRaw, restaurantId]);
 
-  // Produtos em destaque
   const featuredQuery = useMemo(() => {
     if (!db) return null;
     return query(
@@ -66,7 +64,6 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     return featuredProductsRaw.filter(p => p.active !== false);
   }, [featuredProductsRaw]);
 
-  // Todos os produtos do restaurante
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
     return query(
@@ -114,8 +111,8 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 )}
               </div>
               <h2 className={cn(
-                "text-4xl md:text-6xl font-headline tracking-tight",
-                isEgua ? "text-white" : "text-marrom-terra"
+                "text-4xl md:text-6xl tracking-tight",
+                isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
               )}>
                 Destaques {isEgua ? 'da Cozinha' : 'da Ilha'}
               </h2>
@@ -147,8 +144,8 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
           <div id="menu" className="relative scroll-mt-[80px] md:scroll-mt-[100px]">
             <div className="container mx-auto px-4 pt-16 md:pt-24 text-center">
               <h2 className={cn(
-                "text-4xl md:text-5xl font-headline mb-10 md:mb-16",
-                isEgua ? "text-white" : "text-marrom-terra"
+                "text-4xl md:text-5xl mb-10 md:mb-16",
+                isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
               )}>
                 Nosso Cardápio
               </h2>
@@ -196,8 +193,8 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
           <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-16">
             <div className="space-y-6 text-center md:text-left">
               <h3 className={cn(
-                "font-headline text-4xl uppercase tracking-tighter",
-                isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
+                "text-4xl uppercase tracking-tighter",
+                isEgua ? "text-fogo-vibrante font-subheadline font-bold italic" : "text-caramelo-palha font-headline"
               )}>
                 {restaurantDisplayName}
               </h3>
