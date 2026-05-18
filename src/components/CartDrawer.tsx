@@ -53,11 +53,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   });
 
   const handleSendToWhatsApp = async () => {
-    if (!customerInfo.name || !customerInfo.phone) {
+    // Validação de campos obrigatórios
+    if (!customerInfo.name.trim() || !customerInfo.phone.trim() || !customerInfo.address.trim()) {
       toast({
         variant: "destructive",
         title: "Dados incompletos",
-        description: "Por favor, preencha seu nome e telefone para continuar."
+        description: "Por favor, preencha nome, WhatsApp e endereço para continuar o pedido."
       });
       return;
     }
@@ -91,7 +92,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         let orderText = `Olá, gostaria de fazer um pedido para o *${restaurantName}*:\n\n🛒 *PEDIDO #${nextOrderNumber}*\n\n`;
         orderText += `👤 *Cliente:* ${customerInfo.name}\n`;
         orderText += `📞 *Contato:* ${customerInfo.phone}\n`;
-        if (customerInfo.address) orderText += `📍 *Entrega:* ${customerInfo.address}\n`;
+        orderText += `📍 *Entrega:* ${customerInfo.address}\n`;
         orderText += `\n---------------------------\n`;
         
         cart.forEach(item => {
@@ -169,13 +170,13 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 )}>
                   <div className="flex items-center gap-2 mb-1">
                     <User className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Identificação</Label>
+                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Identificação Obrigatória</Label>
                   </div>
                   <div className="space-y-2">
                     <Input 
                       value={customerInfo.name} 
                       onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} 
-                      placeholder="Nome Completo"
+                      placeholder="Nome Completo *"
                       className={cn(
                         "h-10 border-none rounded-lg text-xs",
                         isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
@@ -184,7 +185,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <Input 
                       value={customerInfo.phone} 
                       onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value.replace(/\D/g, '')})} 
-                      placeholder="WhatsApp (com DDD)"
+                      placeholder="WhatsApp (com DDD) *"
                       className={cn(
                         "h-10 border-none rounded-lg text-xs",
                         isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
@@ -193,7 +194,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <Input 
                       value={customerInfo.address} 
                       onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})} 
-                      placeholder="Endereço (Opcional)"
+                      placeholder="Endereço Completo de Entrega *"
                       className={cn(
                         "h-10 border-none rounded-lg text-xs",
                         isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
@@ -286,7 +287,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               Finalizar no WhatsApp
             </Button>
             <p className="text-[7px] text-center mt-3 opacity-40 uppercase tracking-[0.2em] font-bold">
-              Você será redirecionado para o atendimento
+              Todos os campos acima são obrigatórios
             </p>
           </div>
         )}
