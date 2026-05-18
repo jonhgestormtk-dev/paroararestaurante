@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -18,7 +19,7 @@ export function CategoryFilter({ activeCategory, onSelect, categories }: Categor
     return parts[2] || 'paroara';
   }, [pathname]);
 
-  const isEgua = restaurantSlug === 'egua-da-panela';
+  const isEgua = restaurantSlug === 'egua-na-panela';
   const displayCategories = categories || ['Todos', 'Promoções', 'Regionais', 'Peixes', 'Grelhados', 'Executivos', 'Massas', 'Bebidas', 'Sobremesas'];
 
   return (

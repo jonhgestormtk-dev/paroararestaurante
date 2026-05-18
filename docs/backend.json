@@ -6,7 +6,7 @@
       "description": "Item do cardápio do restaurante.",
       "type": "object",
       "properties": {
-        "restaurantId": { "type": "string", "enum": ["paroara", "egua-da-panela"] },
+        "restaurantId": { "type": "string", "enum": ["paroara", "egua-na-panela"] },
         "name": { "type": "string" },
         "description": { "type": "string" },
         "longDescription": { "type": "string" },
@@ -27,7 +27,7 @@
       "description": "Categoria do cardápio.",
       "type": "object",
       "properties": {
-        "restaurantId": { "type": "string", "enum": ["paroara", "egua-da-panela"] },
+        "restaurantId": { "type": "string", "enum": ["paroara", "egua-na-panela"] },
         "name": { "type": "string" },
         "active": { "type": "boolean" },
         "order": { "type": "number" }

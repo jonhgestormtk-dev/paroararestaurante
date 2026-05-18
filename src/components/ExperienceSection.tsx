@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -7,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 export function ExperienceSection() {
   const pathname = usePathname();
-  const isEgua = pathname.includes('egua-da-panela');
+  const isEgua = pathname.includes('egua-na-panela');
 
   const experiences = useMemo(() => {
     if (isEgua) {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -51,7 +52,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     return cart[0]?.restaurantId || 'paroara';
   }, [pathname, cart]);
 
-  const isEgua = restaurantSlug === 'egua-da-panela';
+  const isEgua = restaurantSlug === 'egua-na-panela';
 
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -92,7 +93,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
 
     const restaurantId = cart[0]?.restaurantId || 'paroara';
-    const restaurantName = restaurantId === 'paroara' ? 'PAROARA' : 'Égua da Panela';
+    const restaurantName = restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
     const whatsappNumber = '559184541085';
     
     const baseOrderData = {
@@ -321,7 +322,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {paymentMethod === 'Dinheiro' && (
                     <div className="space-y-2.5 animate-in fade-in slide-in-from-top-3 duration-300 px-1">
                       <Label className={cn(
-                        "text-[10px] uppercase font-black tracking-widest opacity-60",
+                        "text-creme-legivel/80",
                         isEgua ? "text-white" : "text-marrom-madeira"
                       )}>Precisa de troco para quanto?</Label>
                       <div className="relative">
@@ -376,7 +377,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </button>
                           </div>
                           <p className={cn("text-[9px] font-subheadline italic mb-2", isEgua ? "text-creme-legivel/40" : "text-cinza-organico/60")}>
-                            {item.restaurantId === 'paroara' ? 'Paroara' : 'Égua da Panela'}
+                            {item.restaurantId === 'paroara' ? 'Paroara' : 'Égua na Panela'}
                           </p>
                           <div className="flex items-center justify-between mt-auto">
                             <div className={cn(

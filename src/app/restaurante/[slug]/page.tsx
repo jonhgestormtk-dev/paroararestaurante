@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -25,10 +26,10 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
 
-  const isEgua = restaurantId === 'egua-da-panela';
+  const isEgua = restaurantId === 'egua-na-panela';
 
   const restaurantDisplayName = useMemo(() => {
-    if (isEgua) return 'Égua da Panela';
+    if (isEgua) return 'Égua na Panela';
     if (restaurantId === 'paroara') return 'PAROARA';
     return restaurantId.replace('-', ' ');
   }, [restaurantId, isEgua]);

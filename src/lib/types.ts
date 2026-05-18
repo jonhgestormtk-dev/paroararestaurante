@@ -1,5 +1,5 @@
 
-export type RestaurantSlug = 'paroara' | 'egua-da-panela';
+export type RestaurantSlug = 'paroara' | 'egua-na-panela';
 
 export type Category = 'Todos' | 'Promoções' | 'Executivos' | 'Grelhados' | 'Massas' | 'Bebidas' | 'Regionais' | 'Sobremesas' | 'Peixes' | 'Carnes';
 

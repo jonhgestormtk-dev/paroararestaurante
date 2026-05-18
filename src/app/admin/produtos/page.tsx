@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -191,7 +192,7 @@ export default function AdminProducts() {
             <SelectContent>
               <SelectItem value="todos">Todos os Restaurantes</SelectItem>
               <SelectItem value="paroara">Paroara</SelectItem>
-              <SelectItem value="egua-da-panela">Égua da Panela</SelectItem>
+              <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -237,7 +238,7 @@ export default function AdminProducts() {
                         <Button variant="ghost" size="icon" onClick={() => handleOpenModal(product)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(product.id)}>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -271,7 +272,7 @@ export default function AdminProducts() {
                   <SelectTrigger className="bg-white border-areia-escura"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="paroara">Paroara</SelectItem>
-                    <SelectItem value="egua-da-panela">Égua da Panela</SelectItem>
+                    <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

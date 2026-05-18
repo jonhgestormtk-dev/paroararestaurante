@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -17,7 +18,7 @@ export function Hero() {
     return parts[2] || 'paroara';
   }, [pathname]);
 
-  const isEgua = restaurantSlug === 'egua-da-panela';
+  const isEgua = restaurantSlug === 'egua-na-panela';
 
   const displayImage = useMemo(() => {
     if (isEgua) return 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg';

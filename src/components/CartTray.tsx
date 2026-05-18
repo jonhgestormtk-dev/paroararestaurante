@@ -15,7 +15,7 @@ export function CartTray() {
   const pathname = usePathname();
 
   const isEgua = useMemo(() => {
-    return pathname.includes('egua-da-panela');
+    return pathname.includes('egua-na-panela');
   }, [pathname]);
 
   if (totalItems === 0) return null;

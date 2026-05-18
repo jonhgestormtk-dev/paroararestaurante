@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -13,7 +14,7 @@ export function WhatsAppCTA() {
     return parts[2] || 'paroara';
   }, [pathname]);
 
-  const isEgua = restaurantSlug === 'egua-da-panela';
+  const isEgua = restaurantSlug === 'egua-na-panela';
 
   const handleOrder = () => {
     window.open('https://wa.me/559184541085', '_blank');

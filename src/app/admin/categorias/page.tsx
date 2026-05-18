@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -206,7 +207,7 @@ export default function AdminCategories() {
             <SelectContent>
               <SelectItem value="todos">Todos os Restaurantes</SelectItem>
               <SelectItem value="paroara">Paroara</SelectItem>
-              <SelectItem value="egua-da-panela">Égua da Panela</SelectItem>
+              <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -289,7 +290,7 @@ export default function AdminCategories() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="paroara">Paroara</SelectItem>
-                  <SelectItem value="egua-da-panela">Égua da Panela</SelectItem>
+                  <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
                 </SelectContent>
               </Select>
             </div>

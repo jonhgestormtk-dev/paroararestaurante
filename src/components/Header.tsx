@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -29,10 +30,10 @@ export function Header() {
     return null;
   }, [pathname]);
 
-  const isEgua = restaurantSlug === 'egua-da-panela';
+  const isEgua = restaurantSlug === 'egua-na-panela';
   
   const restaurantName = useMemo(() => {
-    if (isEgua) return 'Égua da Panela';
+    if (isEgua) return 'Égua na Panela';
     if (restaurantSlug === 'paroara') return 'PAROARA';
     return 'PAROARA';
   }, [restaurantSlug, isEgua]);
