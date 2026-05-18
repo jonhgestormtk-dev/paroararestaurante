@@ -24,7 +24,7 @@ export function CartTray() {
     <>
       {/* A barra só é renderizada se a sacola NÃO estiver aberta */}
       {!isDrawerOpen && (
-        <div className="fixed bottom-0 left-0 right-0 z-[60] p-4 md:p-6 flex justify-center pointer-events-none pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 md:p-6 flex justify-center pointer-events-none pb-safe">
           <Button
             onClick={() => setIsDrawerOpen(true)}
             className={cn(
