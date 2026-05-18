@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -72,7 +71,7 @@ export function Header() {
                 "text-[7px] md:text-[10px] font-subheadline tracking-widest uppercase mt-0.5",
                 isEgua ? "text-creme-legivel/60" : "text-areia-media/80"
               )}>
-                {isEgua ? 'Culinária Regional e Afetiva' : 'O Restaurante Marajoara'}
+                {isEgua ? 'CULINÁRIA REGIONAL PARAENSE' : 'O Restaurante Marajoara'}
               </p>
             </div>
           </Link>

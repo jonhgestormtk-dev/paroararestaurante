@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -11,7 +10,7 @@ export default function SplashPage() {
     {
       id: 'egua-da-panela',
       name: 'Égua da Panela',
-      tagline: 'Culinária Regional e Afetiva',
+      tagline: 'CULINÁRIA REGIONAL PARAENSE',
       description: 'Pratos com gostinho de casa, preparados com os melhores temperos do Pará.',
       color: 'bg-fogo-vibrante',
       hoverColor: 'hover:bg-fogo-escuro',
