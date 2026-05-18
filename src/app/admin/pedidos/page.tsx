@@ -24,7 +24,8 @@ import {
   Minus,
   CreditCard,
   Banknote,
-  Wallet
+  Wallet,
+  PlusCircle
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -161,6 +162,8 @@ export default function AdminOrders() {
   };
 
   const handleUpdateItemQty = (index: number, delta: number) => {
+    if (editingOrder?.status !== 'Pendente') return;
+    
     const newItems = [...editFormData.items];
     const item = newItems[index];
     const newQty = Math.max(1, item.quantity + delta);
@@ -169,11 +172,15 @@ export default function AdminOrders() {
   };
 
   const handleRemoveItem = (index: number) => {
+    if (editingOrder?.status !== 'Pendente') return;
+    
     const newItems = editFormData.items.filter((_, i) => i !== index);
     setEditFormData({ ...editFormData, items: newItems });
   };
 
   const handleAddItem = (productId: string) => {
+    if (editingOrder?.status !== 'Pendente') return;
+
     const product = products?.find(p => p.id === productId);
     if (!product) return;
 
@@ -191,10 +198,16 @@ export default function AdminOrders() {
         }]
       });
     }
+    toast({ title: "Item Adicionado", description: `${product.name} foi adicionado ao pedido.` });
   };
 
   const handleSaveEdit = async () => {
     if (!db || !editingOrder) return;
+
+    if (editingOrder.status !== 'Pendente') {
+      toast({ variant: "destructive", title: "Erro", description: "Apenas pedidos pendentes podem ser editados." });
+      return;
+    }
 
     if (editFormData.items.length === 0) {
       toast({ variant: "destructive", title: "Erro", description: "O pedido deve ter pelo menos um item." });
@@ -593,7 +606,30 @@ export default function AdminOrders() {
                   )}
                 </div>
 
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira mb-2 pt-2">Itens</h4>
+                <div className="flex items-center justify-between pt-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens</h4>
+                  <Badge className="bg-marrom-terra/10 text-marrom-terra text-[8px] border-marrom-terra/20">EDICÃO ATIVA</Badge>
+                </div>
+
+                {/* Seletor de novos itens (apenas Pendente) */}
+                <div className="p-3 bg-white/40 border border-dashed border-marrom-madeira/20 rounded-xl space-y-2">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-marrom-madeira opacity-60 flex items-center gap-1">
+                    <PlusCircle className="w-3 h-3" /> Adicionar Novo Prato
+                  </Label>
+                  <Select onValueChange={(v) => handleAddItem(v)}>
+                    <SelectTrigger className="bg-white border-areia-escura h-9 text-xs">
+                      <SelectValue placeholder="Selecione um produto..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-areia-clara border-areia-escura">
+                      {products?.filter(p => p.active !== false && p.restaurantId === editingOrder?.restaurantId).map((p) => (
+                        <SelectItem key={p.id} value={p.id} className="text-xs">
+                          {p.emoji} {p.name} - R$ {p.price.toFixed(2)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   {editFormData.items.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-white border border-areia-escura rounded-sm">
