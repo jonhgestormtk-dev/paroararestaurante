@@ -26,7 +26,7 @@ export default function SplashPage() {
       color: 'bg-marrom-terra',
       hoverColor: 'hover:bg-marrom-escuro',
       icon: <ChefHat className="w-12 h-12 text-caramelo-palha" />,
-      image: 'https://picsum.photos/seed/paroara/1200/800'
+      image: 'https://i.ibb.co/MyTx3cXr/file.jpg'
     }
   ];
 
