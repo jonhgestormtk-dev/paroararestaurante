@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -25,7 +26,7 @@ export default function SplashPage() {
       color: 'bg-marrom-terra',
       hoverColor: 'hover:bg-marrom-escuro',
       icon: <ChefHat className="w-12 h-12 text-caramelo-palha" />,
-      image: 'https://i.ibb.co/rKvQHQHj/file.jpg'
+      image: 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg'
     }
   ];
 
