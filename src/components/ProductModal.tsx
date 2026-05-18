@@ -1,15 +1,13 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, Sparkles } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { enrichDishDescription } from '@/ai/flows/ai-enrich-dish-description-flow';
 
 interface ProductModalProps {
   product: Product | null;
@@ -21,8 +19,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [observations, setObservations] = useState('');
-  const [isEnriching, setIsEnriching] = useState(false);
-  const [aiDesc, setAiDesc] = useState<string | null>(null);
 
   if (!product) return null;
 
@@ -31,25 +27,8 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     onClose();
     setQuantity(1);
     setObservations('');
-    setAiDesc(null);
   };
 
-  const handleEnrich = async () => {
-    setIsEnriching(true);
-    try {
-      const result = await enrichDishDescription({
-        dishName: product.name,
-        ingredients: product.ingredients || []
-      });
-      setAiDesc(result.description);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsEnriching(false);
-    }
-  };
-
-  // Fallback image if imageUrl is empty to avoid Next.js console error
   const displayImage = product.imageUrl || `https://picsum.photos/seed/${product.id}/800/600`;
 
   return (
@@ -84,21 +63,9 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
           <div className="space-y-4 md:space-y-6">
             <div className="prose prose-stone max-w-none">
-              <p className="text-marrom-texto/90 font-body leading-relaxed text-xs md:text-base italic">
-                {aiDesc || product.longDescription || product.description}
+              <p className="text-marrom-texto/90 font-body leading-relaxed text-xs md:text-base italic whitespace-pre-wrap">
+                {product.longDescription || product.description}
               </p>
-              {!aiDesc && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="text-verde-folha p-0 h-auto gap-2 font-bold hover:text-verde-escuro mt-1 text-[10px] md:text-xs"
-                  onClick={handleEnrich}
-                  disabled={isEnriching}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {isEnriching ? 'Tecendo a história...' : 'Conhecer a tradição deste prato'}
-                </Button>
-              )}
             </div>
 
             <div className="space-y-2">
