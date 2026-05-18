@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -64,12 +65,12 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       </div>
       
       <div className={cn(
-        "p-2.5 md:p-4 flex flex-col flex-grow",
+        "p-2 md:p-3 flex flex-col flex-grow",
         isEgua ? "bg-preto-carvao/40" : "bg-areia-clara/20"
       )}>
-        <div className="flex justify-between items-start mb-1.5">
+        <div className="flex justify-between items-start mb-1">
           <h3 className={cn(
-            "font-subheadline text-[11px] md:text-lg font-bold leading-tight line-clamp-2 italic",
+            "font-subheadline text-[10px] md:text-base font-bold leading-tight line-clamp-2 italic",
             isEgua ? "text-creme-suave" : "text-marrom-terra"
           )}>
             {product.emoji && <span className="mr-1 not-italic opacity-80">{product.emoji}</span>}
@@ -78,7 +79,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         </div>
         
         <p className={cn(
-          "text-[9px] md:text-xs font-body italic line-clamp-2 mb-2 md:mb-4 flex-grow opacity-80 leading-relaxed",
+          "text-[9px] md:text-xs font-body italic line-clamp-2 mb-2 md:mb-3 flex-grow opacity-70 leading-relaxed",
           isEgua ? "text-creme-legivel/60" : "text-cinza-organico"
         )}>
           {product.description}
@@ -90,11 +91,11 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         )}>
           <div className="flex flex-col">
             <span className={cn(
-              "text-[7px] md:text-[9px] uppercase tracking-widest font-bold",
+              "text-[7px] md:text-[8px] uppercase tracking-widest font-bold",
               isEgua ? "text-fogo-vibrante/60" : "text-marrom-madeira/60"
             )}>R$</span>
             <span className={cn(
-              "font-body font-black text-sm md:text-lg",
+              "font-body font-black text-xs md:text-base",
               isEgua ? "text-white" : "text-marrom-escuro"
             )}>
               {product.price.toFixed(2).replace('.', ',')}
@@ -105,14 +106,14 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
             <Button
               size="icon"
               className={cn(
-                "h-7 w-7 md:h-9 md:w-9 rounded-full transition-all duration-300 shadow-md group/btn",
+                "h-6 w-6 md:h-8 md:w-8 rounded-full transition-all duration-300 shadow-md group/btn",
                 isEgua 
                   ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro" 
                   : "bg-marrom-terra text-areia-clara hover:bg-caramelo-palha"
               )}
               onClick={handleQuickAdd}
             >
-              <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/btn:rotate-90 transition-transform" />
+              <Plus className="w-3 h-3 md:w-3.5 md:h-3.5 group-hover/btn:rotate-90 transition-transform" />
             </Button>
           </div>
         </div>
