@@ -19,7 +19,7 @@ import {
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -178,9 +178,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               Sua Sacola
             </SheetTitle>
           </div>
-          <SheetClose className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/5">
-            <X className="w-4 h-4 text-white/40" />
-          </SheetClose>
         </SheetHeader>
 
         <ScrollArea className="flex-1">
