@@ -89,7 +89,7 @@ export default function AdminCategories() {
     if (category) {
       setEditingCategory(category);
       setFormData({
-        restaurantId: category.restaurantId,
+        restaurantId: category.restaurantId || 'paroara',
         name: category.name,
         active: category.active,
         order: category.order || 0
@@ -112,8 +112,12 @@ export default function AdminCategories() {
       return;
     }
 
+    // Garantir que restaurantId nunca seja undefined para o Firebase
     const dataToSave = { 
-      ...formData,
+      restaurantId: formData.restaurantId || 'paroara',
+      name: formData.name,
+      active: formData.active ?? true,
+      order: formData.order || 0,
       updatedAt: serverTimestamp()
     };
     
