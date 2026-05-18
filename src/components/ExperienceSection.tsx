@@ -14,7 +14,7 @@ export function ExperienceSection() {
       return [
         {
           icon: <Heart className="w-10 h-10 text-fogo-vibrante" />,
-          title: "Sabor Afetivo",
+          title: "Sabor Regional",
           description: "Pratos que abraçam a alma, preparados com o tempero e o carinho de uma verdadeira cozinha paraense."
         },
         {
