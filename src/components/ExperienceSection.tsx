@@ -1,55 +1,119 @@
 
 'use client';
 
-import React from 'react';
-import { Leaf, Flame, Smartphone, Star } from 'lucide-react';
-
-const experiences = [
-  {
-    icon: <Leaf className="w-10 h-10 text-verde-folha" />,
-    title: "Ingredientes Regionais",
-    description: "Selecionamos os ingredientes mais frescos e autênticos diretamente dos produtores da Ilha do Marajó e do interior do Pará."
-  },
-  {
-    icon: <Flame className="w-10 h-10 text-caramelo-palha" />,
-    title: "Preparo Artesanal",
-    description: "Nossas receitas são heranças ancestrais, preparadas com o fogo e o tempo que a verdadeira culinária regional exige."
-  },
-  {
-    icon: <Smartphone className="w-10 h-10 text-marrom-madeira" />,
-    title: "Atendimento Rápido",
-    description: "Sua experiência premium continua no digital. Faça seu pedido pelo WhatsApp e receba no conforto do seu lar com agilidade."
-  }
-];
+import React, { useMemo } from 'react';
+import { Leaf, Flame, Smartphone, Star, Heart, Zap } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export function ExperienceSection() {
+  const pathname = usePathname();
+  const isEgua = pathname.includes('egua-da-panela');
+
+  const experiences = useMemo(() => {
+    if (isEgua) {
+      return [
+        {
+          icon: <Heart className="w-10 h-10 text-fogo-vibrante" />,
+          title: "Sabor Afetivo",
+          description: "Pratos que abraçam a alma, preparados com o tempero e o carinho de uma verdadeira cozinha paraense."
+        },
+        {
+          icon: <Flame className="w-10 h-10 text-fogo-vibrante" />,
+          title: "Fogo & Tempero",
+          description: "A intensidade do fogo e o equilíbrio das ervas regionais transformam ingredientes simples em banquetes memoráveis."
+        },
+        {
+          icon: <Zap className="w-10 h-10 text-fogo-vibrante" />,
+          title: "Entrega Expressa",
+          description: "O calor da nossa panela direto para sua mesa. Garantimos que seu pedido chegue rápido e fumegante."
+        }
+      ];
+    }
+    return [
+      {
+        icon: <Leaf className="w-10 h-10 text-verde-folha" />,
+        title: "Ingredientes Regionais",
+        description: "Selecionamos os ingredientes mais frescos e autênticos diretamente dos produtores da Ilha do Marajó."
+      },
+      {
+        icon: <Flame className="w-10 h-10 text-caramelo-palha" />,
+        title: "Preparo Artesanal",
+        description: "Nossas receitas são heranças ancestrais, preparadas com o fogo e o tempo que a culinária regional exige."
+      },
+      {
+        icon: <Smartphone className="w-10 h-10 text-marrom-madeira" />,
+        title: "Atendimento Rápido",
+        description: "Sua experiência premium continua no digital. Faça seu pedido pelo WhatsApp com agilidade."
+      }
+    ];
+  }, [isEgua]);
+
   return (
-    <section className="bg-areia-media/15 py-32 border-y border-areia-escura/30 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full bg-rustic-texture opacity-[0.02] pointer-events-none"></div>
+    <section className={cn(
+      "py-24 md:py-40 border-y relative overflow-hidden transition-colors duration-500",
+      isEgua 
+        ? "bg-preto-panela border-fogo-vibrante/10" 
+        : "bg-areia-media/15 border-areia-escura/30"
+    )}>
+      {/* Texture Layer */}
+      <div className={cn(
+        "absolute inset-0 pointer-events-none opacity-[0.03]",
+        isEgua ? "bg-carbon-texture" : "bg-rustic-texture"
+      )}></div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-20 space-y-4">
-          <div className="flex items-center justify-center gap-2 text-verde-folha/60 mb-2">
-            <Star className="w-4 h-4 fill-verde-folha/40" />
-            <span className="text-[10px] font-body uppercase tracking-[0.5em] font-black">Nossa Essência</span>
-            <Star className="w-4 h-4 fill-verde-folha/40" />
+          <div className={cn(
+            "flex items-center justify-center gap-2 mb-2",
+            isEgua ? "text-fogo-vibrante" : "text-verde-folha/60"
+          )}>
+            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
+            <span className="text-[10px] font-black uppercase tracking-[0.5em]">
+              {isEgua ? 'Nossos Valores' : 'Nossa Essência'}
+            </span>
+            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
           </div>
-          <h2 className="text-4xl md:text-5xl font-headline text-marrom-terra">Experiência Paroara</h2>
-          <div className="w-20 h-1 bg-marrom-madeira/30 mx-auto rounded-full"></div>
+          <h2 className={cn(
+            "text-4xl md:text-6xl font-headline",
+            isEgua ? "text-white" : "text-marrom-terra"
+          )}>
+            {isEgua ? 'Por que a Égua?' : 'Experiência Paroara'}
+          </h2>
+          <div className={cn(
+            "w-24 h-1 mx-auto rounded-full",
+            isEgua ? "bg-fogo-vibrante shadow-[0_0_20px_rgba(230,57,70,0.6)]" : "bg-marrom-madeira/30"
+          )}></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
           {experiences.map((exp, idx) => (
             <div 
               key={idx}
-              className="bg-white/40 backdrop-blur-md p-10 rounded-2xl border border-white/60 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] transition-all duration-500 group flex flex-col items-center text-center"
+              className={cn(
+                "p-10 rounded-[40px] border transition-all duration-700 group flex flex-col items-center text-center",
+                isEgua 
+                  ? "bg-black/40 border-white/5 hover:border-fogo-vibrante/30 hover:shadow-[0_30px_60px_rgba(230,57,70,0.1)]" 
+                  : "bg-white/40 border-white/60 shadow-sm hover:shadow-xl"
+              )}
             >
-              <div className="mb-10 bg-white w-24 h-24 rounded-full flex items-center justify-center border border-areia-escura/30 group-hover:scale-110 transition-transform duration-500 shadow-sm relative">
-                <div className="absolute inset-2 border border-dashed border-areia-escura/20 rounded-full animate-spin-slow"></div>
+              <div className={cn(
+                "mb-10 w-24 h-24 rounded-3xl flex items-center justify-center border group-hover:scale-110 transition-transform duration-500 relative",
+                isEgua 
+                  ? "bg-preto-carvao border-fogo-vibrante/20" 
+                  : "bg-white border-areia-escura/30 shadow-sm"
+              )}>
+                {isEgua && <div className="absolute inset-0 bg-fogo-vibrante/5 blur-xl group-hover:bg-fogo-vibrante/10 transition-all"></div>}
                 {exp.icon}
               </div>
-              <h4 className="font-headline text-2xl text-marrom-terra mb-6 tracking-wide">{exp.title}</h4>
-              <p className="text-cinza-organico font-body leading-relaxed text-lg italic opacity-80">{exp.description}</p>
+              <h4 className={cn(
+                "font-headline text-2xl mb-6 tracking-wide",
+                isEgua ? "text-white" : "text-marrom-terra"
+              )}>{exp.title}</h4>
+              <p className={cn(
+                "font-body leading-relaxed text-base italic opacity-80",
+                isEgua ? "text-creme-legivel" : "text-cinza-organico"
+              )}>{exp.description}</p>
             </div>
           ))}
         </div>

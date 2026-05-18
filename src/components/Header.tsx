@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ShoppingCart, MessageCircle, Menu } from 'lucide-react';
+import { ShoppingCart, MessageCircle, Menu, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
@@ -33,10 +33,10 @@ export function Header() {
   const isEgua = restaurantSlug === 'egua-da-panela';
   
   const restaurantName = useMemo(() => {
-    if (restaurantSlug === 'egua-da-panela') return 'Égua da Panela';
+    if (isEgua) return 'Égua da Panela';
     if (restaurantSlug === 'paroara') return 'PAROARA';
     return 'PAROARA';
-  }, [restaurantSlug]);
+  }, [restaurantSlug, isEgua]);
 
   const navLinks = useMemo(() => {
     const base = [{ label: 'Início', path: '/' }];
@@ -53,30 +53,31 @@ export function Header() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 z-50 w-full h-16 md:h-20 shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500 backdrop-blur-sm bg-opacity-95 flex items-center border-b",
+        "fixed top-0 z-50 w-full h-16 md:h-20 shadow-[0_4px_30px_rgba(0,0,0,0.4)] transition-all duration-500 backdrop-blur-xl flex items-center border-b",
         isEgua 
-          ? "bg-preto-carvao text-creme-suave border-fogo-vibrante/20" 
+          ? "bg-black/90 text-creme-suave border-fogo-vibrante/30" 
           : "bg-marrom-escuro text-areia-clara border-marrom-madeira/40"
       )}>
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 md:gap-5">
+          <Link href="/" className="flex items-center gap-2 md:gap-5 group">
             <div className="flex flex-col items-start">
               <h1 className={cn(
-                "text-lg md:text-3xl font-headline tracking-[0.2em] leading-none uppercase",
-                isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
+                "text-xl md:text-3xl font-headline leading-none uppercase flex items-center gap-2",
+                isEgua ? "text-fogo-vibrante tracking-tighter" : "text-caramelo-palha tracking-[0.2em]"
               )}>
+                {isEgua && <Flame className="w-5 h-5 animate-pulse hidden md:block" />}
                 {restaurantName}
               </h1>
               <p className={cn(
                 "text-[7px] md:text-[10px] font-subheadline tracking-widest uppercase mt-0.5",
-                isEgua ? "text-creme-legivel/80" : "text-areia-media/80"
+                isEgua ? "text-creme-legivel/60" : "text-areia-media/80"
               )}>
                 {isEgua ? 'Culinária Regional e Afetiva' : 'O Restaurante Marajoara'}
               </p>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8 text-[10px] font-body uppercase tracking-[0.2em] font-bold opacity-80">
+          <nav className="hidden lg:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.25em] opacity-80">
             {navLinks.map((link) => (
               <Link 
                 key={link.path} 
@@ -91,9 +92,9 @@ export function Header() {
             ))}
           </nav>
           
-          <div className="flex items-center gap-2 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             <div 
-              className="relative cursor-pointer group p-2 hover:bg-white/5 rounded-full transition-colors" 
+              className="relative cursor-pointer group p-2.5 hover:bg-white/5 rounded-full transition-all" 
               onClick={() => setIsCartOpen(true)}
             >
               <ShoppingCart className={cn(
@@ -104,7 +105,7 @@ export function Header() {
                 <span className={cn(
                   "absolute top-0 right-0 text-[8px] md:text-[9px] font-black h-4 w-4 md:h-5 md:w-5 rounded-full flex items-center justify-center border-2",
                   isEgua 
-                    ? "bg-fogo-vibrante text-creme-suave border-preto-carvao" 
+                    ? "bg-fogo-vibrante text-white border-black" 
                     : "bg-caramelo-palha text-marrom-escuro border-marrom-escuro"
                 )}>
                   {totalItems}
@@ -114,9 +115,9 @@ export function Header() {
 
             <Button 
               className={cn(
-                "hidden md:flex border-none hover:scale-105 transition-all duration-500 gap-2 font-black uppercase text-[10px] tracking-[0.1em] px-5 py-5 rounded shadow-xl",
+                "hidden md:flex border-none hover:scale-105 transition-all duration-500 gap-2 font-black uppercase text-[10px] tracking-widest px-6 py-5 rounded-none shadow-2xl",
                 isEgua 
-                  ? "bg-fogo-vibrante text-creme-suave hover:bg-fogo-escuro" 
+                  ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro" 
                   : "bg-caramelo-palha text-marrom-escuro hover:bg-areia-clara"
               )}
               onClick={() => window.open('https://wa.me/559184541085', '_blank')}
@@ -128,19 +129,19 @@ export function Header() {
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className={cn(
-                  "lg:hidden p-0 h-10 w-10",
-                  isEgua ? "text-creme-suave hover:bg-white/5" : "text-areia-clara hover:bg-white/10"
+                  "lg:hidden p-0 h-10 w-10 rounded-full",
+                  isEgua ? "text-fogo-vibrante hover:bg-white/5" : "text-areia-clara hover:bg-white/10"
                 )}>
                   <Menu className="w-6 h-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className={cn(
-                "border-r p-0 w-[80%] max-w-[300px]",
-                isEgua ? "bg-preto-carvao text-creme-suave border-fogo-vibrante/20" : "bg-marrom-escuro text-areia-clara border-marrom-madeira/40"
+                "border-r p-0 w-[85%] max-w-[320px]",
+                isEgua ? "bg-black text-creme-suave border-fogo-vibrante/20" : "bg-marrom-escuro text-areia-clara border-marrom-madeira/40"
               )}>
                 <SheetHeader className="p-8 border-b border-white/5">
                   <SheetTitle className={cn(
-                    "font-headline text-2xl tracking-widest text-left",
+                    "font-headline text-2xl tracking-tight text-left",
                     isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
                   )}>
                     {restaurantName}
@@ -151,7 +152,10 @@ export function Header() {
                     <Link 
                       key={link.path} 
                       href={link.path}
-                      className="px-4 py-4 hover:bg-white/5 rounded-sm transition-all text-[10px] font-bold uppercase tracking-[0.2em]"
+                      className={cn(
+                        "px-5 py-5 rounded-xl transition-all text-[11px] font-black uppercase tracking-[0.25em] border border-transparent",
+                        isEgua ? "hover:bg-fogo-vibrante/10 hover:border-fogo-vibrante/20" : "hover:bg-white/5"
+                      )}
                     >
                       {link.label}
                     </Link>

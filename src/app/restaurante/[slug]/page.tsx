@@ -16,7 +16,8 @@ import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Product, RestaurantSlug } from '@/lib/types';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Flame } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function RestaurantHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -25,13 +26,15 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
 
+  const isEgua = restaurantId === 'egua-da-panela';
+
   const restaurantDisplayName = useMemo(() => {
-    if (restaurantId === 'egua-da-panela') return 'Égua da Panela';
+    if (isEgua) return 'Égua da Panela';
     if (restaurantId === 'paroara') return 'PAROARA';
     return restaurantId.replace('-', ' ');
-  }, [restaurantId]);
+  }, [restaurantId, isEgua]);
 
-  // Consultar todas as categorias e filtrar em memória para evitar erros de índice composto em protótipos
+  // Consultar todas as categorias e filtrar em memória
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -41,13 +44,10 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
   const dynamicCategories = useMemo(() => {
     const base = ['Todos'];
     if (!allCategoriesRaw) return base;
-    
-    // Filtrar categorias pertencentes ao restaurante atual
     const filtered = allCategoriesRaw.filter((c: any) => c.restaurantId === restaurantId);
     if (filtered.length > 0) {
       return [...base, ...filtered.map((c: any) => c.name)];
     }
-    
     return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Bebidas'];
   }, [allCategoriesRaw, restaurantId]);
 
@@ -86,7 +86,10 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
 
   return (
     <CartProvider>
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className={cn(
+        "min-h-screen flex flex-col transition-colors duration-700",
+        isEgua ? "bg-preto-carvao text-creme-suave" : "bg-background text-foreground"
+      )}>
         <Header />
         
         <main className="flex-1">
@@ -94,18 +97,36 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
           
           <PromoBanner onProductClick={(p) => setSelectedProduct(p)} />
           
-          <section className="container mx-auto px-4 py-12 md:py-20">
-            <div className="text-center mb-10 md:mb-16 space-y-3">
-              <div className="flex items-center justify-center gap-2 text-caramelo-palha">
-                <Sparkles className="w-4 h-4 fill-caramelo-palha" />
-                <span className="text-[10px] font-body uppercase tracking-[0.3em] font-bold">Favoritos</span>
-                <Sparkles className="w-4 h-4 fill-caramelo-palha" />
+          <section className="container mx-auto px-4 py-16 md:py-24">
+            <div className="text-center mb-12 md:mb-20 space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                {isEgua ? (
+                  <>
+                    <Flame className="w-5 h-5 text-fogo-vibrante animate-pulse" />
+                    <span className="text-[11px] font-black uppercase tracking-[0.4em] text-fogo-vibrante">Mais Pedidos</span>
+                    <Flame className="w-5 h-5 text-fogo-vibrante animate-pulse" />
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-caramelo-palha" />
+                    <span className="text-[10px] font-body uppercase tracking-[0.3em] font-bold text-marrom-madeira">Favoritos da Casa</span>
+                    <Sparkles className="w-4 h-4 text-caramelo-palha" />
+                  </>
+                )}
               </div>
-              <h2 className="text-3xl md:text-5xl font-headline text-marrom-terra">Destaques da Casa</h2>
-              <div className="w-20 h-0.5 bg-caramelo-palha mx-auto rounded-full opacity-40"></div>
+              <h2 className={cn(
+                "text-4xl md:text-6xl font-headline tracking-tight",
+                isEgua ? "text-white" : "text-marrom-terra"
+              )}>
+                Destaques {isEgua ? 'do Fogo' : 'da Ilha'}
+              </h2>
+              <div className={cn(
+                "w-24 h-1 mx-auto rounded-full",
+                isEgua ? "bg-fogo-vibrante shadow-[0_0_15px_rgba(230,57,70,0.5)]" : "bg-caramelo-palha opacity-40"
+              )}></div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
               {featuredProducts.length > 0 ? (
                 featuredProducts.map((product) => (
                   <ProductCard 
@@ -115,8 +136,8 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                   />
                 ))
               ) : (
-                <div className="col-span-full text-center py-10 text-cinza-organico italic">
-                  {productsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto opacity-20" /> : "Nenhum destaque configurado."}
+                <div className="col-span-full text-center py-10 opacity-40 italic">
+                  {productsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : "Nenhum destaque configurado."}
                 </div>
               )}
             </div>
@@ -125,8 +146,13 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
           <ExperienceSection />
           
           <div id="menu" className="relative scroll-mt-[80px] md:scroll-mt-[100px]">
-            <div className="container mx-auto px-4 pt-12 md:pt-20 text-center">
-              <h2 className="text-3xl md:text-4xl font-headline text-marrom-terra mb-8 md:mb-12">Nosso Cardápio</h2>
+            <div className="container mx-auto px-4 pt-16 md:pt-24 text-center">
+              <h2 className={cn(
+                "text-4xl md:text-5xl font-headline mb-10 md:mb-16",
+                isEgua ? "text-white" : "text-marrom-terra"
+              )}>
+                Explore Sabores
+              </h2>
             </div>
             
             <CategoryFilter 
@@ -135,13 +161,13 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
               onSelect={setActiveCategory as any} 
             />
 
-            <section className="container mx-auto px-4 py-8 md:py-16">
+            <section className="container mx-auto px-4 py-12 md:py-20 min-h-[400px]">
               {productsLoading ? (
                 <div className="flex justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-marrom-terra opacity-20" />
+                  <Loader2 className="w-10 h-10 animate-spin text-fogo-vibrante opacity-40" />
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
                   {filteredProducts.map((product) => (
                     <ProductCard 
                       key={product.id} 
@@ -151,8 +177,11 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 bg-areia-media/10 rounded-xl border border-dashed border-areia-escura/40">
-                  <p className="text-sm text-cinza-organico italic">Nenhum prato nesta categoria.</p>
+                <div className={cn(
+                  "text-center py-24 rounded-3xl border border-dashed",
+                  isEgua ? "bg-preto-panela/50 border-white/10" : "bg-areia-media/10 border-areia-escura/40"
+                )}>
+                  <p className="text-sm opacity-60 italic">Nenhum prato nesta categoria.</p>
                 </div>
               )}
             </section>
@@ -161,22 +190,41 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
           <WhatsAppCTA />
         </main>
 
-        <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-16 md:py-24 pb-32">
-          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
-            <div className="space-y-4 text-center md:text-left">
-              <h3 className="font-headline text-3xl md:text-4xl text-caramelo-palha uppercase">{restaurantDisplayName}</h3>
-              <p className="text-xs md:text-sm italic opacity-80">Sabor e tradição no coração de Belém.</p>
+        <footer id="contato" className={cn(
+          "py-20 md:py-32 pb-40 transition-colors duration-500",
+          isEgua ? "bg-black text-creme-suave" : "bg-grafite-amadeirado text-areia-clara"
+        )}>
+          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-16">
+            <div className="space-y-6 text-center md:text-left">
+              <h3 className={cn(
+                "font-headline text-4xl uppercase tracking-tighter",
+                isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
+              )}>
+                {restaurantDisplayName}
+              </h3>
+              <p className="text-sm italic opacity-60 max-w-xs mx-auto md:mx-0">
+                {isEgua ? 'O tempero que faz a gente pirar. Tradição e fogo no coração de Belém.' : 'Sabor e tradição marajoara servidos com elegância.'}
+              </p>
             </div>
-            <nav className="flex flex-col items-center md:items-start gap-3 text-xs md:text-sm">
-              <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-2">Menu</h4>
-              <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="hover:text-caramelo-palha transition-colors">Início</button>
-              <button onClick={() => document.getElementById('menu')?.scrollIntoView({behavior: 'smooth'})} className="hover:text-caramelo-palha transition-colors">Cardápio</button>
+            <nav className="flex flex-col items-center md:items-start gap-4">
+              <h4 className={cn(
+                "font-headline text-xl mb-2",
+                isEgua ? "text-white" : "text-caramelo-palha"
+              )}>Explorar</h4>
+              <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm hover:text-fogo-vibrante transition-colors uppercase tracking-widest font-bold opacity-80">Início</button>
+              <button onClick={() => document.getElementById('menu')?.scrollIntoView({behavior: 'smooth'})} className="text-sm hover:text-fogo-vibrante transition-colors uppercase tracking-widest font-bold opacity-80">Cardápio</button>
             </nav>
-            <div className="space-y-3 text-xs md:text-sm text-center md:text-left">
-              <h4 className="font-headline text-lg md:text-xl text-caramelo-palha mb-2">Visite-nos</h4>
-              <p>Av. Gentil Bittencourt, 2231 - Belém/PA</p>
-              <p>Terça a Domingo: 11h às 15h e 18h às 23h30</p>
+            <div className="space-y-4 text-sm text-center md:text-left">
+              <h4 className={cn(
+                "font-headline text-xl mb-2",
+                isEgua ? "text-white" : "text-caramelo-palha"
+              )}>Localização</h4>
+              <p className="opacity-80">Av. Gentil Bittencourt, 2231 - Belém/PA</p>
+              <p className="opacity-80">Terça a Domingo: 11h às 15h e 18h às 23h30</p>
             </div>
+          </div>
+          <div className="container mx-auto px-4 mt-20 pt-8 border-t border-white/5 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-20">© 2024 {restaurantDisplayName} • Todos os direitos reservados</p>
           </div>
         </footer>
 
