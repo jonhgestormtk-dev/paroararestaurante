@@ -21,7 +21,10 @@ import {
   Edit2,
   Trash2,
   Plus,
-  Minus
+  Minus,
+  CreditCard,
+  Banknote,
+  Wallet
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -71,13 +74,19 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   'Finalizado': 'text-marrom-escuro bg-marrom-escuro/10 border-marrom-escuro/20',
 };
 
+const PAYMENT_ICONS: Record<string, any> = {
+  'Pix': Wallet,
+  'Dinheiro': Banknote,
+  'Débito': CreditCard,
+  'Crédito': CreditCard
+};
+
 export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   
-  // Estado de edição ampliado
   const [editFormData, setEditFormData] = useState({ 
     name: '', 
     phone: '', 
@@ -94,7 +103,6 @@ export default function AdminOrders() {
   }, [db]);
   const { data: orders, loading } = useCollection<Order>(ordersQuery);
 
-  // Buscar produtos para permitir adicionar itens ao editar
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('name', 'asc'));
@@ -145,7 +153,7 @@ export default function AdminOrders() {
       name: order.customer.name,
       phone: order.customer.phone,
       address: order.customer.address || '',
-      items: JSON.parse(JSON.stringify(order.items)) // Deep clone para edição segura
+      items: JSON.parse(JSON.stringify(order.items))
     });
     setIsEditModalOpen(true);
   };
@@ -217,7 +225,8 @@ export default function AdminOrders() {
       message += `• ${item.quantity}x *${item.name}* - R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
     });
 
-    message += `\n*Novo Total: R$ ${order.total.toFixed(2).replace('.', ',')}*\n\n`;
+    message += `\n*Novo Total: R$ ${order.total.toFixed(2).replace('.', ',')}*\n`;
+    message += `💳 *Pagamento:* ${order.payment?.method || 'Não inf.'}\n\n`;
     message += `Acompanhamos seu pedido! Qualquer dúvida, estamos à disposição.`;
 
     const encoded = encodeURIComponent(message);
@@ -226,7 +235,7 @@ export default function AdminOrders() {
 
   const exportToCSV = () => {
     if (!orders) return;
-    const headers = ['ID', 'Num Pedido', 'Data', 'Cliente', 'Telefone', 'Total', 'Status'];
+    const headers = ['ID', 'Num Pedido', 'Data', 'Cliente', 'Telefone', 'Total', 'Pagamento', 'Status'];
     const rows = orders.map(o => [
       o.id,
       o.orderNumber || '-',
@@ -234,6 +243,7 @@ export default function AdminOrders() {
       o.customer.name,
       o.customer.phone,
       o.total.toFixed(2),
+      o.payment?.method || 'N/A',
       o.status
     ]);
     
@@ -338,12 +348,23 @@ export default function AdminOrders() {
                   )}
                 </div>
 
-                <div className="bg-areia-clara/10 p-3 rounded-sm border border-areia-escura/30 space-y-2">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-marrom-madeira opacity-60">
-                    <Package className="w-3 h-3" /> Itens
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-areia-clara/10 p-3 rounded-sm border border-areia-escura/30 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-marrom-madeira opacity-60">
+                      <Package className="w-2.5 h-2.5" /> Itens
+                    </div>
+                    <div className="text-[10px] text-marrom-texto truncate">
+                      {order.items.length} produto(s)
+                    </div>
                   </div>
-                  <div className="text-xs text-marrom-texto">
-                    {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
+                  <div className="bg-areia-clara/10 p-3 rounded-sm border border-areia-escura/30 space-y-1">
+                    <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-marrom-madeira opacity-60">
+                      <CreditCard className="w-2.5 h-2.5" /> Pagamento
+                    </div>
+                    <div className="text-[10px] font-bold text-marrom-texto truncate">
+                      {order.payment?.method || 'Não inf.'}
+                      {order.payment?.changeFor ? ` (T: ${order.payment.changeFor})` : ''}
+                    </div>
                   </div>
                 </div>
 
@@ -403,7 +424,7 @@ export default function AdminOrders() {
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ref Pedido</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Data</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens</TableHead>
+                <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Pagamento</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total</TableHead>
                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Status</TableHead>
                 <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Ações</TableHead>
@@ -417,73 +438,88 @@ export default function AdminOrders() {
                   </TableRow>
                 ))
               ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => (
-                  <TableRow key={order.id} className="hover:bg-areia-media/5 border-areia-escura group transition-colors">
-                    <TableCell>
-                      <p className="text-xs font-mono text-marrom-terra font-black">
-                        #{order.orderNumber || order.id.substring(0, 8)}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-marrom-madeira uppercase">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(order.createdAt)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="text-sm font-bold text-marrom-terra">{order.customer.name}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-verde-folha font-bold">
-                          <Phone className="w-3 h-3" />
-                          {order.customer.phone}
+                filteredOrders.map((order) => {
+                  const PayIcon = order.payment?.method ? PAYMENT_ICONS[order.payment.method] || CreditCard : CreditCard;
+                  return (
+                    <TableRow key={order.id} className="hover:bg-areia-media/5 border-areia-escura group transition-colors">
+                      <TableCell>
+                        <p className="text-xs font-mono text-marrom-terra font-black">
+                          #{order.orderNumber || order.id.substring(0, 8)}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-marrom-madeira uppercase">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(order.createdAt)}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-[200px] truncate text-xs text-cinza-organico">
-                        {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-bold text-marrom-escuro text-sm">R$ {order.total.toFixed(2).replace('.', ',')}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-widest border", STATUS_COLORS[order.status])}>
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-marrom-madeira">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura">
-                          {order.status === 'Pendente' && (
-                            <DropdownMenuItem onClick={() => handleOpenEditModal(order)} className="text-xs uppercase font-bold tracking-widest gap-2">
-                              <Edit2 className="w-3 h-3 text-marrom-madeira" /> Editar Pedido
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-marrom-terra">{order.customer.name}</p>
+                          <div className="flex items-center gap-2 text-[10px] text-verde-folha font-bold">
+                            <Phone className="w-3 h-3" />
+                            {order.customer.phone}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-areia-media/20 rounded-sm">
+                            <PayIcon className="w-3.5 h-3.5 text-marrom-madeira" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-marrom-terra leading-none">
+                              {order.payment?.method || 'N/A'}
+                            </span>
+                            {order.payment?.changeFor && (
+                              <span className="text-[8px] text-cinza-organico italic mt-0.5">
+                                Troco para R$ {order.payment.changeFor.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-bold text-marrom-escuro text-sm">R$ {order.total.toFixed(2).replace('.', ',')}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-widest border", STATUS_COLORS[order.status])}>
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-marrom-madeira">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura">
+                            {order.status === 'Pendente' && (
+                              <DropdownMenuItem onClick={() => handleOpenEditModal(order)} className="text-xs uppercase font-bold tracking-widest gap-2">
+                                <Edit2 className="w-3 h-3 text-marrom-madeira" /> Editar Pedido
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="text-xs uppercase font-bold tracking-widest gap-2">
+                              <Clock className="w-3 h-3 text-caramelo-palha" /> Pendente
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Pendente')} className="text-xs uppercase font-bold tracking-widest gap-2">
-                            <Clock className="w-3 h-3 text-caramelo-palha" /> Pendente
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Em Preparo')} className="text-xs uppercase font-bold tracking-widest gap-2">
-                            <AlertCircle className="w-3 h-3 text-marrom-madeira" /> Em Preparo
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Saiu para Entrega')} className="text-xs uppercase font-bold tracking-widest gap-2">
-                            <Truck className="w-3 h-3 text-verde-folha" /> Em Rota
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Finalizado')} className="text-xs uppercase font-bold tracking-widest gap-2">
-                            <CheckCircle className="w-3 h-3 text-marrom-escuro" /> Finalizado
-                          </DropdownMenuItem>
-                          <Separator className="my-1 bg-areia-escura" />
-                          <DropdownMenuItem className="text-xs uppercase font-bold tracking-widest gap-2 text-verde-folha" onClick={() => handleResendToWhatsApp(order)}>
-                            <MessageCircle className="w-3 h-3" /> WhatsApp
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Em Preparo')} className="text-xs uppercase font-bold tracking-widest gap-2">
+                              <AlertCircle className="w-3 h-3 text-marrom-madeira" /> Em Preparo
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Saiu para Entrega')} className="text-xs uppercase font-bold tracking-widest gap-2">
+                              <Truck className="w-3 h-3 text-verde-folha" /> Em Rota
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, 'Finalizado')} className="text-xs uppercase font-bold tracking-widest gap-2">
+                              <CheckCircle className="w-3 h-3 text-marrom-escuro" /> Finalizado
+                            </DropdownMenuItem>
+                            <Separator className="my-1 bg-areia-escura" />
+                            <DropdownMenuItem className="text-xs uppercase font-bold tracking-widest gap-2 text-verde-folha" onClick={() => handleResendToWhatsApp(order)}>
+                              <MessageCircle className="w-3 h-3" /> WhatsApp
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="h-32 text-center text-cinza-organico italic font-subheadline">
@@ -521,17 +557,16 @@ export default function AdminOrders() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">WhatsApp / Telefone</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">WhatsApp</Label>
                   <Input 
                     value={editFormData.phone}
                     onChange={(e) => setEditFormData({...editFormData, phone: e.target.value.replace(/\D/g, '')})}
                     className="bg-white border-areia-escura"
-                    placeholder="Somente números"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">Endereço de Entrega</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60">Endereço</Label>
                   <Input 
                     value={editFormData.address}
                     onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
@@ -542,55 +577,53 @@ export default function AdminOrders() {
 
               {/* Coluna Itens do Pedido */}
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira mb-2">Itens & Cardápio</h4>
-                
-                <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira mb-2">Resumo de Pagamento</h4>
+                <div className="p-4 bg-white/50 border border-areia-escura rounded-sm space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-bold opacity-60 uppercase tracking-widest">Método:</span>
+                    <span className="font-black text-marrom-terra">{editingOrder?.payment?.method || 'N/A'}</span>
+                  </div>
+                  {editingOrder?.payment?.changeFor && (
+                    <div className="flex justify-between text-xs">
+                      <span className="font-bold opacity-60 uppercase tracking-widest">Troco para:</span>
+                      <span className="font-black text-marrom-terra">R$ {editingOrder.payment.changeFor.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira mb-2 pt-2">Itens</h4>
+                <div className="space-y-2">
                   {editFormData.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-white border border-areia-escura rounded-sm group">
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white border border-areia-escura rounded-sm">
                       <div className="flex-1 pr-2">
-                        <p className="text-xs font-bold text-marrom-terra truncate">{item.name}</p>
-                        <p className="text-[10px] text-cinza-organico">R$ {item.price.toFixed(2)}</p>
+                        <p className="text-[10px] font-bold text-marrom-terra truncate">{item.name}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center border border-areia-escura rounded-sm bg-areia-clara/20">
                           <button onClick={() => handleUpdateItemQty(idx, -1)} className="p-1 hover:bg-areia-media">
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-2.5 h-2.5" />
                           </button>
-                          <span className="w-6 text-center text-xs font-black">{item.quantity}</span>
+                          <span className="w-5 text-center text-[10px] font-black">{item.quantity}</span>
                           <button onClick={() => handleUpdateItemQty(idx, 1)} className="p-1 hover:bg-areia-media">
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-2.5 h-2.5" />
                           </button>
                         </div>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                          className="h-6 w-6 text-destructive hover:bg-destructive/10"
                           onClick={() => handleRemoveItem(idx)}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2 block">Adicionar do Cardápio</Label>
-                  <Select onValueChange={(val) => handleAddItem(val)}>
-                    <SelectTrigger className="bg-white border-areia-escura h-9 text-xs">
-                      <SelectValue placeholder="Escolher Prato..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-areia-clara">
-                      {products?.filter(p => p.active !== false).map(p => (
-                        <SelectItem key={p.id} value={p.id} className="text-xs">{p.name} - R$ {p.price.toFixed(2)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div className="pt-4 border-t border-dashed border-areia-escura">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Novo Total</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total</span>
                     <span className="text-lg font-black text-marrom-escuro">
                       R$ {editFormData.items.reduce((acc, i) => acc + (i.price * i.quantity), 0).toFixed(2).replace('.', ',')}
                     </span>

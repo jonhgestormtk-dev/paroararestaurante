@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -9,7 +10,12 @@ import {
   ShoppingBag as ShoppingBagIcon, 
   User, 
   X,
-  ClipboardList
+  ClipboardList,
+  Wallet,
+  Banknote,
+  CreditCard,
+  Copy,
+  Check
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -24,6 +30,7 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useToast } from '@/hooks/use-toast';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { PaymentMethod } from '@/lib/types';
 
 const ShoppingBag = ShoppingBagIcon;
 
@@ -52,13 +59,34 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     address: ''
   });
 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Pix');
+  const [changeFor, setChangeFor] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const pixKey = "91984541085";
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(pixKey);
+    setCopied(true);
+    toast({ title: "Chave Pix Copiada!", description: "Agora basta colar no seu banco." });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleSendToWhatsApp = async () => {
-    // Validação de campos obrigatórios
     if (!customerInfo.name.trim() || !customerInfo.phone.trim() || !customerInfo.address.trim()) {
       toast({
         variant: "destructive",
         title: "Dados incompletos",
-        description: "Por favor, preencha nome, WhatsApp e endereço para continuar o pedido."
+        description: "Por favor, preencha nome, WhatsApp e endereço para continuar."
+      });
+      return;
+    }
+
+    if (paymentMethod === 'Dinheiro' && (!changeFor || Number(changeFor) < totalPrice)) {
+      toast({
+        variant: "destructive",
+        title: "Troco inválido",
+        description: "Informe um valor para troco maior que o total do pedido."
       });
       return;
     }
@@ -78,6 +106,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       })),
       total: totalPrice,
       status: 'Pendente',
+      payment: {
+        method: paymentMethod,
+        changeFor: paymentMethod === 'Dinheiro' ? Number(changeFor) : null
+      },
       createdAt: serverTimestamp()
     };
 
@@ -99,8 +131,14 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           orderText += `• ${item.quantity}x *${item.name}* — R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
         });
 
-        orderText += `\n*Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}*\n\n`;
-        orderText += `---------------------------\nRestaurante: _${restaurantName}_`;
+        orderText += `\n*Total: R$ ${totalPrice.toFixed(2).replace('.', ',')}*\n`;
+        orderText += `💳 *Pagamento:* ${paymentMethod}${paymentMethod === 'Dinheiro' ? ` (Troco para R$ ${changeFor})` : ''}\n`;
+        
+        if (paymentMethod === 'Pix') {
+          orderText += `\n⚠️ _Por favor, envie o comprovante após o pagamento._\n`;
+        }
+
+        orderText += `\n---------------------------\nRestaurante: _${restaurantName}_`;
 
         window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(orderText)}`, '_blank');
         
@@ -170,7 +208,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 )}>
                   <div className="flex items-center gap-2 mb-1">
                     <User className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Identificação Obrigatória</Label>
+                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Identificação</Label>
                   </div>
                   <div className="space-y-2">
                     <Input 
@@ -194,7 +232,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <Input 
                       value={customerInfo.address} 
                       onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})} 
-                      placeholder="Endereço Completo de Entrega *"
+                      placeholder="Endereço Completo *"
                       className={cn(
                         "h-10 border-none rounded-lg text-xs",
                         isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
@@ -203,11 +241,83 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </div>
                 </div>
 
+                {/* Forma de Pagamento */}
+                <div className={cn(
+                  "p-4 rounded-xl border space-y-4",
+                  isEgua ? "bg-preto-panela/50 border-white/5" : "bg-white border-marrom-madeira/10 shadow-sm"
+                )}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <CreditCard className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
+                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Forma de Pagamento</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'Pix', icon: Wallet },
+                      { id: 'Dinheiro', icon: Banknote },
+                      { id: 'Débito', icon: CreditCard },
+                      { id: 'Crédito', icon: CreditCard }
+                    ].map((method) => (
+                      <button
+                        key={method.id}
+                        onClick={() => setPaymentMethod(method.id as PaymentMethod)}
+                        className={cn(
+                          "flex items-center gap-2 p-3 rounded-lg border text-[10px] font-bold uppercase transition-all",
+                          paymentMethod === method.id 
+                            ? (isEgua ? "bg-fogo-vibrante text-white border-fogo-vibrante" : "bg-marrom-terra text-white border-marrom-terra")
+                            : (isEgua ? "bg-black/20 border-white/5 text-white/40" : "bg-areia-clara/50 border-transparent text-marrom-texto/60")
+                        )}
+                      >
+                        <method.icon className="w-3.5 h-3.5" />
+                        {method.id}
+                      </button>
+                    ))}
+                  </div>
+
+                  {paymentMethod === 'Pix' && (
+                    <div className={cn(
+                      "p-3 rounded-lg border border-dashed flex flex-col gap-2",
+                      isEgua ? "border-fogo-vibrante/20 bg-fogo-vibrante/5" : "border-marrom-madeira/20 bg-marrom-madeira/5"
+                    )}>
+                      <p className="text-[9px] uppercase font-black opacity-60">Chave Pix (Telefone)</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-sm font-bold">(91) 98454-1085</span>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 px-2 gap-1.5 text-[9px] uppercase font-black"
+                          onClick={handleCopyPix}
+                        >
+                          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied ? 'Copiado' : 'Copiar'}
+                        </Button>
+                      </div>
+                      <p className="text-[8px] italic opacity-40">Envie o comprovante no WhatsApp após o envio do pedido.</p>
+                    </div>
+                  )}
+
+                  {paymentMethod === 'Dinheiro' && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <Label className="text-[9px] uppercase font-black opacity-60">Troco para quanto?</Label>
+                      <Input 
+                        type="number"
+                        value={changeFor}
+                        onChange={(e) => setChangeFor(e.target.value)}
+                        placeholder="Ex: 100"
+                        className={cn(
+                          "h-10 border-none rounded-lg text-xs",
+                          isEgua ? "bg-black/40 text-white" : "bg-areia-clara/50 text-marrom-texto"
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* Lista de Itens */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 px-1">
-                    <ClipboardList className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <h3 className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Resumo do Pedido</h3>
+                    <ClipboardList className={cn("w-3.5 h-3.5", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Resumo do Pedido</h3>
                   </div>
                   <div className="space-y-2">
                     {cart.map((item) => (
@@ -287,7 +397,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               Finalizar no WhatsApp
             </Button>
             <p className="text-[7px] text-center mt-3 opacity-40 uppercase tracking-[0.2em] font-bold">
-              Todos os campos acima são obrigatórios
+              Revise seus dados antes de enviar
             </p>
           </div>
         )}
