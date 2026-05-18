@@ -183,7 +183,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     />
                     <Input 
                       value={customerInfo.phone} 
-                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} 
+                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value.replace(/\D/g, '')})} 
                       placeholder="WhatsApp (com DDD)"
                       className={cn(
                         "h-10 border-none rounded-lg text-xs",
