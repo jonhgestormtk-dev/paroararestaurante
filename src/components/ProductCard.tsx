@@ -81,8 +81,8 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         </div>
         
         <p className={cn(
-          "text-[10px] md:text-sm font-body italic whitespace-pre-wrap mb-3 flex-grow opacity-70 leading-relaxed",
-          isEgua ? "text-creme-legivel/80" : "text-cinza-organico"
+          "text-[11px] md:text-base font-body italic whitespace-pre-wrap mb-3 flex-grow opacity-80 leading-relaxed",
+          isEgua ? "text-creme-legivel" : "text-cinza-organico"
         )}>
           {product.description}
         </p>
