@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -27,7 +26,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { Order, Product, RestaurantSlug } from '@/lib/types';
-import { PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { 
   BarChart, 
   Bar, 
@@ -49,7 +47,6 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'checking' | 'migrating' | 'completed'>('idle');
-  const hasAttemptedMigration = useRef(false);
 
   const allOrdersQuery = useMemo(() => {
     if (!db) return null;
@@ -75,71 +72,11 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: allCategories, loading: loadingCategories } = useCollection(catQuery);
 
-  const seedDatabase = async (force = false) => {
-    if (!db || (hasAttemptedMigration.current && !force)) return;
-    
-    hasAttemptedMigration.current = true;
-    setMigrationStatus('migrating');
-    setIsSeeding(true);
-    
-    try {
-      const batch = writeBatch(db);
-      const restaurants: RestaurantSlug[] = ['paroara', 'egua-da-panela'];
-      
-      // 1. Migrar Categorias para ambos os restaurantes
-      const validCategories = CATEGORIES.filter(c => c !== 'Todos' && c !== 'Promoções');
-      
-      restaurants.forEach(resId => {
-        validCategories.forEach((catName, index) => {
-          const catId = `${resId}-${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')}`;
-          const catRef = doc(db, 'categories', catId);
-          batch.set(catRef, {
-            restaurantId: resId,
-            name: catName,
-            active: true,
-            order: index * 10,
-            updatedAt: serverTimestamp(),
-            createdAt: serverTimestamp()
-          }, { merge: true });
-        });
-      });
-
-      // 2. Migrar Produtos (distribuir entre restaurantes)
-      PRODUCTS.forEach((product, idx) => {
-        const resId = idx % 2 === 0 ? 'paroara' : 'egua-da-panela';
-        const productRef = doc(db, 'products', product.id);
-        const { id, ...productData } = product;
-        batch.set(productRef, {
-          ...productData,
-          restaurantId: resId,
-          active: productData.active ?? true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-      });
-
-      await batch.commit();
-      setMigrationStatus('completed');
-      toast({ title: "Sincronização Concluída", description: "Dados migrados para multi-restaurante." });
-    } catch (error: any) {
-      console.error(error);
-      setMigrationStatus('idle');
-      hasAttemptedMigration.current = false;
-      toast({ variant: "destructive", title: "Erro na Sincronização" });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
   useEffect(() => {
     if (!loadingProducts && !loadingCategories && db) {
-      if ((!allProducts || allProducts.length === 0) && (!allCategories || allCategories.length === 0)) {
-        seedDatabase();
-      } else {
-        setMigrationStatus('completed');
-      }
+      setMigrationStatus('completed');
     }
-  }, [loadingProducts, loadingCategories, allProducts, allCategories, db]);
+  }, [loadingProducts, loadingCategories, db]);
 
   const stats = useMemo(() => {
     if (!allOrders) return { totalOrders: '0', totalRevenue: 'R$ 0,00', activeProducts: '0' };
@@ -155,10 +92,6 @@ export default function AdminDashboard() {
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-3xl font-headline text-marrom-terra">Dashboard Admin</h1>
-        <Button variant="outline" size="sm" onClick={() => seedDatabase(true)} disabled={isSeeding}>
-          {isSeeding ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-          Sincronizar Dados
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
