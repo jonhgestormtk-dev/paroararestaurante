@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -220,7 +219,7 @@ export default function AdminProducts() {
                         "text-[9px] font-black uppercase tracking-widest",
                         product.restaurantId === 'paroara' ? "border-marrom-terra text-marrom-terra" : "border-fogo-vibrante text-fogo-vibrante"
                       )}>
-                        {product.restaurantId.replace('-', ' ')}
+                        {product.restaurantId?.replace('-', ' ') || 'Geral'}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-bold">{product.name}</TableCell>

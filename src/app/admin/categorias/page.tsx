@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -230,7 +229,7 @@ export default function AdminCategories() {
                         "text-[9px] font-black uppercase tracking-widest",
                         cat.restaurantId === 'paroara' ? "border-marrom-terra text-marrom-terra" : "border-fogo-vibrante text-fogo-vibrante"
                       )}>
-                        {cat.restaurantId.replace('-', ' ')}
+                        {cat.restaurantId?.replace('-', ' ') || 'Geral'}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-bold text-marrom-terra">{cat.name}</TableCell>
@@ -322,7 +321,7 @@ export default function AdminCategories() {
 
           <DialogFooter className="p-6 bg-white border-t border-areia-escura">
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="text-[10px] uppercase font-bold tracking-widest">Cancelar</Button>
-            <Button onClick={handleSave} className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-6 font-bold uppercase tracking-widest text-[10px]">
+            <Button onClick={handleSave} className="bg-marrom-terra text-areia-clara hover:bg-marrom-escuro rounded-sm px-6 font-bold uppercase tracking-widest text-xs">
               Salvar
             </Button>
           </DialogFooter>
