@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -48,15 +49,19 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     }
   };
 
+  // Fallback image if imageUrl is empty to avoid Next.js console error
+  const displayImage = product.imageUrl || `https://picsum.photos/seed/${product.id}/800/600`;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-areia-clara text-marrom-texto max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
         <div className="relative h-[200px] md:h-[350px] w-full flex-shrink-0">
           <Image
-            src={product.imageUrl}
+            src={displayImage}
             alt={product.name}
             fill
             className="object-cover"
+            priority
           />
         </div>
 
