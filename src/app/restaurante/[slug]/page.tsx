@@ -25,6 +25,12 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const db = useFirestore();
 
+  const restaurantDisplayName = useMemo(() => {
+    if (restaurantId === 'egua-da-panela') return 'Égua da Panela';
+    if (restaurantId === 'paroara') return 'PAROARA';
+    return restaurantId.replace('-', ' ');
+  }, [restaurantId]);
+
   // Consultar todas as categorias e filtrar em memória para evitar erros de índice composto em protótipos
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
@@ -158,7 +164,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
         <footer id="contato" className="bg-grafite-amadeirado text-areia-clara py-16 md:py-24 pb-32">
           <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
             <div className="space-y-4 text-center md:text-left">
-              <h3 className="font-headline text-3xl md:text-4xl text-caramelo-palha uppercase">{restaurantId.replace('-', ' ')}</h3>
+              <h3 className="font-headline text-3xl md:text-4xl text-caramelo-palha uppercase">{restaurantDisplayName}</h3>
               <p className="text-xs md:text-sm italic opacity-80">Sabor e tradição no coração de Belém.</p>
             </div>
             <nav className="flex flex-col items-center md:items-start gap-3 text-xs md:text-sm">

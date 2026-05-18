@@ -45,7 +45,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     // Identifica o restaurante do primeiro item (assume que o carrinho é de apenas um restaurante por vez)
     const restaurantId = cart[0]?.restaurantId || 'paroara';
-    const restaurantName = restaurantId === 'paroara' ? 'PAROARA' : 'ÉGUA DA PANELA';
+    const restaurantName = restaurantId === 'paroara' ? 'PAROARA' : 'Égua da Panela';
     const whatsappNumber = '559184541085'; // Centralizado
     
     const baseOrderData = {

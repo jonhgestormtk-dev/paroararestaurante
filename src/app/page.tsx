@@ -10,12 +10,12 @@ export default function SplashPage() {
   const restaurants = [
     {
       id: 'egua-da-panela',
-      name: 'ÉGUA DA PANELA',
+      name: 'Égua da Panela',
       tagline: 'Culinária Regional e Afetiva',
       description: 'Pratos com gostinho de casa, preparados com os melhores temperos do Pará.',
-      color: 'bg-verde-folha',
-      hoverColor: 'hover:bg-verde-escuro',
-      icon: <Utensils className="w-12 h-12 text-areia-clara" />,
+      color: 'bg-fogo-vibrante',
+      hoverColor: 'hover:bg-fogo-escuro',
+      icon: <Utensils className="w-12 h-12 text-creme-suave" />,
       image: 'https://picsum.photos/seed/egua/1200/800'
     },
     {
@@ -63,7 +63,7 @@ export default function SplashPage() {
                   {res.icon}
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2">{res.name}</h2>
+                <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2 uppercase">{res.name}</h2>
                 <p className="text-caramelo-palha font-subheadline text-lg italic mb-6">{res.tagline}</p>
                 <p className="text-white/80 font-body text-sm max-w-sm mb-8 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-700">{res.description}</p>
                 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -30,6 +31,12 @@ export function Header() {
   }, [pathname]);
 
   const isEgua = restaurantSlug === 'egua-da-panela';
+  
+  const restaurantName = useMemo(() => {
+    if (restaurantSlug === 'egua-da-panela') return 'Égua da Panela';
+    if (restaurantSlug === 'paroara') return 'PAROARA';
+    return 'PAROARA';
+  }, [restaurantSlug]);
 
   const navLinks = useMemo(() => {
     const base = [{ label: 'Início', path: '/' }];
@@ -58,7 +65,7 @@ export function Header() {
                 "text-lg md:text-3xl font-headline tracking-[0.2em] leading-none uppercase",
                 isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
               )}>
-                {restaurantSlug ? restaurantSlug.replace('-', ' ') : 'PAROARA'}
+                {restaurantName}
               </h1>
               <p className={cn(
                 "text-[7px] md:text-[10px] font-subheadline tracking-widest uppercase mt-0.5",
@@ -136,7 +143,7 @@ export function Header() {
                     "font-headline text-2xl tracking-widest text-left",
                     isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
                   )}>
-                    {restaurantSlug ? restaurantSlug.replace('-', ' ') : 'MENU'}
+                    {restaurantName}
                   </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col p-6 gap-2">
