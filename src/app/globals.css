@@ -20,13 +20,13 @@
     --cinza-organico: 26 12% 49%;
     --branco-quente: 43 100% 99%;
 
-    /* Égua da Panela Theme Variables */
-    --fogo-vibrante: 0 84% 55%;
-    --fogo-escuro: 0 84% 35%;
-    --preto-carvao: 0 0% 7%;
-    --preto-panela: 0 0% 12%;
-    --creme-suave: 30 30% 95%;
-    --creme-legivel: 30 20% 85%;
+    /* Égua da Panela Theme Variables (Inspired by the orange/black menu) */
+    --fogo-vibrante: 35 100% 52%; /* Vibrant Orange/Amber */
+    --fogo-escuro: 30 100% 40%;
+    --preto-carvao: 0 0% 5%;
+    --preto-panela: 0 0% 10%;
+    --creme-suave: 30 30% 98%;
+    --creme-legivel: 30 20% 80%;
 
     /* Default ShadCN Integration (Mapped to Paroara as base) */
     --background: var(--branco-quente);

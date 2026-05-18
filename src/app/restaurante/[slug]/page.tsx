@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -16,7 +15,7 @@ import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Product, RestaurantSlug } from '@/lib/types';
-import { Sparkles, Loader2, Flame } from 'lucide-react';
+import { Sparkles, Loader2, Flame, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function RestaurantHomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -102,9 +101,9 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
               <div className="flex items-center justify-center gap-2">
                 {isEgua ? (
                   <>
-                    <Flame className="w-5 h-5 text-fogo-vibrante animate-pulse" />
-                    <span className="text-[11px] font-black uppercase tracking-[0.4em] text-fogo-vibrante">Mais Pedidos</span>
-                    <Flame className="w-5 h-5 text-fogo-vibrante animate-pulse" />
+                    <Utensils className="w-5 h-5 text-fogo-vibrante" />
+                    <span className="text-[11px] font-black uppercase tracking-[0.4em] text-fogo-vibrante">Recomendados</span>
+                    <Utensils className="w-5 h-5 text-fogo-vibrante" />
                   </>
                 ) : (
                   <>
@@ -118,11 +117,11 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 "text-4xl md:text-6xl font-headline tracking-tight",
                 isEgua ? "text-white" : "text-marrom-terra"
               )}>
-                Destaques {isEgua ? 'do Fogo' : 'da Ilha'}
+                Destaques {isEgua ? 'da Cozinha' : 'da Ilha'}
               </h2>
               <div className={cn(
                 "w-24 h-1 mx-auto rounded-full",
-                isEgua ? "bg-fogo-vibrante shadow-[0_0_15px_rgba(230,57,70,0.5)]" : "bg-caramelo-palha opacity-40"
+                isEgua ? "bg-fogo-vibrante shadow-[0_0_15px_rgba(255,165,0,0.5)]" : "bg-caramelo-palha opacity-40"
               )}></div>
             </div>
 
@@ -151,7 +150,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 "text-4xl md:text-5xl font-headline mb-10 md:mb-16",
                 isEgua ? "text-white" : "text-marrom-terra"
               )}>
-                Explore Sabores
+                Nosso Cardápio
               </h2>
             </div>
             
@@ -203,7 +202,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 {restaurantDisplayName}
               </h3>
               <p className="text-sm italic opacity-60 max-w-xs mx-auto md:mx-0">
-                {isEgua ? 'O tempero que faz a gente pirar. Tradição e fogo no coração de Belém.' : 'Sabor e tradição marajoara servidos com elegância.'}
+                {isEgua ? 'Sabor que conquista em cada detalhe. O melhor da culinária regional paraense.' : 'Sabor e tradição marajoara servidos com elegância.'}
               </p>
             </div>
             <nav className="flex flex-col items-center md:items-start gap-4">

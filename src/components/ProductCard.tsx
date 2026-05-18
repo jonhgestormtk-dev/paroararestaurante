@@ -35,9 +35,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     <div 
       onClick={onClick}
       className={cn(
-        "group rounded-lg overflow-hidden border shadow-sm transition-all duration-500 cursor-pointer flex flex-col h-full transform hover:-translate-y-1",
+        "group rounded-2xl overflow-hidden border shadow-sm transition-all duration-500 cursor-pointer flex flex-col h-full transform hover:-translate-y-1",
         isEgua 
-          ? "bg-preto-panela border-white/5 hover:shadow-[0_20px_40px_rgba(255,77,77,0.15)]" 
+          ? "bg-preto-panela border-white/5 hover:shadow-[0_20px_40px_rgba(255,165,0,0.15)]" 
           : "bg-white border-areia-escura/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]"
       )}
     >
@@ -67,57 +67,54 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       </div>
       
       <div className={cn(
-        "p-2 md:p-3 flex flex-col flex-grow",
+        "p-3 md:p-4 flex flex-col flex-grow",
         isEgua ? "bg-preto-carvao/40" : "bg-areia-clara/20"
       )}>
-        <div className="flex justify-between items-start mb-1.5">
+        <div className="flex justify-between items-start mb-2">
           <h3 className={cn(
-            "font-subheadline text-base md:text-xl font-black leading-tight italic",
-            isEgua ? "text-white" : "text-marrom-terra"
+            "font-subheadline text-lg md:text-2xl font-bold leading-tight italic",
+            isEgua ? "text-creme-suave" : "text-marrom-terra"
           )}>
-            {product.emoji && <span className="mr-1 not-italic opacity-80">{product.emoji}</span>}
             {product.name}
           </h3>
         </div>
         
         <p className={cn(
-          "text-[11px] md:text-base font-body italic whitespace-pre-wrap mb-3 flex-grow opacity-80 leading-relaxed",
-          isEgua ? "text-creme-legivel" : "text-cinza-organico"
+          "text-xs md:text-sm font-body italic whitespace-pre-wrap mb-4 flex-grow leading-relaxed",
+          isEgua ? "text-creme-legivel/80" : "text-cinza-organico"
         )}>
           {product.description}
         </p>
         
         <div className={cn(
-          "flex items-center justify-between mt-auto pt-2 border-t",
+          "flex items-center justify-between mt-auto pt-3 border-t",
           isEgua ? "border-white/5" : "border-areia-escura/20"
         )}>
-          <div className="flex flex-col">
+          <div className="flex items-baseline gap-1">
             <span className={cn(
-              "text-[7px] md:text-[8px] uppercase tracking-widest font-bold",
-              isEgua ? "text-fogo-vibrante/60" : "text-marrom-madeira/60"
-            )}>R$</span>
-            <span className={cn(
-              "font-body font-black text-sm md:text-lg",
-              isEgua ? "text-white" : "text-marrom-escuro"
+              "font-body font-black text-lg md:text-2xl tracking-tighter",
+              isEgua ? "text-fogo-vibrante" : "text-marrom-escuro"
             )}>
               {product.price.toFixed(2).replace('.', ',')}
             </span>
+            <span className={cn(
+              "text-[10px] md:text-xs font-black uppercase",
+              isEgua ? "text-fogo-vibrante" : "text-marrom-madeira/60"
+            )}>$</span>
           </div>
           
-          <div className="flex gap-1">
-            <Button
-              size="icon"
-              className={cn(
-                "h-6 w-6 md:h-8 md:w-8 rounded-full transition-all duration-300 shadow-md group/btn",
-                isEgua 
-                  ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro" 
-                  : "bg-marrom-terra text-areia-clara hover:bg-caramelo-palha"
-              )}
-              onClick={handleQuickAdd}
-            >
-              <Plus className="w-3 h-3 md:w-3.5 md:h-3.5 group-hover/btn:rotate-90 transition-transform" />
-            </Button>
-          </div>
+          <Button
+            size="icon"
+            className={cn(
+              "h-8 w-8 md:h-10 md:w-10 rounded-full transition-all duration-300 shadow-md group/btn",
+              isEgua 
+                ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro" 
+                : "bg-marrom-terra text-areia-clara hover:bg-caramelo-palha"
+            )}
+            onClick={handleQuickAdd}
+          >
+            <Plus className="w-4 h-4 md:w-5 md:h-5 group-hover/btn:rotate-90 transition-transform" />
+          </Button>
         </div>
       </div>
     </div>

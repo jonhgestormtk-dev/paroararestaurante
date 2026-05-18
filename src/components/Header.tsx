@@ -52,9 +52,9 @@ export function Header() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 z-50 w-full h-16 md:h-20 shadow-[0_4px_30px_rgba(0,0,0,0.4)] transition-all duration-500 backdrop-blur-xl flex items-center border-b",
+        "fixed top-0 z-50 w-full h-16 md:h-20 shadow-[0_4px_30px_rgba(0,0,0,0.6)] transition-all duration-500 backdrop-blur-xl flex items-center border-b",
         isEgua 
-          ? "bg-black/90 text-creme-suave border-fogo-vibrante/30" 
+          ? "bg-black/95 text-creme-suave border-fogo-vibrante/20" 
           : "bg-marrom-escuro text-areia-clara border-marrom-madeira/40"
       )}>
         <div className="container mx-auto px-4 flex items-center justify-between">
@@ -64,14 +64,14 @@ export function Header() {
                 "text-xl md:text-3xl font-headline leading-none uppercase flex items-center gap-2",
                 isEgua ? "text-fogo-vibrante tracking-tighter" : "text-caramelo-palha tracking-[0.2em]"
               )}>
-                {isEgua && <Flame className="w-5 h-5 animate-pulse hidden md:block" />}
+                {isEgua && <Flame className="w-5 h-5 animate-pulse" />}
                 {restaurantName}
               </h1>
               <p className={cn(
                 "text-[7px] md:text-[10px] font-subheadline tracking-widest uppercase mt-0.5",
-                isEgua ? "text-creme-legivel/60" : "text-areia-media/80"
+                isEgua ? "text-fogo-vibrante/60" : "text-areia-media/80"
               )}>
-                {isEgua ? 'CULINÁRIA REGIONAL PARAENSE' : 'O Restaurante Marajoara'}
+                {isEgua ? 'SABOR QUE CONQUISTA' : 'O Restaurante Marajoara'}
               </p>
             </div>
           </Link>
@@ -114,9 +114,9 @@ export function Header() {
 
             <Button 
               className={cn(
-                "hidden md:flex border-none hover:scale-105 transition-all duration-500 gap-2 font-black uppercase text-[10px] tracking-widest px-6 py-5 rounded-none shadow-2xl",
+                "hidden md:flex border-none hover:scale-105 transition-all duration-500 gap-2 font-black uppercase text-[10px] tracking-widest px-6 py-5 rounded-xl shadow-2xl",
                 isEgua 
-                  ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro" 
+                  ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro shadow-fogo-vibrante/20" 
                   : "bg-caramelo-palha text-marrom-escuro hover:bg-areia-clara"
               )}
               onClick={() => window.open('https://wa.me/559184541085', '_blank')}
