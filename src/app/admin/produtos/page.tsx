@@ -53,14 +53,12 @@ export default function AdminProducts() {
 
   const db = useFirestore();
   
-  // Buscar Produtos
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return collection(db, 'products');
   }, [db]);
   const { data: products, loading } = useCollection<Product>(productsQuery);
 
-  // Buscar Categorias para o Select
   const categoriesQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -70,7 +68,7 @@ export default function AdminProducts() {
   const [formData, setFormData] = useState<Partial<Product>>({
     restaurantId: 'paroara',
     name: '',
-    category: 'Regionais',
+    category: '',
     price: 0,
     description: '',
     imageUrl: '',
@@ -89,7 +87,6 @@ export default function AdminProducts() {
     }).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   }, [products, searchTerm, restaurantFilter]);
 
-  // Filtrar categorias baseadas no restaurante selecionado no formulário
   const availableCategories = useMemo(() => {
     if (!allCategories) return [];
     return allCategories.filter((c: any) => c.restaurantId === formData.restaurantId && c.active !== false);
@@ -220,7 +217,7 @@ export default function AdminProducts() {
                         "text-[9px] font-black uppercase tracking-widest",
                         product.restaurantId === 'paroara' ? "border-marrom-terra text-marrom-terra" : "border-fogo-vibrante text-fogo-vibrante"
                       )}>
-                        {product.restaurantId?.replace('-', ' ') || 'Geral'}
+                        {product.restaurantId === 'egua-na-panela' ? 'Égua na Panela' : (product.restaurantId?.replace('-', ' ') || 'Geral')}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-bold">{product.name}</TableCell>
@@ -238,7 +235,7 @@ export default function AdminProducts() {
                         <Button variant="ghost" size="icon" onClick={() => handleOpenModal(product)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(id)}>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(product.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

@@ -113,7 +113,6 @@ export default function AdminCategories() {
       return;
     }
 
-    // Garantir que restaurantId nunca seja undefined para o Firebase
     const dataToSave = { 
       restaurantId: formData.restaurantId || 'paroara',
       name: formData.name,
@@ -234,7 +233,7 @@ export default function AdminCategories() {
                         "text-[9px] font-black uppercase tracking-widest",
                         cat.restaurantId === 'paroara' ? "border-marrom-terra text-marrom-terra" : "border-fogo-vibrante text-fogo-vibrante"
                       )}>
-                        {cat.restaurantId?.replace('-', ' ') || 'Geral'}
+                        {cat.restaurantId === 'egua-na-panela' ? 'Égua na Panela' : (cat.restaurantId?.replace('-', ' ') || 'Geral')}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-bold text-marrom-terra">{cat.name}</TableCell>
