@@ -10,7 +10,9 @@ import {
   Store,
   CalendarDays,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -92,12 +94,12 @@ export default function AdminDashboard() {
       today: t,
       growth: {
         paroara: {
-          count: getGrowth(t.paroara.count, y.paroara.count),
+          count: t.paroara.count - y.paroara.count, // Diferença absoluta em vez de porcentagem
           revenue: getGrowth(t.paroara.revenue, y.paroara.revenue),
           ticket: getGrowth(t.paroara.ticket, y.paroara.ticket)
         },
         egua: {
-          count: getGrowth(t.egua.count, y.egua.count),
+          count: t.egua.count - y.egua.count, // Diferença absoluta em vez de porcentagem
           revenue: getGrowth(t.egua.revenue, y.egua.revenue),
           ticket: getGrowth(t.egua.ticket, y.egua.ticket)
         }
@@ -109,7 +111,7 @@ export default function AdminDashboard() {
     return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
-  const GrowthBadge = ({ value }: { value: number }) => {
+  const GrowthBadge = ({ value, isPercentage = true }: { value: number; isPercentage?: boolean }) => {
     if (value === 0) return null;
     const isPositive = value > 0;
     return (
@@ -119,8 +121,13 @@ export default function AdminDashboard() {
           ? "text-verde-folha bg-verde-folha/5 border-verde-folha/10" 
           : "text-destructive bg-destructive/5 border-destructive/10"
       )}>
-        {isPositive ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-        {Math.abs(value).toFixed(0)}% <span className="opacity-40 ml-0.5 font-normal">vs ontem</span>
+        {isPositive ? (
+          isPercentage ? <ArrowUpRight className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />
+        ) : (
+          isPercentage ? <ArrowDownRight className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />
+        )}
+        {Math.abs(value).toFixed(0)}{isPercentage ? '%' : ''} 
+        <span className="opacity-40 ml-0.5 font-normal">{isPercentage ? 'vs ontem' : 'pedidos vs ontem'}</span>
       </div>
     );
   };
@@ -152,7 +159,7 @@ export default function AdminDashboard() {
                 <span className="text-3xl font-black text-marrom-terra">{stats?.today.paroara.count || 0}</span>
               </div>
               <div className="flex justify-end">
-                <GrowthBadge value={stats?.growth.paroara.count || 0} />
+                <GrowthBadge value={stats?.growth.paroara.count || 0} isPercentage={false} />
               </div>
             </div>
             <div className="space-y-2">
@@ -161,7 +168,7 @@ export default function AdminDashboard() {
                 <span className="text-3xl font-black text-fogo-vibrante">{stats?.today.egua.count || 0}</span>
               </div>
               <div className="flex justify-end">
-                <GrowthBadge value={stats?.growth.egua.count || 0} />
+                <GrowthBadge value={stats?.growth.egua.count || 0} isPercentage={false} />
               </div>
             </div>
           </CardContent>
@@ -182,7 +189,7 @@ export default function AdminDashboard() {
                 <span className="text-xl font-black text-marrom-terra">{formatBRL(stats?.today.paroara.revenue || 0)}</span>
               </div>
               <div className="flex justify-end">
-                <GrowthBadge value={stats?.growth.paroara.revenue || 0} />
+                <GrowthBadge value={stats?.growth.paroara.revenue || 0} isPercentage={true} />
               </div>
             </div>
             <div className="space-y-2">
@@ -191,7 +198,7 @@ export default function AdminDashboard() {
                 <span className="text-xl font-black text-fogo-vibrante">{formatBRL(stats?.today.egua.revenue || 0)}</span>
               </div>
               <div className="flex justify-end">
-                <GrowthBadge value={stats?.growth.egua.revenue || 0} />
+                <GrowthBadge value={stats?.growth.egua.revenue || 0} isPercentage={true} />
               </div>
             </div>
           </CardContent>
