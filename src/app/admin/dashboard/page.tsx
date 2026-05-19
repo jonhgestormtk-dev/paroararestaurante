@@ -62,9 +62,9 @@ import {
 import { Progress } from '@/components/ui/progress';
 
 const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
-  'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente', icon: Clock },
-  'Em Preparo': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Preparando', icon: AlertCircle },
-  'Saiu para Entrega': { color: '#8B5CF6', bg: 'bg-purple-500/10', label: 'Em Rota', icon: Truck },
+  'Pendente': { color: '#F97316', bg: 'bg-orange-500/10', label: 'Pendente', icon: Clock },
+  'Em Preparo': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Em Preparo', icon: AlertCircle },
+  'Saiu para Entrega': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Em Rota', icon: Truck },
   'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado', icon: CheckCircle2 },
   'Cancelado': { color: '#EF4444', bg: 'bg-rose-500/10', label: 'Cancelado', icon: XCircle },
 };
@@ -75,7 +75,6 @@ const TYPE_CONFIG: Record<OrderType, { icon: any; label: string }> = {
   'Salão': { icon: UtensilsCrossed, label: 'No Salão' },
 };
 
-// Componente de Tempo Decorrido em Real-time
 const TimeAgo = ({ date }: { date: Date }) => {
   const [minutes, setMinutes] = useState(0);
 
@@ -154,6 +153,14 @@ export default function AdminDashboard() {
       return matchesDate && matchesRes;
     });
 
+    // Filtro específico para o painel real-time (Apenas pedidos de HOJE)
+    const todayOrders = allOrders.filter(o => {
+      const date = getOrderDate(o);
+      const isToday = date >= todayStart;
+      const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
+      return isToday && matchesRes;
+    });
+
     // Hourly Data
     const hourlyDataMap: Record<number, { hour: string; revenue: number }> = {};
     for (let i = 0; i < 24; i++) hourlyDataMap[i] = { hour: `${i}h`, revenue: 0 };
@@ -187,7 +194,7 @@ export default function AdminDashboard() {
       current: calculateMetrics(currentOrders),
       hourlyData: Object.values(hourlyDataMap),
       statusChartData,
-      recentOrders: allOrders.slice(0, 8)
+      recentOrders: todayOrders // Agora usa apenas os pedidos de hoje
     };
   }, [allOrders, timeFilter, restaurantFilter]);
 
@@ -278,7 +285,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Gráfico de Fluxo */}
         <Card className="lg:col-span-2 bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
           <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
@@ -305,7 +311,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Status Donut */}
         <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
           <CardHeader className="p-8 border-b border-areia-escura/10">
             <div className="flex items-center gap-2">
@@ -337,7 +342,6 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Seção Operacional: Últimos Pedidos */}
       <Card className="bg-white border-areia-escura rounded-[2rem] shadow-2xl overflow-hidden">
         <CardHeader className="p-8 border-b border-areia-escura/20 bg-areia-clara/10 flex flex-row items-center justify-between">
           <div className="space-y-1">
@@ -345,7 +349,7 @@ export default function AdminDashboard() {
               <Activity className="w-5 h-5" />
               <CardTitle className="text-sm font-black uppercase tracking-[0.2em]">Painel Operacional Real-time</CardTitle>
             </div>
-            <CardDescription className="font-subheadline italic text-xs">Monitoramento inteligente de fluxos e prioridades.</CardDescription>
+            <CardDescription className="font-subheadline italic text-xs">Exibindo apenas pedidos de hoje ({new Date().toLocaleDateString('pt-BR')}).</CardDescription>
           </div>
           <Badge className="bg-marrom-terra text-white uppercase text-[10px] font-black px-4 py-1">Ativo Agora</Badge>
         </CardHeader>
@@ -372,7 +376,6 @@ export default function AdminDashboard() {
                     isLate && "bg-rose-50/30 border-l-4 border-rose-500 shadow-inner"
                   )}
                 >
-                  {/* Avatar / Initials */}
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-transform group-hover:scale-110 shrink-0 shadow-sm",
                     order.restaurantId === 'paroara' ? "bg-marrom-terra text-white" : "bg-fogo-vibrante text-white"
@@ -380,7 +383,6 @@ export default function AdminDashboard() {
                     {order.customer.name.charAt(0).toUpperCase()}
                   </div>
 
-                  {/* Nome e Info Empresa */}
                   <div className="flex-1 space-y-1 min-w-0">
                     <div className="flex items-center gap-3">
                       <h4 className="font-headline text-lg text-marrom-escuro truncate uppercase tracking-tighter">
@@ -403,7 +405,6 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Metadados Operacionais */}
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-3 bg-white/40 p-3 rounded-2xl border border-areia-escura/30">
                     <div className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 opacity-40" />
@@ -436,7 +437,6 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Status e Valor */}
                   <div className="flex items-center justify-between md:justify-end gap-6 md:min-w-[200px]">
                     <div className="flex flex-col items-end">
                       <p className="text-xs font-bold text-cinza-organico uppercase tracking-tighter mb-1">Total</p>
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
             {(!stats?.recentOrders || stats.recentOrders.length === 0) && (
               <div className="p-20 text-center space-y-4">
                 <ShoppingBag className="w-12 h-12 mx-auto text-areia-escura opacity-20" />
-                <p className="text-sm italic text-cinza-organico">Nenhum pedido registrado no momento.</p>
+                <p className="text-sm italic text-cinza-organico">Nenhum pedido registrado para o dia de hoje.</p>
               </div>
             )}
           </AnimatePresence>
