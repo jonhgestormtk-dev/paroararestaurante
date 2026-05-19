@@ -70,10 +70,10 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
-  'Pendente': 'text-caramelo-palha bg-caramelo-palha/10 border-caramelo-palha/20',
-  'Em Preparo': 'text-marrom-madeira bg-marrom-madeira/10 border-marrom-madeira/20',
-  'Saiu para Entrega': 'text-verde-folha bg-verde-folha/10 border-verde-folha/20',
-  'Finalizado': 'text-marrom-escuro bg-marrom-escuro/10 border-marrom-escuro/20',
+  'Pendente': 'text-fogo-vibrante bg-fogo-vibrante/10 border-fogo-vibrante/30 font-black',
+  'Em Preparo': 'text-amber-600 bg-amber-600/10 border-amber-600/30 font-black',
+  'Saiu para Entrega': 'text-blue-600 bg-blue-600/10 border-blue-600/30 font-black',
+  'Finalizado': 'text-emerald-600 bg-emerald-600/10 border-emerald-600/30 font-black',
 };
 
 const PAYMENT_ICONS: Record<string, any> = {
