@@ -1,50 +1,36 @@
-
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  ShoppingBag, 
   Search, 
   Filter, 
-  Phone, 
-  MapPin, 
-  Calendar as CalendarIcon,
-  MessageCircle,
+  Clock, 
+  Truck, 
+  CheckCircle2, 
+  AlertCircle, 
+  MessageCircle, 
   MoreVertical,
-  CheckCircle,
-  Clock,
-  Truck,
-  AlertCircle,
-  User,
+  Calendar as CalendarIcon,
+  Store,
   Package,
-  Edit2,
-  Trash2,
-  Plus,
-  Minus,
+  UtensilsCrossed,
+  Wallet,
   CreditCard,
   Banknote,
-  Wallet,
-  PlusCircle,
-  StickyNote,
-  Store,
   XCircle,
+  Timer,
+  ChevronRight,
   ChevronLeft,
-  ChevronRight
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
-import { Order, OrderStatus, Product } from '@/lib/types';
+import { collection, updateDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
+import { Order, OrderStatus, RestaurantSlug, PaymentMethod, OrderType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { 
   Select, 
   SelectContent, 
@@ -53,40 +39,33 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
+// Configurações de Status
 const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
-  'Pendente': { color: '#F97316', bg: 'bg-orange-500/10', label: 'Pendente', icon: Clock },
-  'Em Preparo': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Em Preparo', icon: AlertCircle },
-  'Saiu para Entrega': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Em Rota', icon: Truck },
-  'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado', icon: CheckCircle },
+  'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente', icon: Clock },
+  'Em Preparo': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Preparando', icon: AlertCircle },
+  'Saiu para Entrega': { color: '#8B5CF6', bg: 'bg-violet-500/10', label: 'Em Rota', icon: Truck },
+  'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado', icon: CheckCircle2 },
   'Cancelado': { color: '#EF4444', bg: 'bg-rose-500/10', label: 'Cancelado', icon: XCircle },
 };
 
-const RESTAURANT_CONFIG = {
-  'paroara': { name: 'Paroara', color: 'bg-marrom-terra', text: 'text-marrom-terra' },
-  'egua-na-panela': { name: 'Égua na Panela', color: 'bg-fogo-vibrante', text: 'text-fogo-vibrante' },
+const TYPE_CONFIG: Record<OrderType, { icon: any; label: string }> = {
+  'Delivery': { icon: Truck, label: 'Delivery' },
+  'Retirada': { icon: Package, label: 'Retirada' },
+  'Salão': { icon: UtensilsCrossed, label: 'No Salão' },
 };
 
 const PAYMENT_ICONS: Record<string, any> = {
@@ -96,20 +75,209 @@ const PAYMENT_ICONS: Record<string, any> = {
   'Crédito': CreditCard
 };
 
+// Componente de Contador Realtime
+const OrderTimer = ({ createdAt }: { createdAt: any }) => {
+  const [minutes, setMinutes] = useState(0);
+
+  useEffect(() => {
+    const calculate = () => {
+      const date = createdAt instanceof Timestamp ? createdAt.toDate() : new Date(createdAt?.seconds * 1000 || createdAt);
+      const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
+      setMinutes(diff);
+    };
+    calculate();
+    const interval = setInterval(calculate, 60000);
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  const isCritical = minutes >= 36;
+  const isAttention = minutes >= 26 && minutes < 36;
+  const isNormal = minutes < 26;
+
+  let colorClass = "text-emerald-500";
+  let priorityLabel = "NORMAL";
+  
+  if (isCritical) {
+    colorClass = "text-rose-500 animate-pulse";
+    priorityLabel = "CRÍTICO";
+  } else if (isAttention) {
+    colorClass = "text-amber-500";
+    priorityLabel = "ATENÇÃO";
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className={cn("flex items-center gap-1 text-[10px] font-black", colorClass)}>
+        <Timer className="w-3 h-3" />
+        {minutes} MIN
+      </div>
+      <Badge className={cn(
+        "text-[8px] font-black px-2 py-0 h-4 border-none uppercase tracking-widest",
+        isCritical ? "bg-rose-500 text-white" : isAttention ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
+      )}>
+        {priorityLabel}
+      </Badge>
+    </div>
+  );
+};
+
+// Card de Pedido Operacional
+const OrderCard = ({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id: string, s: OrderStatus) => void }) => {
+  const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
+  const type = TYPE_CONFIG[order.type || 'Delivery'];
+  const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
+  const isLate = useMemo(() => {
+    const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000 || order.createdAt);
+    return Math.floor((new Date().getTime() - date.getTime()) / 60000) >= 36;
+  }, [order.createdAt]);
+
+  const orderTime = useMemo(() => {
+    const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000 || order.createdAt);
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }, [order.createdAt]);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className={cn(
+        "group relative bg-white rounded-2xl p-4 border border-areia-escura/30 shadow-sm hover:shadow-xl transition-all duration-300",
+        isLate && order.status !== 'Finalizado' && "ring-1 ring-rose-500/20 bg-rose-50/20 shadow-rose-100"
+      )}
+    >
+      {isLate && order.status !== 'Finalizado' && (
+        <div className="absolute -top-2 -right-2 bg-rose-500 text-white text-[8px] font-black px-2 py-1 rounded-full animate-bounce shadow-lg z-10">
+          ATRASADO
+        </div>
+      )}
+
+      <div className="flex justify-between items-start mb-3">
+        <div className="space-y-0.5 min-w-0">
+          <h4 className="font-headline text-sm text-marrom-escuro truncate uppercase tracking-tight">
+            {order.customer.name}
+          </h4>
+          <p className={cn(
+            "text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5",
+            order.restaurantId === 'paroara' ? "text-marrom-terra" : "text-fogo-vibrante"
+          )}>
+            <Store className="w-3 h-3" />
+            {order.restaurantId === 'egua-na-panela' ? 'Égua na Panela' : 'Paroara'} • #{order.orderNumber || order.id.substring(0, 6)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-black text-marrom-escuro">R$ {order.total.toFixed(2).replace('.', ',')}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4 p-2 bg-areia-clara/20 rounded-xl border border-areia-escura/10">
+        <div className="flex items-center gap-1 text-[10px] font-bold text-cinza-organico">
+          <Clock className="w-3 h-3 opacity-40" />
+          {orderTime}
+        </div>
+        <div className="h-3 w-px bg-areia-escura/20" />
+        <div className="flex items-center gap-1 text-[10px] font-bold text-cinza-organico uppercase">
+          <PaymentIcon className="w-3 h-3 opacity-40" />
+          {order.payment.method}
+        </div>
+        <div className="h-3 w-px bg-areia-escura/20" />
+        <div className="flex items-center gap-1 text-[10px] font-bold text-cinza-organico uppercase">
+          <type.icon className="w-3 h-3 opacity-40" />
+          {type.label}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <OrderTimer createdAt={order.createdAt} />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-areia-media/20">
+              <MoreVertical className="w-4 h-4 text-marrom-madeira" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 rounded-xl bg-areia-clara border-areia-escura">
+            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+              <DropdownMenuItem 
+                key={key} 
+                onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
+                className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5"
+              >
+                <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
+                {cfg.label}
+              </DropdownMenuItem>
+            ))}
+            <div className="h-px bg-areia-escura/20 my-1" />
+            <DropdownMenuItem 
+              onClick={() => {
+                const phone = order.customer.phone.replace(/\D/g, '');
+                window.open(`https://wa.me/${phone}`, '_blank');
+              }}
+              className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-verde-folha"
+            >
+              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </motion.div>
+  );
+};
+
+// Coluna do Kanban
+const KanbanColumn = ({ 
+  title, 
+  status, 
+  orders, 
+  onStatusUpdate,
+  icon: Icon,
+  accentColor
+}: { 
+  title: string; 
+  status: OrderStatus; 
+  orders: Order[]; 
+  onStatusUpdate: (id: string, s: OrderStatus) => void;
+  icon: any;
+  accentColor: string;
+}) => {
+  return (
+    <div className="flex flex-col h-full min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden">
+      <div className="p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
+            <Icon className="w-4 h-4" style={{ color: accentColor }} />
+          </div>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-marrom-escuro">{title}</h3>
+        </div>
+        <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">
+          {orders.length}
+        </Badge>
+      </div>
+      
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          <AnimatePresence mode="popLayout">
+            {orders.map(order => (
+              <OrderCard key={order.id} order={order} onStatusUpdate={onStatusUpdate} />
+            ))}
+          </AnimatePresence>
+          {orders.length === 0 && (
+            <div className="py-20 text-center space-y-3 opacity-20">
+              <Icon className="w-10 h-10 mx-auto" />
+              <p className="text-[10px] font-black uppercase tracking-widest">Nenhum pedido</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+};
+
 export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [restaurantFilter, setRestaurantFilter] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  
-  const [editFormData, setEditFormData] = useState({ 
-    name: '', 
-    phone: '', 
-    address: '',
-    items: [] as any[] 
-  });
-  
   const { toast } = useToast();
   const db = useFirestore();
 
@@ -117,229 +285,130 @@ export default function AdminOrders() {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   }, [db]);
-  const { data: orders, loading } = useCollection<Order>(ordersQuery);
-
-  const productsQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, 'products'), orderBy('name', 'asc'));
-  }, [db]);
-  const { data: products } = useCollection<Product>(productsQuery);
-
-  const getOrderDate = (createdAt: any) => {
-    if (!createdAt) return new Date();
-    if (createdAt instanceof Timestamp) return createdAt.toDate();
-    if (createdAt.seconds) return new Date(createdAt.seconds * 1000);
-    return new Date(createdAt);
-  };
+  const { data: allOrders, loading } = useCollection<Order>(ordersQuery);
 
   const filteredOrders = useMemo(() => {
-    if (!orders) return [];
-    return orders.filter(o => {
-      const orderDate = getOrderDate(o.createdAt);
+    if (!allOrders) return [];
+    return allOrders.filter(o => {
+      const orderDate = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt?.seconds * 1000 || o.createdAt);
       const matchesDate = !selectedDate || isSameDay(orderDate, selectedDate);
-      
-      const orderIdMatch = o.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const orderNumMatch = o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-      const customerMatch = o.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesSearch = orderIdMatch || orderNumMatch || customerMatch;
-      const matchesStatus = statusFilter === 'todos' || o.status === statusFilter;
-      
-      return matchesDate && matchesSearch && matchesStatus;
+      const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
+      const matchesSearch = o.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           o.orderNumber?.includes(searchTerm);
+      return matchesDate && matchesRes && matchesSearch;
     });
-  }, [orders, searchTerm, statusFilter, selectedDate]);
+  }, [allOrders, selectedDate, restaurantFilter, searchTerm]);
 
-  const formatDateLabel = (createdAt: any) => {
-    const date = getOrderDate(createdAt);
-    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  };
+  const kanbanData = useMemo(() => {
+    return {
+      pendentes: filteredOrders.filter(o => o.status === 'Pendente'),
+      preparando: filteredOrders.filter(o => o.status === 'Em Preparo'),
+      rota: filteredOrders.filter(o => o.status === 'Saiu para Entrega'),
+      finalizados: filteredOrders.filter(o => o.status === 'Finalizado' || o.status === 'Cancelado'),
+    };
+  }, [filteredOrders]);
 
-  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+  const handleStatusUpdate = async (id: string, newStatus: OrderStatus) => {
     if (!db) return;
     try {
-      await updateDoc(doc(db, 'orders', orderId), { status: newStatus });
+      await updateDoc(doc(db, 'orders', id), { status: newStatus });
       toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
     } catch (e) {
-      toast({ variant: "destructive", title: "Erro ao Atualizar", description: "Não foi possível alterar o status do pedido." });
+      toast({ variant: "destructive", title: "Erro ao atualizar" });
     }
-  };
-
-  const handleOpenEditModal = (order: Order) => {
-    setEditingOrder(order);
-    setEditFormData({
-      name: order.customer.name,
-      phone: order.customer.phone,
-      address: order.customer.address || '',
-      items: JSON.parse(JSON.stringify(order.items))
-    });
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!db || !editingOrder) return;
-    const newTotal = editFormData.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    try {
-      await updateDoc(doc(db, 'orders', editingOrder.id), {
-        'customer.name': editFormData.name,
-        'customer.phone': editFormData.phone,
-        'customer.address': editFormData.address,
-        items: editFormData.items,
-        total: newTotal
-      });
-      toast({ title: "Pedido Atualizado" });
-      setIsEditModalOpen(false);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Erro ao Editar" });
-    }
-  };
-
-  const handleResendToWhatsApp = (order: Order) => {
-    const phone = order.customer.phone.replace(/\D/g, '');
-    let message = `Olá *${order.customer.name}*, seu pedido *#${order.orderNumber || order.id.substring(0, 8)}* foi atualizado.\n\n*Novo Total: R$ ${order.total.toFixed(2).replace('.', ',')}*`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="h-[calc(100vh-140px)] flex flex-col space-y-6 animate-in fade-in duration-700">
+      {/* Header Operacional */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
-          <h1 className="text-3xl font-headline text-marrom-terra">Pedidos</h1>
-          <p className="text-cinza-organico font-subheadline italic">Gerenciamento centralizado de vendas.</p>
+          <h1 className="text-3xl font-headline text-marrom-terra">Gestão Operacional</h1>
+          <p className="text-cinza-organico font-subheadline italic text-xs">Acompanhamento de pedidos multi-restaurante em tempo real.</p>
         </div>
-      </div>
 
-      <Card className="bg-white border-areia-escura overflow-hidden shadow-2xl rounded-2xl">
-        <div className="p-4 md:p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col md:flex-row gap-4 items-center">
-          
-          <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-areia-escura/50 shadow-sm w-full md:w-auto">
-            <Button 
-              variant={isSameDay(selectedDate || new Date(), new Date()) ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedDate(new Date())}
-              className={cn(
-                "text-[10px] uppercase font-black tracking-widest rounded-lg px-4 h-10",
-                isSameDay(selectedDate || new Date(), new Date()) ? "bg-marrom-terra text-white" : "text-marrom-madeira"
-              )}
-            >
-              Hoje
-            </Button>
-            <Separator orientation="vertical" className="h-6 bg-areia-escura/30" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "text-[10px] uppercase font-black tracking-widest rounded-lg px-4 h-10 gap-2",
-                    !isSameDay(selectedDate || new Date(), new Date()) ? "bg-marrom-terra/10 text-marrom-terra" : "text-marrom-madeira/60"
-                  )}
-                >
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                  {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  initialFocus
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="relative flex-1 w-full">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
-              placeholder="Buscar cliente ou pedido..."
+              placeholder="Buscar pedido ou cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 rounded-xl h-12"
+              className="pl-10 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30"
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-56 rounded-xl h-12">
-              <SelectValue placeholder="Status: Todos" />
+          <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
+            <SelectTrigger className="w-full md:w-52 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30">
+              <div className="flex items-center gap-2">
+                <Store className="w-3.5 h-3.5 text-marrom-madeira" />
+                <SelectValue placeholder="Restaurante" />
+              </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos os Status</SelectItem>
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                <SelectItem key={key} value={key}>{config.label}</SelectItem>
-              ))}
+              <SelectItem value="all">Visão Consolidada</SelectItem>
+              <SelectItem value="paroara">Paroara</SelectItem>
+              <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-areia-clara/10">
-              <TableRow>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">Pedido / Unidade</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest">Cliente</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest">Total</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest">Status</TableHead>
-                <TableHead className="text-right text-[10px] font-black uppercase tracking-widest">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10">Carregando...</TableCell></TableRow>
-              ) : filteredOrders.map((order) => {
-                const resConfig = RESTAURANT_CONFIG[order.restaurantId] || RESTAURANT_CONFIG['paroara'];
-                const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
-                return (
-                  <TableRow key={order.id} className="hover:bg-areia-media/5 transition-colors">
-                    <TableCell className="py-6">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-mono text-xs font-black">#{order.orderNumber || order.id.substring(0, 6)}</span>
-                        <Badge className={cn("text-[8px] font-black uppercase border-none text-white", resConfig.color)}>
-                          {resConfig.name}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-black uppercase">{order.customer.name}</span>
-                        <span className="text-[10px] text-cinza-organico">{formatDateLabel(order.createdAt)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-lg font-black tracking-tighter">
-                      R$ {order.total.toFixed(2).replace('.', ',')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[9px] font-black uppercase border-none px-4 py-2 rounded-full", status.bg)} style={{ color: status.color }}>
-                        {status.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon"><MoreVertical className="w-5 h-5" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura w-56 rounded-xl">
-                          <DropdownMenuItem onClick={() => handleResendToWhatsApp(order)} className="text-[10px] font-black uppercase tracking-widest gap-3 py-3 text-verde-folha">
-                            <MessageCircle className="w-4 h-4" /> WhatsApp
-                          </DropdownMenuItem>
-                          <Separator className="my-1" />
-                          {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                            <DropdownMenuItem key={key} onClick={() => handleUpdateStatus(order.id, key as OrderStatus)} className="text-[10px] font-black uppercase tracking-widest gap-3 py-3">
-                              <config.icon className="w-4 h-4" style={{ color: config.color }} /> {config.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[10px] uppercase tracking-widest">
+                <CalendarIcon className="w-4 h-4" />
+                {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Filtrar Data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                locale={ptBR}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
-      </Card>
+      </div>
+
+      {/* Kanban Board */}
+      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar">
+        <div className="flex gap-6 h-full min-w-max">
+          <KanbanColumn 
+            title="Pendentes" 
+            status="Pendente" 
+            orders={kanbanData.pendentes} 
+            onStatusUpdate={handleStatusUpdate}
+            icon={Clock}
+            accentColor="#F59E0B"
+          />
+          <KanbanColumn 
+            title="Em Preparo" 
+            status="Em Preparo" 
+            orders={kanbanData.preparando} 
+            onStatusUpdate={handleStatusUpdate}
+            icon={Timer}
+            accentColor="#3B82F6"
+          />
+          <KanbanColumn 
+            title="Saiu Entrega" 
+            status="Saiu para Entrega" 
+            orders={kanbanData.rota} 
+            onStatusUpdate={handleStatusUpdate}
+            icon={Truck}
+            accentColor="#8B5CF6"
+          />
+          <KanbanColumn 
+            title="Finalizados" 
+            status="Finalizado" 
+            orders={kanbanData.finalizados} 
+            onStatusUpdate={handleStatusUpdate}
+            icon={CheckCircle2}
+            accentColor="#10B981"
+          />
+        </div>
+      </div>
     </div>
   );
 }
