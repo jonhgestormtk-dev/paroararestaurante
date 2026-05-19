@@ -242,13 +242,13 @@ const KanbanColumn = ({
   accentColor: string;
 }) => {
   return (
-    <div className="flex flex-col h-full min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden">
-      <div className="p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
+    <div className="flex flex-col h-full min-w-[310px] md:min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden snap-center md:snap-start">
+      <div className="p-4 md:p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
             <Icon className="w-4 h-4" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-marrom-escuro">{title}</h3>
+          <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-marrom-escuro">{title}</h3>
         </div>
         <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">
           {orders.length}
@@ -256,14 +256,14 @@ const KanbanColumn = ({
       </div>
       
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+        <div className="p-3 md:p-4 space-y-4">
           <AnimatePresence mode="popLayout">
             {orders.map(order => (
               <OrderCard key={order.id} order={order} onStatusUpdate={onStatusUpdate} />
             ))}
           </AnimatePresence>
           {orders.length === 0 && (
-            <div className="py-20 text-center space-y-3 opacity-20">
+            <div className="py-20 text-center space-y-3 opacity-10">
               <Icon className="w-10 h-10 mx-auto" />
               <p className="text-[10px] font-black uppercase tracking-widest">Nenhum pedido</p>
             </div>
@@ -319,62 +319,64 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col space-y-6 animate-in fade-in duration-700">
+    <div className="h-[calc(100svh-160px)] md:h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
       {/* Header Operacional */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border border-areia-escura/30 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 bg-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
-          <h1 className="text-3xl font-headline text-marrom-terra">Gestão Operacional</h1>
-          <p className="text-cinza-organico font-subheadline italic text-xs">Acompanhamento de pedidos multi-restaurante em tempo real.</p>
+          <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão Operacional</h1>
+          <p className="text-cinza-organico font-subheadline italic text-[10px] md:text-xs">Acompanhamento multi-restaurante em tempo real.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
-              placeholder="Buscar pedido ou cliente..."
+              placeholder="Buscar..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30"
+              className="pl-10 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-xs"
             />
           </div>
 
-          <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
-            <SelectTrigger className="w-full md:w-52 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30">
-              <div className="flex items-center gap-2">
-                <Store className="w-3.5 h-3.5 text-marrom-madeira" />
-                <SelectValue placeholder="Restaurante" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Visão Consolidada</SelectItem>
-              <SelectItem value="paroara">Paroara</SelectItem>
-              <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 w-full md:w-auto">
+            <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
+              <SelectTrigger className="flex-1 md:w-40 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-[10px]">
+                <div className="flex items-center gap-2">
+                  <Store className="w-3.5 h-3.5 text-marrom-madeira" />
+                  <SelectValue placeholder="Restaurante" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Consolidado</SelectItem>
+                <SelectItem value="paroara">Paroara</SelectItem>
+                <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[10px] uppercase tracking-widest">
-                <CalendarIcon className="w-4 h-4" />
-                {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Filtrar Data"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                locale={ptBR}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex-1 md:w-auto h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[9px] uppercase tracking-widest px-3">
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  locale={ptBR}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar">
-        <div className="flex gap-6 h-full min-w-max">
+      {/* Kanban Board - Scroll Snap para Mobile */}
+      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
+        <div className="flex gap-4 md:gap-6 h-full min-w-max px-1">
           <KanbanColumn 
             title="Pendentes" 
             status="Pendente" 
