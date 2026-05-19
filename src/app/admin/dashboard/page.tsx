@@ -121,14 +121,18 @@ export default function AdminDashboard() {
     
     let currentStart: Date;
     let currentEnd: Date = new Date();
+    currentEnd.setHours(23, 59, 59, 999);
     const todayStart = getStartOfDay(now);
 
     switch (timeFilter) {
-      case 'today': currentStart = todayStart; break;
+      case 'today': 
+        currentStart = todayStart; 
+        break;
       case 'yesterday':
         currentStart = new Date(todayStart);
         currentStart.setDate(currentStart.getDate() - 1);
-        currentEnd = todayStart;
+        currentEnd = new Date(todayStart);
+        currentEnd.setMilliseconds(-1);
         break;
       case '7days':
         currentStart = new Date(todayStart);
@@ -149,10 +153,14 @@ export default function AdminDashboard() {
 
     const currentOrders = allOrders.filter(o => {
       const date = getOrderDate(o);
-      const matchesDate = date >= currentStart && date < currentEnd;
+      const matchesDate = date >= currentStart && date <= currentEnd;
       const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
-      return matchesDate && matchesRes;
+      return matchesSearchCriteria(o, matchesDate, matchesRes);
     });
+
+    function matchesSearchCriteria(o: any, dateOk: boolean, resOk: boolean) {
+      return dateOk && resOk;
+    }
 
     const todayOrders = allOrders.filter(o => {
       const date = getOrderDate(o);
@@ -168,7 +176,6 @@ export default function AdminDashboard() {
       hourlyDataMap[h].revenue += o.total || 0;
     });
 
-    // Cálculo da distribuição de status
     const statusDataMap: Record<string, number> = {
       'Pendente': 0,
       'Em Preparo': 0,
@@ -268,7 +275,7 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className={cn("text-[11px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40", company.color)}>Restaurante</h3>
+                <h3 className={cn("text-[11px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40 text-marrom-terra")}>Restaurante</h3>
                 <h2 className="text-2xl font-headline uppercase">{company.name}</h2>
               </div>
               <Store className={cn("w-6 h-6", company.color)} />
@@ -368,6 +375,7 @@ export default function AdminDashboard() {
               const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
               const type = TYPE_CONFIG[order.type || 'Delivery'];
               const waitMinutes = Math.floor((new Date().getTime() - orderDate.getTime()) / 60000);
+              
               const isLate = waitMinutes >= 36;
               const isAttention = waitMinutes >= 26 && waitMinutes < 36;
 
@@ -410,6 +418,22 @@ export default function AdminDashboard() {
                         <Store className="w-3 h-3" />
                         {order.restaurantId === 'egua-na-panela' ? 'Égua na Panela' : 'Paroara'} • #{order.orderNumber || order.id.substring(0, 6)}
                       </span>
+                    </div>
+
+                    {/* Resumo dos Itens na Dashboard */}
+                    <div className="mt-3 space-y-1 max-w-md">
+                      {order.items?.map((item, idx) => (
+                        <div key={idx} className="flex flex-col">
+                          <span className="text-[10px] font-bold text-marrom-madeira/80">
+                            {item.quantity}x {item.name}
+                          </span>
+                          {item.observations && (
+                            <span className="text-[9px] italic text-fogo-vibrante/70 pl-3 border-l border-fogo-vibrante/20">
+                              ↳ {item.observations}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
 
