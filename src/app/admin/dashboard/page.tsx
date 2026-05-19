@@ -211,17 +211,11 @@ export default function AdminDashboard() {
                 <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest">Paroara</span>
                 <span className="text-xl font-black text-marrom-terra">{formatBRL(stats?.today.paroara.ticket || 0)}</span>
               </div>
-              <div className="flex justify-end">
-                <GrowthBadge value={stats?.growth.paroara.ticket || 0} />
-              </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest">Égua na Panela</span>
                 <span className="text-xl font-black text-fogo-vibrante">{formatBRL(stats?.today.egua.ticket || 0)}</span>
-              </div>
-              <div className="flex justify-end">
-                <GrowthBadge value={stats?.growth.egua.ticket || 0} />
               </div>
             </div>
           </CardContent>
