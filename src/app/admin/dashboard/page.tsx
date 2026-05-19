@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -261,22 +260,22 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className={cn("text-[10px] font-black uppercase tracking-[0.3em] opacity-40", company.color)}>Unidade</h3>
+                <h3 className={cn("text-[10px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40", company.color)}>Unidade</h3>
                 <h2 className="text-2xl font-headline uppercase">{company.name}</h2>
               </div>
               <Store className={cn("w-6 h-6", company.color)} />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Pedidos</p>
+                <p className="text-[10px] font-subheadline font-bold uppercase text-cinza-organico opacity-60">Pedidos</p>
                 <p className="text-2xl font-black">{company.stats?.count}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Faturamento</p>
+                <p className="text-[10px] font-subheadline font-bold uppercase text-cinza-organico opacity-60">Faturamento</p>
                 <p className="text-xl font-black">{formatBRL(company.stats?.revenue || 0)}</p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Avg. Preparo</p>
+                <p className="text-[10px] font-subheadline font-bold uppercase text-cinza-organico opacity-60">Avg. Preparo</p>
                 <p className="text-xl font-black text-marrom-terra">{company.stats?.avgPrep} min</p>
               </div>
             </div>
