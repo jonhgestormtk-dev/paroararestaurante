@@ -168,9 +168,23 @@ export default function AdminDashboard() {
       hourlyDataMap[h].revenue += o.total || 0;
     });
 
+    // Cálculo da distribuição de status
+    const statusDataMap: Record<string, number> = {
+      'Pendente': 0,
+      'Em Preparo': 0,
+      'Saiu para Entrega': 0,
+      'Finalizado': 0,
+      'Cancelado': 0
+    };
+    currentOrders.forEach(o => {
+      if (o.status && statusDataMap[o.status] !== undefined) {
+        statusDataMap[o.status]++;
+      }
+    });
+
     const statusChartData = Object.entries(STATUS_CONFIG).map(([status, config]) => ({
       name: status,
-      value: statusDataMap[status as OrderStatus] || 0,
+      value: statusDataMap[status] || 0,
       color: config.color
     }));
 
