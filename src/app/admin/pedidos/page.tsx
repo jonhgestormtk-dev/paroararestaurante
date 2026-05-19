@@ -24,7 +24,8 @@ import {
   Minus,
   Trash2,
   Loader2,
-  Save
+  Save,
+  ChevronRight
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
@@ -97,7 +98,6 @@ const OrderTimer = ({ createdAt }: { createdAt: any }) => {
 
   const isCritical = minutes >= 36;
   const isAttention = minutes >= 26 && minutes < 36;
-  const isNormal = minutes < 26;
 
   let colorClass = "text-emerald-500";
   let priorityLabel = "NORMAL";
@@ -172,11 +172,11 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs font-black text-marrom-escuro">R$ {order.total.toFixed(2).replace('.', ',')}</p>
+          <p className="text-xs font-black text-marrom-escuro pr-1">R$ {order.total.toFixed(2).replace('.', ',')}</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4 p-2 bg-areia-clara/20 rounded-xl border border-areia-escura/10">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3 p-2 bg-areia-clara/20 rounded-xl border border-areia-escura/10">
         <div className="flex items-center gap-1 text-[10px] font-bold text-cinza-organico">
           <Clock className="w-3 h-3 opacity-40" />
           {orderTime}
@@ -193,6 +193,23 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
         </div>
       </div>
 
+      {/* Resumo de Itens do Pedido */}
+      <div className="mb-4 space-y-1 px-1 py-2 border-t border-b border-areia-escura/10 bg-areia-clara/5 rounded-sm">
+        {order.items?.map((item, idx) => (
+          <div key={idx} className="space-y-0.5">
+            <div className="flex justify-between items-center text-[10px] font-bold text-marrom-madeira/80 leading-tight">
+              <span className="truncate pr-2">{item.quantity}x {item.name}</span>
+              <span className="shrink-0 opacity-40 font-mono text-[9px]">R${(item.price * item.quantity).toFixed(2)}</span>
+            </div>
+            {item.observations && (
+              <p className="text-[9px] italic text-fogo-vibrante/70 pl-3 leading-tight border-l border-fogo-vibrante/20 py-0.5">
+                ↳ {item.observations}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
       <div className="flex items-center justify-between">
         <OrderTimer createdAt={order.createdAt} />
         
@@ -202,7 +219,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
               <MoreVertical className="w-4 h-4 text-marrom-madeira" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl bg-areia-clara border-areia-escura">
+          <DropdownMenuContent align="end" className="w-48 rounded-xl bg-areia-clara border-areia-escura shadow-2xl">
             {order.status === 'Pendente' && (
               <DropdownMenuItem 
                 onClick={() => onEdit(order)}
@@ -263,7 +280,7 @@ const KanbanColumn = ({
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
             <Icon className="w-4 h-4" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-marrom-escuro font-subheadline">
+          <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-marrom-escuro font-headline">
             {title}
           </h3>
         </div>
@@ -650,4 +667,3 @@ export default function AdminOrders() {
     </div>
   );
 }
-
