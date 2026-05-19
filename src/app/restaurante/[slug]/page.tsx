@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -216,7 +215,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 "font-headline text-xl mb-2",
                 isEgua ? "text-white" : "text-caramelo-palha"
               )}>Localização</h4>
-              <p className="opacity-80">Av. Gentil Bittencourt, 2231 - Belém/PA</p>
+              <p className="opacity-80">Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso</p>
               <p className="opacity-80">Terça a Domingo: 11h às 15h e 18h às 23h30</p>
             </div>
           </div>
