@@ -21,9 +21,16 @@ import {
   orderBy, 
   Timestamp
 } from 'firebase/firestore';
-import { Order } from '@/lib/types';
+import { Order, OrderStatus } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
+const STATUS_COLORS: Record<OrderStatus, string> = {
+  'Pendente': 'text-caramelo-palha bg-caramelo-palha/10 border-caramelo-palha/20',
+  'Em Preparo': 'text-marrom-madeira bg-marrom-madeira/10 border-marrom-madeira/20',
+  'Saiu para Entrega': 'text-verde-folha bg-verde-folha/10 border-verde-folha/20',
+  'Finalizado': 'text-marrom-escuro bg-marrom-escuro/10 border-marrom-escuro/20',
+};
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -244,7 +251,9 @@ export default function AdminDashboard() {
               </div>
               <div className="text-right">
                 <p className="font-mono text-sm font-black text-marrom-escuro">{formatBRL(order.total || 0)}</p>
-                <p className="text-[9px] text-cinza-organico italic uppercase tracking-widest mt-1 opacity-60">{order.status}</p>
+                <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-widest border mt-1", STATUS_COLORS[order.status])}>
+                  {order.status}
+                </Badge>
               </div>
             </div>
           ))}
