@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -6,7 +5,6 @@ import {
   ShoppingBag, 
   Search, 
   Filter, 
-  Download, 
   Phone, 
   MapPin, 
   Calendar,
@@ -253,32 +251,6 @@ export default function AdminOrders() {
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
   };
 
-  const exportToCSV = () => {
-    if (!orders) return;
-    const headers = ['ID', 'Num Pedido', 'Data', 'Cliente', 'Telefone', 'Total', 'Pagamento', 'Status'];
-    const rows = orders.map(o => [
-      o.id,
-      o.orderNumber || '-',
-      formatDate(o.createdAt),
-      o.customer.name,
-      o.customer.phone,
-      o.total.toFixed(2),
-      o.payment?.method || 'N/A',
-      o.status
-    ]);
-    
-    const csvContent = "data:text/csv;charset=utf-8," + 
-      [headers, ...rows].map(e => e.join(",")).join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `pedidos_paroara_${new Date().toLocaleDateString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -286,14 +258,6 @@ export default function AdminOrders() {
           <h1 className="text-3xl font-headline text-marrom-terra">Pedidos</h1>
           <p className="text-cinza-organico font-subheadline italic">Gerencie os pedidos em tempo real.</p>
         </div>
-        <Button 
-          onClick={exportToCSV}
-          variant="outline"
-          className="border-areia-escura text-marrom-madeira hover:bg-marrom-terra hover:text-white rounded-sm px-6 py-6 font-bold uppercase tracking-widest text-xs gap-2 shadow-sm transition-all"
-        >
-          <Download className="w-4 h-4" />
-          Exportar CSV
-        </Button>
       </div>
 
       <Card className="bg-white border-areia-escura overflow-hidden">
