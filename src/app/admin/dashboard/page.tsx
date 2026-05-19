@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -24,7 +25,8 @@ import {
   Wallet,
   MapPin,
   UtensilsCrossed,
-  Package
+  Package,
+  TrendingDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -33,7 +35,7 @@ import {
   query, 
   orderBy, 
   Timestamp,
-  limit
+  where
 } from 'firebase/firestore';
 import { Order, OrderStatus, RestaurantSlug, OrderType } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -213,7 +215,7 @@ export default function AdminDashboard() {
         <div className="absolute inset-0 bg-rustic-texture opacity-5 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Analytics Central</h1>
+            <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Dashboard</h1>
             <p className="text-caramelo-palha/60 font-subheadline italic">Monitoramento Operacional em Tempo Real</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md p-2 rounded-2xl border border-white/10">
@@ -260,7 +262,7 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className={cn("text-[10px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40", company.color)}>Restaurante</h3>
+                <h3 className={cn("text-[11px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40", company.color)}>Restaurante</h3>
                 <h2 className="text-2xl font-headline uppercase">{company.name}</h2>
               </div>
               <Store className={cn("w-6 h-6", company.color)} />
