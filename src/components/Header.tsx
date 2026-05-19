@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -122,7 +121,7 @@ export function Header() {
                   ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro shadow-fogo-vibrante/20" 
                   : "bg-caramelo-palha text-marrom-escuro hover:bg-areia-clara"
               )}
-              onClick={() => window.open('https://wa.me/559184541085', '_blank')}
+              onClick={() => window.open('https://wa.me/5591985256348', '_blank')}
             >
               <MessageCircle className="w-4 h-4" />
               WhatsApp

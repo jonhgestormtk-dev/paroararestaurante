@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -64,7 +63,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [changeFor, setChangeFor] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const pixKey = "91984541085";
+  const pixKey = "91985256348";
 
   const handleCopyPix = () => {
     navigator.clipboard.writeText(pixKey);
@@ -94,7 +93,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     const restaurantId = cart[0]?.restaurantId || 'paroara';
     const restaurantName = restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
-    const whatsappNumber = '559184541085';
+    const whatsappNumber = '5591985256348';
     
     const baseOrderData = {
       restaurantId,
@@ -302,7 +301,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <span className={cn(
                           "font-mono text-base md:text-lg font-black tracking-tighter",
                           isEgua ? "text-white" : "text-marrom-escuro"
-                        )}>(91) 98454-1085</span>
+                        )}>(91) 98525-6348</span>
                         <Button 
                           size="sm" 
                           variant="ghost" 

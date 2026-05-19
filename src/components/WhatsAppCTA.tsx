@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -17,7 +16,7 @@ export function WhatsAppCTA() {
   const isEgua = restaurantSlug === 'egua-na-panela';
 
   const handleOrder = () => {
-    window.open('https://wa.me/559184541085', '_blank');
+    window.open('https://wa.me/5591985256348', '_blank');
   };
 
   return (
@@ -76,7 +75,7 @@ export function WhatsAppCTA() {
             <p className={cn(
               "font-black text-xl md:text-2xl tracking-widest",
               isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
-            )}>+55 91 8454-1085</p>
+            )}>+55 91 98525-6348</p>
           </div>
         </div>
       </div>

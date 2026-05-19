@@ -47,7 +47,7 @@ export default function AdminSettings() {
 
   const [settings, setSettings] = useState({
     storeName: 'Paroara | Restaurante | Beer Drik’s',
-    whatsapp: '559184541085',
+    whatsapp: '5591985256348',
     address: 'Av. Gentil Bittencourt, 2231 - Belém, PA',
     openingHours: 'Terça a Domingo: 11h às 15h e 18h às 23h30',
     promoProductId: ''
