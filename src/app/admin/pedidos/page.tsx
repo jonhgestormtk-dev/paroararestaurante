@@ -7,7 +7,7 @@ import {
   Filter, 
   Phone, 
   MapPin, 
-  Calendar,
+  Calendar as CalendarIcon,
   MessageCircle,
   MoreVertical,
   CheckCircle,
@@ -26,7 +26,9 @@ import {
   PlusCircle,
   StickyNote,
   Store,
-  XCircle
+  XCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, updateDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -68,6 +70,10 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format, isSameDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
   'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente', icon: Clock },
@@ -92,6 +98,7 @@ const PAYMENT_ICONS: Record<string, any> = {
 export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   
@@ -117,34 +124,33 @@ export default function AdminOrders() {
   }, [db]);
   const { data: products } = useCollection<Product>(productsQuery);
 
+  const getOrderDate = (createdAt: any) => {
+    if (!createdAt) return new Date();
+    if (createdAt instanceof Timestamp) return createdAt.toDate();
+    if (createdAt.seconds) return new Date(createdAt.seconds * 1000);
+    return new Date(createdAt);
+  };
+
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
     return orders.filter(o => {
+      const orderDate = getOrderDate(o.createdAt);
+      const matchesDate = !selectedDate || isSameDay(orderDate, selectedDate);
+      
       const orderIdMatch = o.id.toLowerCase().includes(searchTerm.toLowerCase());
       const orderNumMatch = o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase());
       const customerMatch = o.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSearch = orderIdMatch || orderNumMatch || customerMatch;
       const matchesStatus = statusFilter === 'todos' || o.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      
+      return matchesDate && matchesSearch && matchesStatus;
     });
-  }, [orders, searchTerm, statusFilter]);
+  }, [orders, searchTerm, statusFilter, selectedDate]);
 
-  const formatDate = (createdAt: any) => {
-    if (!createdAt) return '...';
-    try {
-      let date: Date;
-      if (createdAt instanceof Timestamp) {
-        date = createdAt.toDate();
-      } else if (createdAt.seconds) {
-        date = new Date(createdAt.seconds * 1000);
-      } else {
-        date = new Date(createdAt);
-      }
-      return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return 'Data Inválida';
-    }
+  const formatDateLabel = (createdAt: any) => {
+    const date = getOrderDate(createdAt);
+    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
@@ -269,18 +275,63 @@ export default function AdminOrders() {
       </div>
 
       <Card className="bg-white border-areia-escura overflow-hidden shadow-2xl rounded-2xl">
-        <div className="p-4 md:p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
+        <div className="p-4 md:p-6 border-b border-areia-escura bg-areia-clara/20 flex flex-col md:flex-row gap-4 items-center">
+          
+          {/* Filtro de Data Estilo Premium */}
+          <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-areia-escura/50 shadow-sm w-full md:w-auto">
+            <Button 
+              variant={isSameDay(selectedDate || new Date(), new Date()) ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setSelectedDate(new Date())}
+              className={cn(
+                "text-[10px] uppercase font-black tracking-widest rounded-lg px-4 h-10",
+                isSameDay(selectedDate || new Date(), new Date()) ? "bg-marrom-terra text-white" : "text-marrom-madeira"
+              )}
+            >
+              Hoje
+            </Button>
+            
+            <Separator orientation="vertical" className="h-6 bg-areia-escura/30" />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={cn(
+                    "text-[10px] uppercase font-black tracking-widest rounded-lg px-4 h-10 gap-2",
+                    !isSameDay(selectedDate || new Date(), new Date()) ? "bg-marrom-terra/10 text-marrom-terra" : "text-marrom-madeira/60"
+                  )}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Selecionar Data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                  locale={ptBR}
+                  className="bg-areia-clara text-marrom-terra rounded-xl"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
               placeholder="Buscar por cliente, número ou ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-areia-escura/50 focus:ring-marrom-terra rounded-xl"
+              className="pl-10 bg-white border-areia-escura/50 focus:ring-marrom-terra rounded-xl h-12"
             />
           </div>
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-56 bg-white border-areia-escura/50 rounded-xl">
+            <SelectTrigger className="w-full md:w-56 bg-white border-areia-escura/50 rounded-xl h-12">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5" />
                 <SelectValue placeholder="Status: Todos" />
@@ -325,8 +376,8 @@ export default function AdminOrders() {
                         <p className="text-xs font-mono font-black text-marrom-madeira/40">#{order.orderNumber || order.id.substring(0, 8)}</p>
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-marrom-madeira/60">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(order.createdAt)}
+                        <CalendarIcon className="w-3 h-3" />
+                        {formatDateLabel(order.createdAt)}
                       </div>
                     </div>
                     <Badge variant="outline" className={cn("text-[9px] font-black uppercase tracking-[0.1em] border-none px-3 py-1.5 rounded-full shadow-sm", status.bg)} style={{ color: status.color }}>
@@ -427,7 +478,7 @@ export default function AdminOrders() {
           ) : (
             <div className="p-20 text-center space-y-4">
               <ShoppingBag className="w-12 h-12 mx-auto text-areia-escura opacity-20" />
-              <p className="text-sm italic text-cinza-organico">Nenhum pedido encontrado para este filtro.</p>
+              <p className="text-sm italic text-cinza-organico">Nenhum pedido encontrado para esta data.</p>
             </div>
           )}
         </div>
@@ -474,8 +525,8 @@ export default function AdminOrders() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-marrom-madeira uppercase">
-                          <Calendar className="w-3 h-3 opacity-40" />
-                          {formatDate(order.createdAt)}
+                          <CalendarIcon className="w-3 h-3 opacity-40" />
+                          {formatDateLabel(order.createdAt)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -570,7 +621,7 @@ export default function AdminOrders() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} className="h-40 text-center text-cinza-organico italic font-subheadline opacity-40">
-                    Nenhum pedido registrado até o momento.
+                    Nenhum pedido registrado para esta data.
                   </TableCell>
                 </TableRow>
               )}
@@ -579,7 +630,7 @@ export default function AdminOrders() {
         </div>
       </Card>
 
-      {/* Modal de Edição de Pedido - Mantido similar mas ajustado visualmente */}
+      {/* Modal de Edição de Pedido */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="bg-areia-clara border-none shadow-2xl p-0 overflow-hidden max-w-2xl rounded-2xl">
           <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara">
