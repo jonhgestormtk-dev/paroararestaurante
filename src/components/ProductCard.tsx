@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -20,7 +21,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
   const pathname = usePathname();
   
   const isEgua = useMemo(() => {
-    return product.restaurantId === 'egua-da-panela';
+    return product.restaurantId === 'egua-na-panela';
   }, [product.restaurantId]);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -92,15 +93,15 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         )}>
           <div className="flex items-baseline gap-1">
             <span className={cn(
+              "text-[10px] md:text-xs font-black uppercase",
+              isEgua ? "text-fogo-vibrante" : "text-marrom-madeira/60"
+            )}>R$</span>
+            <span className={cn(
               "font-body font-black text-lg md:text-2xl tracking-tighter",
               isEgua ? "text-fogo-vibrante" : "text-marrom-escuro"
             )}>
               {product.price.toFixed(2).replace('.', ',')}
             </span>
-            <span className={cn(
-              "text-[10px] md:text-xs font-black uppercase",
-              isEgua ? "text-fogo-vibrante" : "text-marrom-madeira/60"
-            )}>$</span>
           </div>
           
           <Button
