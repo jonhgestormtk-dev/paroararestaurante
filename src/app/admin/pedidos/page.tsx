@@ -248,7 +248,7 @@ const KanbanColumn = ({
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
             <Icon className="w-4 h-4" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-marrom-escuro">{title}</h3>
+          <h3 className="text-[10px] md:text-xs font-subheadline font-bold uppercase tracking-[0.2em] text-marrom-escuro">{title}</h3>
         </div>
         <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">
           {orders.length}
