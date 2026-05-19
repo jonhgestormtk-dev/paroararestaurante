@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -74,16 +73,6 @@ export function ExperienceSection() {
             </span>
             <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
           </div>
-          <h2 className={cn(
-            "text-4xl md:text-6xl",
-            isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
-          )}>
-            {isEgua ? 'Por que a Égua?' : 'Experiência Paroara'}
-          </h2>
-          <div className={cn(
-            "w-24 h-1 mx-auto rounded-full",
-            isEgua ? "bg-fogo-vibrante shadow-[0_0_20px_rgba(230,57,70,0.6)]" : "bg-marrom-madeira/30"
-          )}></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">

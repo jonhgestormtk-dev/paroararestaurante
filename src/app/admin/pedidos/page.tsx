@@ -281,7 +281,7 @@ const KanbanColumn = ({
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
             <Icon className="w-4 h-4" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-marrom-escuro font-headline">
+          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-marrom-escuro font-headline">
             {title}
           </h3>
         </div>
@@ -431,21 +431,21 @@ export default function AdminOrders() {
     setIsSaving(true);
     const docRef = doc(db, 'orders', editingOrder.id);
     
+    // Mutações não-bloqueantes seguindo diretrizes de performance
     updateDoc(docRef, editFormData)
       .then(() => {
-        toast({ title: "Pedido Atualizado", description: "As alterações foram salvas com sucesso." });
-        setIsEditModalOpen(false);
-        setIsSaving(false);
-        setEditingOrder(null);
-        setEditFormData(null);
+        toast({ title: "Pedido Atualizado" });
+        setIsEditModalOpen(false); // O fechamento disparará a limpeza via onOpenChange
       })
       .catch(async () => {
-        setIsSaving(false);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
           requestResourceData: editFormData,
         } satisfies SecurityRuleContext));
+      })
+      .finally(() => {
+        setIsSaving(false);
       });
   };
 
@@ -554,12 +554,14 @@ export default function AdminOrders() {
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
-        setIsEditModalOpen(open);
         if (!open) {
+          // Centraliza a limpeza de estado no evento de fechamento para evitar freezes
           setEditingOrder(null);
           setEditFormData(null);
           setProductSearch('');
+          setIsSaving(false);
         }
+        setIsEditModalOpen(open);
       }}>
         <DialogContent className="max-w-2xl bg-areia-clara p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
           <DialogHeader className="bg-marrom-escuro p-6 text-areia-clara">
