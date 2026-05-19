@@ -89,13 +89,13 @@ const TimeAgo = ({ date }: { date: Date }) => {
     return () => clearInterval(interval);
   }, [date]);
 
-  const isCritical = minutes >= 30;
-  const isAttention = minutes >= 15 && minutes < 30;
+  const isCritical = minutes >= 36;
+  const isAttention = minutes >= 26 && minutes < 36;
 
   return (
     <span className={cn(
       "font-bold transition-colors",
-      isCritical ? "text-rose-500 animate-pulse" : isAttention ? "text-amber-500" : "opacity-60"
+      isCritical ? "text-rose-500 animate-pulse" : isAttention ? "text-amber-500" : "text-emerald-500"
     )}>
       {minutes === 0 ? 'Agora mesmo' : `${minutes} min atrás`}
     </span>
@@ -154,7 +154,6 @@ export default function AdminDashboard() {
       return matchesDate && matchesRes;
     });
 
-    // Filtro específico para o painel real-time (Apenas pedidos de HOJE)
     const todayOrders = allOrders.filter(o => {
       const date = getOrderDate(o);
       const isToday = date >= todayStart;
@@ -162,7 +161,6 @@ export default function AdminDashboard() {
       return isToday && matchesRes;
     });
 
-    // Hourly Data
     const hourlyDataMap: Record<number, { hour: string; revenue: number }> = {};
     for (let i = 0; i < 24; i++) hourlyDataMap[i] = { hour: `${i}h`, revenue: 0 };
     currentOrders.forEach(o => {
@@ -170,16 +168,12 @@ export default function AdminDashboard() {
       hourlyDataMap[h].revenue += o.total || 0;
     });
 
-    // Status Chart
-    const statusDataMap: Record<string, number> = {};
-    currentOrders.forEach(o => statusDataMap[o.status] = (statusDataMap[o.status] || 0) + 1);
     const statusChartData = Object.entries(STATUS_CONFIG).map(([status, config]) => ({
       name: status,
       value: statusDataMap[status as OrderStatus] || 0,
       color: config.color
     }));
 
-    // Metrics
     const calculateMetrics = (orders: Order[]) => {
       const p = orders.filter(o => o.restaurantId === 'paroara');
       const e = orders.filter(o => o.restaurantId === 'egua-na-panela');
@@ -210,7 +204,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-      {/* Header Premium */}
       <div className="relative overflow-hidden bg-marrom-escuro p-8 md:p-10 rounded-[2.5rem] shadow-2xl">
         <div className="absolute inset-0 bg-rustic-texture opacity-5 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
@@ -248,7 +241,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Grid de Resumo Operacional */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {[
           { id: 'paroara', name: 'Paroara', color: 'text-marrom-terra', stats: stats?.current.paroara },
@@ -362,7 +354,8 @@ export default function AdminDashboard() {
               const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
               const type = TYPE_CONFIG[order.type || 'Delivery'];
               const waitMinutes = Math.floor((new Date().getTime() - orderDate.getTime()) / 60000);
-              const isLate = waitMinutes >= 30;
+              const isLate = waitMinutes >= 36;
+              const isAttention = waitMinutes >= 26 && waitMinutes < 36;
 
               return (
                 <motion.div
@@ -374,7 +367,7 @@ export default function AdminDashboard() {
                   className={cn(
                     "p-6 flex flex-col md:flex-row md:items-center gap-6 group transition-all relative overflow-hidden",
                     "hover:bg-areia-clara/20",
-                    isLate && "bg-rose-50/30 border-l-4 border-rose-500 shadow-inner"
+                    isLate && order.status !== 'Finalizado' && "bg-rose-50/30 border-l-4 border-rose-500 shadow-inner"
                   )}
                 >
                   <div className={cn(
@@ -389,7 +382,7 @@ export default function AdminDashboard() {
                       <h4 className="font-headline text-lg text-marrom-escuro truncate uppercase tracking-tighter">
                         {order.customer.name}
                       </h4>
-                      {isLate && (
+                      {isLate && order.status !== 'Finalizado' && (
                         <Badge className="bg-rose-500 text-white animate-bounce text-[8px] font-black border-none uppercase">
                           Atrasado
                         </Badge>
