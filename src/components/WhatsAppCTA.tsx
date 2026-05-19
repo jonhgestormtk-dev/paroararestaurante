@@ -42,7 +42,7 @@ export function WhatsAppCTA() {
               "text-4xl md:text-6xl font-bold italic leading-tight tracking-tight uppercase",
               isEgua ? "text-fogo-vibrante font-subheadline" : "text-caramelo-palha font-subheadline"
             )}>
-              {isEgua ? <>Temperou,<br className="hidden md:block" /> pediu, pirou!</> : <>Peça agora pelo <br className="hidden md:block" /> WhatsApp</>}
+              {isEgua ? <>Pediu,<br className="hidden md:block" /> provou, pirou! 😍</> : <>Peça agora pelo <br className="hidden md:block" /> WhatsApp</>}
             </h2>
             <div className={cn("w-20 h-1 mx-auto rounded-full", isEgua ? "bg-fogo-vibrante/30" : "bg-caramelo-palha/30")}></div>
             <p className="text-areia-clara text-lg md:text-2xl font-body opacity-80 max-w-2xl mx-auto leading-relaxed font-light italic">
