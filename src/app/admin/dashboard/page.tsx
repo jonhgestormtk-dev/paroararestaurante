@@ -6,7 +6,6 @@ import {
   ShoppingBag, 
   DollarSign, 
   TrendingUp,
-  TrendingDown,
   Store,
   CalendarDays,
   ArrowUpRight,
@@ -94,12 +93,12 @@ export default function AdminDashboard() {
       today: t,
       growth: {
         paroara: {
-          count: t.paroara.count - y.paroara.count, // Diferença absoluta em vez de porcentagem
+          count: t.paroara.count - y.paroara.count,
           revenue: getGrowth(t.paroara.revenue, y.paroara.revenue),
           ticket: getGrowth(t.paroara.ticket, y.paroara.ticket)
         },
         egua: {
-          count: t.egua.count - y.egua.count, // Diferença absoluta em vez de porcentagem
+          count: t.egua.count - y.egua.count,
           revenue: getGrowth(t.egua.revenue, y.egua.revenue),
           ticket: getGrowth(t.egua.ticket, y.egua.ticket)
         }
@@ -136,7 +135,7 @@ export default function AdminDashboard() {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-headline text-marrom-terra">Dashboard Admin</h1>
+          <h1 className="text-3xl font-headline text-marrom-terra">Dashboard</h1>
           <p className="text-cinza-organico font-subheadline italic flex items-center gap-2">
             <CalendarDays className="w-4 h-4" /> Desempenho Diário • Hoje
           </p>
