@@ -284,9 +284,6 @@ export default function AdminDashboard() {
                   <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest">Paroara</span>
                   <span className="text-3xl font-black text-marrom-terra">{stats?.current.paroara.count || 0}</span>
                 </div>
-                <div className="flex justify-end">
-                  <GrowthBadge value={stats?.growth.paroara.count || 0} isPercentage={false} />
-                </div>
               </div>
             )}
             
@@ -297,9 +294,6 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest">Égua na Panela</span>
                   <span className="text-3xl font-black text-fogo-vibrante">{stats?.current.egua.count || 0}</span>
-                </div>
-                <div className="flex justify-end">
-                  <GrowthBadge value={stats?.growth.egua.count || 0} isPercentage={false} />
                 </div>
               </div>
             )}
