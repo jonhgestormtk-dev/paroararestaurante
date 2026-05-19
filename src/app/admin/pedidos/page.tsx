@@ -58,6 +58,8 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 // Configurações de Status
 const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
@@ -193,7 +195,6 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
         </div>
       </div>
 
-      {/* Resumo de Itens do Pedido */}
       <div className="mb-4 space-y-1 px-1 py-2 border-t border-b border-areia-escura/10 bg-areia-clara/5 rounded-sm">
         {order.items?.map((item, idx) => (
           <div key={idx} className="space-y-0.5">
@@ -356,14 +357,22 @@ export default function AdminOrders() {
     };
   }, [filteredOrders]);
 
-  const handleStatusUpdate = async (id: string, newStatus: OrderStatus) => {
+  const handleStatusUpdate = (id: string, newStatus: OrderStatus) => {
     if (!db) return;
-    try {
-      await updateDoc(doc(db, 'orders', id), { status: newStatus });
-      toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Erro ao atualizar" });
-    }
+    const docRef = doc(db, 'orders', id);
+    const data = { status: newStatus };
+    
+    updateDoc(docRef, data)
+      .then(() => {
+        toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
+      })
+      .catch(async () => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: data,
+        } satisfies SecurityRuleContext));
+      });
   };
 
   const handleEditOrder = (order: Order) => {
@@ -381,6 +390,7 @@ export default function AdminOrders() {
   };
 
   const updateItemQty = (productId: string, delta: number) => {
+    if (!editFormData) return;
     const newItems = editFormData.items.map((item: any) => {
       if (item.productId === productId) {
         return { ...item, quantity: Math.max(1, item.quantity + delta) };
@@ -391,11 +401,13 @@ export default function AdminOrders() {
   };
 
   const removeItem = (productId: string) => {
+    if (!editFormData) return;
     const newItems = editFormData.items.filter((item: any) => item.productId !== productId);
     setEditFormData({ ...editFormData, items: newItems, total: calculateTotal(newItems) });
   };
 
   const addItemToOrder = (product: Product) => {
+    if (!editFormData) return;
     const existing = editFormData.items.find((i: any) => i.productId === product.id);
     let newItems;
     if (existing) {
@@ -414,18 +426,27 @@ export default function AdminOrders() {
     setProductSearch('');
   };
 
-  const saveOrderChanges = async () => {
-    if (!db || !editingOrder) return;
+  const saveOrderChanges = () => {
+    if (!db || !editingOrder || !editFormData || isSaving) return;
     setIsSaving(true);
-    try {
-      await updateDoc(doc(db, 'orders', editingOrder.id), editFormData);
-      toast({ title: "Pedido Atualizado", description: "As alterações foram salvas com sucesso." });
-      setIsEditModalOpen(false);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Erro ao salvar", description: "Verifique suas permissões." });
-    } finally {
-      setIsSaving(false);
-    }
+    const docRef = doc(db, 'orders', editingOrder.id);
+    
+    updateDoc(docRef, editFormData)
+      .then(() => {
+        toast({ title: "Pedido Atualizado", description: "As alterações foram salvas com sucesso." });
+        setIsEditModalOpen(false);
+        setIsSaving(false);
+        setEditingOrder(null);
+        setEditFormData(null);
+      })
+      .catch(async () => {
+        setIsSaving(false);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: editFormData,
+        } satisfies SecurityRuleContext));
+      });
   };
 
   const searchProducts = useMemo(() => {
@@ -438,7 +459,6 @@ export default function AdminOrders() {
 
   return (
     <div className="h-[calc(100svh-160px)] md:h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
-      {/* Header Operacional */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 bg-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão Operacional</h1>
@@ -492,7 +512,6 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Kanban Board - Scroll Snap para Mobile */}
       <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
         <div className="flex gap-4 md:gap-6 h-full min-w-max px-1">
           <KanbanColumn 
@@ -534,19 +553,24 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Modal de Edição de Pedido */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} onOpenChange={(open) => {
+        setIsEditModalOpen(open);
+        if (!open) {
+          setEditingOrder(null);
+          setEditFormData(null);
+          setProductSearch('');
+        }
+      }}>
         <DialogContent className="max-w-2xl bg-areia-clara p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
           <DialogHeader className="bg-marrom-escuro p-6 text-areia-clara">
             <DialogTitle className="font-headline tracking-widest uppercase text-xl flex items-center gap-3">
               <Edit2 className="w-5 h-5 text-caramelo-palha" />
-              Editar Pedido #{editingOrder?.orderNumber}
+              Editar Pedido #{editingOrder?.orderNumber || editingOrder?.id.substring(0, 6)}
             </DialogTitle>
           </DialogHeader>
 
           {editFormData && (
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
-              {/* Seção Cliente */}
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Dados do Cliente</h3>
@@ -617,7 +641,6 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              {/* Seção Itens */}
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens da Cesta</h3>
                 <ScrollArea className="h-64 pr-4">
