@@ -84,8 +84,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Logo Section */}
           <div className="flex items-center justify-between mb-8 shrink-0">
             <div className="space-y-1">
-              <h2 className="font-headline text-2xl text-caramelo-palha tracking-widest leading-none">PAROARA</h2>
-              <p className="text-[8px] uppercase tracking-[0.4em] font-bold opacity-40">Admin Panel</p>
+              <h2 className="font-headline text-xl text-caramelo-palha tracking-widest leading-none">GESTÃO ADM</h2>
+              <p className="text-[8px] uppercase tracking-[0.4em] font-bold opacity-40">Painel de Controle</p>
             </div>
             <Button 
               variant="ghost" 
@@ -135,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div className="overflow-hidden">
                 <p className="text-[10px] font-black uppercase tracking-wider truncate">Administrador</p>
-                <p className="text-[9px] font-body italic opacity-40 truncate">admin@paroara.com</p>
+                <p className="text-[9px] font-body italic opacity-40 truncate">Gestão Paroara & Égua</p>
               </div>
             </div>
 
@@ -165,17 +165,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Button>
             
             <div className="flex flex-col lg:hidden">
-              <h1 className="text-lg font-headline tracking-widest text-marrom-terra leading-none">PAROARA</h1>
-              <p className="text-[7px] font-black tracking-widest uppercase opacity-40">Admin Area</p>
+              <h1 className="text-lg font-headline tracking-widest text-marrom-terra leading-none">GESTÃO ADM</h1>
+              <p className="text-[7px] font-black tracking-widest uppercase opacity-40">Painel de Controle</p>
             </div>
           </div>
 
           <div className="hidden lg:flex flex-col items-end opacity-90">
             <h1 className="text-2xl font-headline tracking-[0.2em] text-marrom-terra leading-none uppercase">
-              PAROARA
+              GESTÃO ADMINISTRATIVA
             </h1>
             <p className="text-[9px] font-subheadline italic text-marrom-madeira tracking-widest uppercase mt-1">
-              Restaurante Marajoara
+              Painel Central Unificado
             </p>
           </div>
         </header>
