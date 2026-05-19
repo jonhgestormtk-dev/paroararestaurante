@@ -193,7 +193,7 @@ export default function AdminDashboard() {
       current: calculateMetrics(currentOrders),
       hourlyData: Object.values(hourlyDataMap),
       statusChartData,
-      recentOrders: todayOrders // Agora usa apenas os pedidos de hoje
+      recentOrders: todayOrders
     };
   }, [allOrders, timeFilter, restaurantFilter]);
 
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className={cn("text-[10px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40", company.color)}>Unidade</h3>
+                <h3 className={cn("text-[10px] font-subheadline font-bold uppercase tracking-[0.3em] opacity-40", company.color)}>Restaurante</h3>
                 <h2 className="text-2xl font-headline uppercase">{company.name}</h2>
               </div>
               <Store className={cn("w-6 h-6", company.color)} />
