@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -233,7 +232,9 @@ export default function AdminPDV() {
                           <img src={product.imageUrl || `https://picsum.photos/seed/${product.id}/200/200`} className="object-cover w-full h-full" alt={product.name} />
                         </div>
                         <div className="flex flex-col justify-center min-w-0">
-                          <h4 className="font-bold text-marrom-terra text-sm truncate uppercase tracking-tighter">{product.name}</h4>
+                          <h4 className="font-subheadline font-bold italic text-marrom-terra text-base md:text-lg truncate uppercase tracking-tighter">
+                            {product.name}
+                          </h4>
                           <p className="text-[10px] text-marrom-madeira font-black">R$ {product.price.toFixed(2).replace('.', ',')}</p>
                         </div>
                       </button>
