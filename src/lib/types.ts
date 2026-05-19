@@ -27,7 +27,8 @@ export interface CartItem extends Product {
   observations?: string;
 }
 
-export type OrderStatus = 'Pendente' | 'Em Preparo' | 'Saiu para Entrega' | 'Finalizado';
+export type OrderStatus = 'Pendente' | 'Em Preparo' | 'Saiu para Entrega' | 'Finalizado' | 'Cancelado';
+export type OrderType = 'Delivery' | 'Retirada' | 'Salão';
 export type PaymentMethod = 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito';
 
 export interface Order {
@@ -48,6 +49,7 @@ export interface Order {
   }[];
   total: number;
   status: OrderStatus;
+  type?: OrderType;
   payment: {
     method: PaymentMethod;
     changeFor?: number;

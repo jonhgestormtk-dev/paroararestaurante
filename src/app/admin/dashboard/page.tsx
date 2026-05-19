@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShoppingBag, 
   DollarSign, 
@@ -17,7 +17,15 @@ import {
   Activity,
   BarChart3,
   PieChart as PieChartIcon,
-  Timer
+  Timer,
+  AlertCircle,
+  Truck,
+  CheckCircle2,
+  XCircle,
+  Wallet,
+  MapPin,
+  UtensilsCrossed,
+  Package
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -25,9 +33,10 @@ import {
   collection, 
   query, 
   orderBy, 
-  Timestamp
+  Timestamp,
+  limit
 } from 'firebase/firestore';
-import { Order, OrderStatus, RestaurantSlug } from '@/lib/types';
+import { Order, OrderStatus, RestaurantSlug, OrderType } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { 
   Select, 
@@ -39,8 +48,6 @@ import {
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -54,20 +61,51 @@ import {
 } from 'recharts';
 import { Progress } from '@/components/ui/progress';
 
-const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string }> = {
-  'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente' },
-  'Em Preparo': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Preparando' },
-  'Saiu para Entrega': { color: '#8B5CF6', bg: 'bg-purple-500/10', label: 'Em Entrega' },
-  'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado' },
+const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
+  'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente', icon: Clock },
+  'Em Preparo': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Preparando', icon: AlertCircle },
+  'Saiu para Entrega': { color: '#8B5CF6', bg: 'bg-purple-500/10', label: 'Em Rota', icon: Truck },
+  'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado', icon: CheckCircle2 },
+  'Cancelado': { color: '#EF4444', bg: 'bg-rose-500/10', label: 'Cancelado', icon: XCircle },
 };
 
-type TimeFilter = 'today' | 'yesterday' | '7days' | '30days';
-type RestaurantFilter = 'all' | RestaurantSlug;
+const TYPE_CONFIG: Record<OrderType, { icon: any; label: string }> = {
+  'Delivery': { icon: Truck, label: 'Delivery' },
+  'Retirada': { icon: Package, label: 'Retirada' },
+  'Salão': { icon: UtensilsCrossed, label: 'No Salão' },
+};
+
+// Componente de Tempo Decorrido em Real-time
+const TimeAgo = ({ date }: { date: Date }) => {
+  const [minutes, setMinutes] = useState(0);
+
+  useEffect(() => {
+    const calculate = () => {
+      const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
+      setMinutes(diff);
+    };
+    calculate();
+    const interval = setInterval(calculate, 60000);
+    return () => clearInterval(interval);
+  }, [date]);
+
+  const isCritical = minutes >= 30;
+  const isAttention = minutes >= 15 && minutes < 30;
+
+  return (
+    <span className={cn(
+      "font-bold transition-colors",
+      isCritical ? "text-rose-500 animate-pulse" : isAttention ? "text-amber-500" : "opacity-60"
+    )}>
+      {minutes === 0 ? 'Agora mesmo' : `${minutes} min atrás`}
+    </span>
+  );
+};
 
 export default function AdminDashboard() {
   const db = useFirestore();
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
-  const [restaurantFilter, setRestaurantFilter] = useState<RestaurantFilter>('all');
+  const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7days' | '30days'>('today');
+  const [restaurantFilter, setRestaurantFilter] = useState<'all' | RestaurantSlug>('all');
 
   const allOrdersQuery = useMemo(() => {
     if (!db) return null;
@@ -83,44 +121,24 @@ export default function AdminDashboard() {
     
     let currentStart: Date;
     let currentEnd: Date = new Date();
-    let prevStart: Date;
-    let prevEnd: Date;
-
     const todayStart = getStartOfDay(now);
 
     switch (timeFilter) {
-      case 'today':
-        currentStart = todayStart;
-        prevStart = new Date(todayStart);
-        prevStart.setDate(prevStart.getDate() - 1);
-        prevEnd = todayStart;
-        break;
+      case 'today': currentStart = todayStart; break;
       case 'yesterday':
         currentStart = new Date(todayStart);
         currentStart.setDate(currentStart.getDate() - 1);
         currentEnd = todayStart;
-        prevStart = new Date(currentStart);
-        prevStart.setDate(prevStart.getDate() - 1);
-        prevEnd = currentStart;
         break;
       case '7days':
         currentStart = new Date(todayStart);
         currentStart.setDate(currentStart.getDate() - 7);
-        prevStart = new Date(currentStart);
-        prevStart.setDate(prevStart.getDate() - 7);
-        prevEnd = currentStart;
         break;
       case '30days':
         currentStart = new Date(todayStart);
         currentStart.setDate(currentStart.getDate() - 30);
-        prevStart = new Date(currentStart);
-        prevStart.setDate(prevStart.getDate() - 30);
-        prevEnd = currentStart;
         break;
-      default:
-        currentStart = todayStart;
-        prevStart = todayStart;
-        prevEnd = todayStart;
+      default: currentStart = todayStart;
     }
 
     const getOrderDate = (order: Order) => {
@@ -129,177 +147,83 @@ export default function AdminDashboard() {
       return new Date(order.createdAt);
     };
 
-    const filterByResAndDate = (orders: Order[], start: Date, end: Date) => {
-      return orders.filter(o => {
-        const date = getOrderDate(o);
-        const matchesDate = date >= start && date < end;
-        const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
-        return matchesDate && matchesRes;
-      });
-    };
+    const currentOrders = allOrders.filter(o => {
+      const date = getOrderDate(o);
+      const matchesDate = date >= currentStart && date < currentEnd;
+      const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
+      return matchesDate && matchesRes;
+    });
 
-    const currentOrders = filterByResAndDate(allOrders, currentStart, currentEnd);
-    const previousOrders = filterByResAndDate(allOrders, prevStart, prevEnd);
-
-    // Processamento de vendas por hora
-    const hourlyDataMap: Record<number, { hour: string; revenue: number; count: number }> = {};
-    for (let i = 0; i < 24; i++) {
-      hourlyDataMap[i] = { hour: `${i}h`, revenue: 0, count: 0 };
-    }
-
+    // Hourly Data
+    const hourlyDataMap: Record<number, { hour: string; revenue: number }> = {};
+    for (let i = 0; i < 24; i++) hourlyDataMap[i] = { hour: `${i}h`, revenue: 0 };
     currentOrders.forEach(o => {
       const h = getOrderDate(o).getHours();
       hourlyDataMap[h].revenue += o.total || 0;
-      hourlyDataMap[h].count += 1;
     });
 
-    const hourlyData = Object.values(hourlyDataMap);
-
-    // Processamento de status
+    // Status Chart
     const statusDataMap: Record<string, number> = {};
-    currentOrders.forEach(o => {
-      statusDataMap[o.status] = (statusDataMap[o.status] || 0) + 1;
-    });
-
+    currentOrders.forEach(o => statusDataMap[o.status] = (statusDataMap[o.status] || 0) + 1);
     const statusChartData = Object.entries(STATUS_CONFIG).map(([status, config]) => ({
       name: status,
       value: statusDataMap[status as OrderStatus] || 0,
       color: config.color
     }));
 
-    // Top Produtos
-    const productMap: Record<string, { name: string; qty: number; revenue: number; restaurant: string }> = {};
-    currentOrders.forEach(o => {
-      o.items.forEach(item => {
-        if (!productMap[item.productId]) {
-          productMap[item.productId] = { name: item.name, qty: 0, revenue: 0, restaurant: o.restaurantId };
-        }
-        productMap[item.productId].qty += item.quantity;
-        productMap[item.productId].revenue += (item.price * item.quantity);
-      });
-    });
-
-    const topProducts = Object.values(productMap)
-      .sort((a, b) => b.qty - a.qty)
-      .slice(0, 5);
-
+    // Metrics
     const calculateMetrics = (orders: Order[]) => {
-      const paroara = orders.filter(o => o.restaurantId === 'paroara');
-      const egua = orders.filter(o => o.restaurantId === 'egua-na-panela');
-
-      const pRev = paroara.reduce((acc, o) => acc + (o.total || 0), 0);
-      const eRev = egua.reduce((acc, o) => acc + (o.total || 0), 0);
-
-      // Mock de tempo de preparo (em minutos) - Em produção seria baseado em timestamps de status
-      const pPrep = paroara.length > 0 ? 18 + Math.random() * 5 : 0;
-      const ePrep = egua.length > 0 ? 22 + Math.random() * 8 : 0;
-
+      const p = orders.filter(o => o.restaurantId === 'paroara');
+      const e = orders.filter(o => o.restaurantId === 'egua-na-panela');
+      const pRev = p.reduce((acc, o) => acc + (o.total || 0), 0);
+      const eRev = e.reduce((acc, o) => acc + (o.total || 0), 0);
       return {
-        paroara: { 
-          count: paroara.length, 
-          revenue: pRev, 
-          ticket: paroara.length > 0 ? pRev / paroara.length : 0,
-          avgPrep: pPrep
-        },
-        egua: { 
-          count: egua.length, 
-          revenue: eRev, 
-          ticket: egua.length > 0 ? eRev / egua.length : 0,
-          avgPrep: ePrep
-        },
-        total: {
-          count: orders.length,
-          revenue: pRev + eRev,
-          ticket: orders.length > 0 ? (pRev + eRev) / orders.length : 0,
-          avgPrep: (pPrep + ePrep) / 2
-        }
+        paroara: { count: p.length, revenue: pRev, avgPrep: p.length > 0 ? 18 : 0 },
+        egua: { count: e.length, revenue: eRev, avgPrep: e.length > 0 ? 22 : 0 }
       };
     };
 
-    const current = calculateMetrics(currentOrders);
-    const previous = calculateMetrics(previousOrders);
-
-    const getGrowth = (curr: number, prev: number) => {
-      if (prev === 0) return curr > 0 ? 100 : 0;
-      return ((curr - prev) / prev) * 100;
-    };
-
     return {
-      current,
-      hourlyData,
+      current: calculateMetrics(currentOrders),
+      hourlyData: Object.values(hourlyDataMap),
       statusChartData,
-      topProducts,
-      growth: {
-        paroara: { revenue: getGrowth(current.paroara.revenue, previous.paroara.revenue) },
-        egua: { revenue: getGrowth(current.egua.revenue, previous.egua.revenue) },
-        total: { revenue: getGrowth(current.total.revenue, previous.total.revenue) }
-      }
+      recentOrders: allOrders.slice(0, 8)
     };
   }, [allOrders, timeFilter, restaurantFilter]);
 
-  const formatBRL = (val: number) => {
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  const formatBRL = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const GrowthIndicator = ({ value }: { value: number }) => {
-    const isPositive = value >= 0;
-    return (
-      <span className={cn(
-        "flex items-center gap-0.5 text-[10px] font-black",
-        isPositive ? "text-emerald-500" : "text-rose-500"
-      )}>
-        {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-        {Math.abs(value).toFixed(1)}%
-      </span>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center gap-6 bg-areia-clara/30">
-        <div className="relative">
-          <Loader2 className="w-12 h-12 animate-spin text-marrom-terra opacity-20" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Activity className="w-5 h-5 text-marrom-terra/40" />
-          </div>
-        </div>
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira/40">Sincronizando Inteligência...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="h-screen flex flex-col items-center justify-center gap-6 bg-areia-clara/30">
+      <Loader2 className="w-12 h-12 animate-spin text-marrom-terra opacity-20" />
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira/40">Sincronizando Operação...</p>
+    </div>
+  );
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-      {/* Header Premium com Filtros Glassmorphism */}
-      <div className="relative overflow-hidden bg-marrom-escuro p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-white/5">
+      {/* Header Premium */}
+      <div className="relative overflow-hidden bg-marrom-escuro p-8 md:p-10 rounded-[2.5rem] shadow-2xl">
         <div className="absolute inset-0 bg-rustic-texture opacity-5 pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-caramelo-palha/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Analytics Central</h1>
-            <div className="flex items-center gap-3 text-caramelo-palha/60 font-subheadline italic">
-              <CalendarDays className="w-4 h-4" /> 
-              <span>Monitoramento Operacional e Financeiro</span>
-            </div>
+            <p className="text-caramelo-palha/60 font-subheadline italic">Monitoramento Operacional em Tempo Real</p>
           </div>
-
           <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md p-2 rounded-2xl border border-white/10">
-            <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
+            <Select value={timeFilter} onValueChange={(v: any) => setTimeFilter(v)}>
               <SelectTrigger className="w-40 bg-transparent border-none text-areia-clara text-xs font-bold focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-marrom-escuro border-white/10 text-areia-clara">
                 <SelectItem value="today">Hoje</SelectItem>
                 <SelectItem value="yesterday">Ontem</SelectItem>
-                <SelectItem value="7days">Últimos 7 dias</SelectItem>
-                <SelectItem value="30days">Últimos 30 dias</SelectItem>
+                <SelectItem value="7days">7 Dias</SelectItem>
+                <SelectItem value="30days">30 Dias</SelectItem>
               </SelectContent>
             </Select>
-
-            <div className="w-px h-6 bg-white/10 hidden md:block" />
-
-            <Select value={restaurantFilter} onValueChange={(v) => setRestaurantFilter(v as RestaurantFilter)}>
+            <div className="w-px h-6 bg-white/10" />
+            <Select value={restaurantFilter} onValueChange={(v: any) => setRestaurantFilter(v)}>
               <SelectTrigger className="w-52 bg-transparent border-none text-areia-clara text-xs font-bold focus:ring-0">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-caramelo-palha" />
@@ -308,7 +232,7 @@ export default function AdminDashboard() {
               </SelectTrigger>
               <SelectContent className="bg-marrom-escuro border-white/10 text-areia-clara">
                 <SelectItem value="all">Visão Consolidada</SelectItem>
-                <SelectItem value="paroara">Paroara Premium</SelectItem>
+                <SelectItem value="paroara">Paroara</SelectItem>
                 <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
               </SelectContent>
             </Select>
@@ -316,236 +240,233 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Grid Comparativo Multiempresa */}
+      {/* Grid de Resumo Operacional */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {[
-          { id: 'paroara' as RestaurantSlug, name: 'Paroara', color: 'text-marrom-terra', accent: 'bg-marrom-terra', stats: stats?.current.paroara, growth: stats?.growth.paroara },
-          { id: 'egua-na-panela' as RestaurantSlug, name: 'Égua na Panela', color: 'text-fogo-vibrante', accent: 'bg-fogo-vibrante', stats: stats?.current.egua, growth: stats?.growth.egua }
+          { id: 'paroara', name: 'Paroara', color: 'text-marrom-terra', stats: stats?.current.paroara },
+          { id: 'egua-na-panela', name: 'Égua na Panela', color: 'text-fogo-vibrante', stats: stats?.current.egua }
         ].map((company) => (
           <motion.div
             key={company.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            className={cn(
-              "relative bg-white rounded-[2rem] p-8 border border-areia-escura/30 shadow-xl overflow-hidden",
-              restaurantFilter !== 'all' && restaurantFilter !== company.id && "opacity-40 grayscale pointer-events-none"
-            )}
+            className="bg-white rounded-[2rem] p-8 border border-areia-escura/30 shadow-xl"
           >
-            <div className={cn("absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full", company.accent)}></div>
-            
             <div className="flex items-center justify-between mb-8">
-              <div className="space-y-1">
-                <h3 className={cn("text-xs font-black uppercase tracking-[0.3em] opacity-40", company.color)}>Empresa</h3>
-                <h2 className="text-2xl font-headline tracking-widest uppercase">{company.name}</h2>
+              <div>
+                <h3 className={cn("text-[10px] font-black uppercase tracking-[0.3em] opacity-40", company.color)}>Unidade</h3>
+                <h2 className="text-2xl font-headline uppercase">{company.name}</h2>
               </div>
-              <div className={cn("p-4 rounded-2xl", company.accent + "/10")}>
-                <Store className={cn("w-6 h-6", company.color)} />
-              </div>
+              <Store className={cn("w-6 h-6", company.color)} />
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Pedidos</p>
-                <p className="text-2xl font-black text-marrom-escuro">{company.stats?.count}</p>
+                <p className="text-2xl font-black">{company.stats?.count}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Faturamento</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xl font-black text-marrom-escuro">{formatBRL(company.stats?.revenue || 0)}</p>
-                  {company.growth && <GrowthIndicator value={company.growth.revenue} />}
-                </div>
+                <p className="text-xl font-black">{formatBRL(company.stats?.revenue || 0)}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Ticket Médio</p>
-                <p className="text-xl font-black text-marrom-escuro">{formatBRL(company.stats?.ticket || 0)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Tempo Preparo</p>
-                <div className="flex items-center gap-2">
-                  <Timer className="w-3.5 h-3.5 text-cinza-organico" />
-                  <p className="text-xl font-black text-marrom-escuro">{company.stats?.avgPrep.toFixed(0)}m</p>
-                </div>
+              <div className="space-y-1 text-right">
+                <p className="text-[10px] font-black uppercase text-cinza-organico opacity-60">Avg. Preparo</p>
+                <p className="text-xl font-black text-marrom-terra">{company.stats?.avgPrep} min</p>
               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Gráfico de Vendas por Hora */}
-      <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
-        <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between bg-areia-clara/5">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-marrom-madeira">
-              <BarChart3 className="w-4 h-4" />
-              <CardTitle className="text-xs font-black uppercase tracking-widest">Fluxo de Vendas por Hora</CardTitle>
-            </div>
-            <CardDescription className="font-subheadline italic">Distribuição de faturamento ao longo do dia</CardDescription>
-          </div>
-          <div className="hidden md:flex gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-marrom-terra"></div>
-              <span className="text-[10px] font-bold text-cinza-organico">Faturamento</span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-8 h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={stats?.hourlyData}>
-              <defs>
-                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#281A15" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#281A15" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="hour" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 700 }} 
-                dy={10}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 700 }} 
-                tickFormatter={(val) => `R$${val}`}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#281A15', 
-                  borderRadius: '16px', 
-                  border: 'none', 
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.2)' 
-                }}
-                itemStyle={{ color: '#F3E7D3', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' }}
-                labelStyle={{ color: '#A87442', marginBottom: '4px', fontSize: '12px', fontWeight: 700 }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#281A15" 
-                strokeWidth={4} 
-                fillOpacity={1} 
-                fill="url(#colorRev)" 
-                animationDuration={2000}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Operação e Analytics Detalhado */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Status de Pedidos (Donut) */}
-        <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-areia-escura/10">
-            <div className="flex items-center gap-2 text-marrom-madeira">
-              <PieChartIcon className="w-4 h-4" />
-              <CardTitle className="text-xs font-black uppercase tracking-widest">Distribuição por Status</CardTitle>
+        {/* Gráfico de Fluxo */}
+        <Card className="lg:col-span-2 bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
+          <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-marrom-madeira" />
+              <CardTitle className="text-xs font-black uppercase tracking-widest">Fluxo de Vendas</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-8 space-y-8">
+          <CardContent className="p-8 h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats?.hourlyData}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#281A15" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#281A15" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#281A15', borderRadius: '12px', border: 'none', color: '#FFF' }} />
+                <Area type="monotone" dataKey="revenue" stroke="#281A15" strokeWidth={3} fill="url(#colorRev)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Status Donut */}
+        <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
+          <CardHeader className="p-8 border-b border-areia-escura/10">
+            <div className="flex items-center gap-2">
+              <PieChartIcon className="w-4 h-4 text-marrom-madeira" />
+              <CardTitle className="text-xs font-black uppercase tracking-widest">Status dos Pedidos</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8">
             <div className="h-[200px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={stats?.statusChartData}
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={8}
-                    dataKey="value"
-                    animationDuration={1500}
-                  >
-                    {stats?.statusChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                    ))}
+                  <Pie data={stats?.statusChartData} innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value">
+                    {stats?.statusChartData.map((entry, idx) => <Cell key={idx} fill={entry.color} />)}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}
-                  />
+                  <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {stats?.statusChartData.map((item) => (
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              {stats?.statusChartData.filter(i => i.value > 0).map((item) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest">{item.name}</span>
+                  <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest truncate">{item.name}</span>
                   <span className="text-xs font-black ml-auto">{item.value}</span>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Eficiência Operacional */}
-        <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-areia-escura/10">
-            <div className="flex items-center gap-2 text-marrom-madeira">
-              <Timer className="w-4 h-4" />
-              <CardTitle className="text-xs font-black uppercase tracking-widest">Tempo de Preparo</CardTitle>
+      {/* Seção Operacional: Últimos Pedidos */}
+      <Card className="bg-white border-areia-escura rounded-[2rem] shadow-2xl overflow-hidden">
+        <CardHeader className="p-8 border-b border-areia-escura/20 bg-areia-clara/10 flex flex-row items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-marrom-terra">
+              <Activity className="w-5 h-5" />
+              <CardTitle className="text-sm font-black uppercase tracking-[0.2em]">Painel Operacional Real-time</CardTitle>
             </div>
-          </CardHeader>
-          <CardContent className="p-8 space-y-10">
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <p className="text-[10px] font-black uppercase text-marrom-terra tracking-widest">Paroara Premium</p>
-                <p className="text-lg font-black">{stats?.current.paroara.avgPrep.toFixed(0)} min</p>
-              </div>
-              <Progress value={Math.min(100, (stats?.current.paroara.avgPrep || 0) / 40 * 100)} className="h-2 bg-marrom-terra/10" />
-              <p className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Dentro da Meta (Ideal: 25min)</p>
-            </div>
+            <CardDescription className="font-subheadline italic text-xs">Monitoramento inteligente de fluxos e prioridades.</CardDescription>
+          </div>
+          <Badge className="bg-marrom-terra text-white uppercase text-[10px] font-black px-4 py-1">Ativo Agora</Badge>
+        </CardHeader>
+        
+        <div className="divide-y divide-areia-escura/10">
+          <AnimatePresence mode="popLayout">
+            {stats?.recentOrders.map((order) => {
+              const orderDate = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000 || order.createdAt);
+              const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
+              const type = TYPE_CONFIG[order.type || 'Delivery'];
+              const waitMinutes = Math.floor((new Date().getTime() - orderDate.getTime()) / 60000);
+              const isLate = waitMinutes >= 30;
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <p className="text-[10px] font-black uppercase text-fogo-vibrante tracking-widest">Égua na Panela</p>
-                <p className="text-lg font-black">{stats?.current.egua.avgPrep.toFixed(0)} min</p>
-              </div>
-              <Progress value={Math.min(100, (stats?.current.egua.avgPrep || 0) / 40 * 100)} className="h-2 bg-fogo-vibrante/10" />
-              <p className="text-[9px] text-amber-500 font-bold uppercase tracking-widest">Atenção (Ideal: 30min)</p>
-            </div>
-          </CardContent>
-        </Card>
+              return (
+                <motion.div
+                  key={order.id}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={cn(
+                    "p-6 flex flex-col md:flex-row md:items-center gap-6 group transition-all relative overflow-hidden",
+                    "hover:bg-areia-clara/20",
+                    isLate && "bg-rose-50/30 border-l-4 border-rose-500 shadow-inner"
+                  )}
+                >
+                  {/* Avatar / Initials */}
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-transform group-hover:scale-110 shrink-0 shadow-sm",
+                    order.restaurantId === 'paroara' ? "bg-marrom-terra text-white" : "bg-fogo-vibrante text-white"
+                  )}>
+                    {order.customer.name.charAt(0).toUpperCase()}
+                  </div>
 
-        {/* Produtos TOP Performance */}
-        <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-areia-escura/10">
-            <div className="flex items-center gap-2 text-marrom-madeira">
-              <Trophy className="w-4 h-4" />
-              <CardTitle className="text-xs font-black uppercase tracking-widest">Top Vendidos</CardTitle>
-            </div>
-          </CardHeader>
-          <div className="divide-y divide-areia-escura/10">
-            {stats?.topProducts.map((p, idx) => (
-              <div key={idx} className="p-6 flex items-center gap-4 hover:bg-areia-clara/5 transition-colors group">
-                <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-transform group-hover:scale-110",
-                  idx === 0 ? "bg-amber-100 text-amber-600 border border-amber-200" :
-                  idx === 1 ? "bg-slate-100 text-slate-500 border border-slate-200" :
-                  idx === 2 ? "bg-orange-50 text-orange-600 border border-orange-100" : "bg-areia-clara text-cinza-organico"
-                )}>
-                  {idx < 3 ? `TOP ${idx + 1}` : `#${idx + 1}`}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-marrom-terra text-sm truncate uppercase tracking-tighter">{p.name}</p>
-                  <p className="text-[9px] text-cinza-organico font-black uppercase tracking-widest opacity-40">{p.restaurant}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-sm font-black text-marrom-escuro">{p.qty} un.</p>
-                  <p className="text-[10px] text-cinza-organico font-bold">{formatBRL(p.revenue)}</p>
-                </div>
-              </div>
-            ))}
-            {(!stats?.topProducts || stats.topProducts.length === 0) && (
-              <div className="p-12 text-center">
-                <p className="text-xs italic text-cinza-organico opacity-40">Nenhum dado de vendas registrado.</p>
+                  {/* Nome e Info Empresa */}
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-headline text-lg text-marrom-escuro truncate uppercase tracking-tighter">
+                        {order.customer.name}
+                      </h4>
+                      {isLate && (
+                        <Badge className="bg-rose-500 text-white animate-bounce text-[8px] font-black border-none uppercase">
+                          Atrasado
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-widest">
+                      <span className={cn(
+                        "flex items-center gap-1.5",
+                        order.restaurantId === 'paroara' ? "text-marrom-terra" : "text-fogo-vibrante"
+                      )}>
+                        <Store className="w-3 h-3" />
+                        {order.restaurantId === 'egua-na-panela' ? 'Égua na Panela' : 'Paroara'} • #{order.orderNumber || order.id.substring(0, 6)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Metadados Operacionais */}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 bg-white/40 p-3 rounded-2xl border border-areia-escura/30">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 opacity-40" />
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-black text-marrom-escuro">
+                          {orderDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <TimeAgo date={orderDate} />
+                      </div>
+                    </div>
+
+                    <div className="h-8 w-px bg-areia-escura/30 hidden md:block" />
+
+                    <div className="flex items-center gap-2">
+                      <Wallet className="w-3.5 h-3.5 opacity-40" />
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-cinza-organico uppercase">Pagamento</span>
+                        <span className="text-[11px] font-black text-marrom-escuro uppercase">{order.payment.method}</span>
+                      </div>
+                    </div>
+
+                    <div className="h-8 w-px bg-areia-escura/30 hidden md:block" />
+
+                    <div className="flex items-center gap-2">
+                      <type.icon className="w-3.5 h-3.5 opacity-40" />
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-cinza-organico uppercase">Tipo</span>
+                        <span className="text-[11px] font-black text-marrom-escuro uppercase">{type.label}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status e Valor */}
+                  <div className="flex items-center justify-between md:justify-end gap-6 md:min-w-[200px]">
+                    <div className="flex flex-col items-end">
+                      <p className="text-xs font-bold text-cinza-organico uppercase tracking-tighter mb-1">Total</p>
+                      <p className="text-xl font-black text-marrom-escuro tracking-tighter">
+                        {formatBRL(order.total)}
+                      </p>
+                    </div>
+                    <div className={cn(
+                      "px-4 py-2 rounded-full flex items-center gap-2 border shadow-sm transition-transform group-hover:scale-105",
+                      status.bg,
+                      `border-[${status.color}]/30`
+                    )}>
+                      <status.icon className="w-3 h-3" style={{ color: status.color }} />
+                      <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: status.color }}>
+                        {status.label}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+            {(!stats?.recentOrders || stats.recentOrders.length === 0) && (
+              <div className="p-20 text-center space-y-4">
+                <ShoppingBag className="w-12 h-12 mx-auto text-areia-escura opacity-20" />
+                <p className="text-sm italic text-cinza-organico">Nenhum pedido registrado no momento.</p>
               </div>
             )}
-          </div>
-        </Card>
-      </div>
+          </AnimatePresence>
+        </div>
+      </Card>
     </div>
   );
 }
