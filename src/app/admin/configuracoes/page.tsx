@@ -8,7 +8,9 @@ import {
   Clock, 
   Store,
   Sparkles,
-  Loader2
+  Loader2,
+  Power,
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,12 +24,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, setDoc, collection, query, orderBy } from 'firebase/firestore';
 import { Product } from '@/lib/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { Separator } from '@/components/ui/separator';
 
 export default function AdminSettings() {
   const { toast } = useToast();
@@ -50,7 +54,12 @@ export default function AdminSettings() {
     whatsapp: '5591985256348',
     address: 'Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso',
     openingHours: 'Terça a Domingo: 9h às 15:30h',
-    promoProductId: ''
+    promoProductId: '',
+    // Novos campos de controle de disponibilidade
+    paroaraActive: true,
+    eguaActive: true,
+    paroaraMessage: 'Desculpe! Não estamos em funcionamento hoje.',
+    eguaMessage: 'Desculpe! Não estamos em funcionamento hoje.'
   });
 
   useEffect(() => {
@@ -97,14 +106,78 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="space-y-1">
         <h1 className="text-3xl font-headline text-marrom-terra">Configurações</h1>
-        <p className="text-cinza-organico font-subheadline italic">Gerencie as informações públicas do seu restaurante.</p>
+        <p className="text-cinza-organico font-subheadline italic">Gerencie o funcionamento e informações dos seus restaurantes.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-8">
+          {/* Disponibilidade do Restaurante */}
+          <Card className="bg-white border-areia-escura shadow-sm overflow-hidden">
+            <CardHeader className="bg-marrom-escuro text-white">
+              <div className="flex items-center gap-3">
+                <Power className="w-5 h-5 text-caramelo-palha" />
+                <CardTitle className="text-lg font-headline">Status de Funcionamento</CardTitle>
+              </div>
+              <CardDescription className="text-areia-clara/60">Ative ou desative o acesso dos clientes ao cardápio.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Paroara Control */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs font-black uppercase tracking-widest text-marrom-terra">Restaurante Paroara</Label>
+                    <p className="text-[10px] text-cinza-organico italic">Define se o cardápio Paroara está visível.</p>
+                  </div>
+                  <Switch 
+                    checked={settings.paroaraActive}
+                    onCheckedChange={(v) => setSettings({...settings, paroaraActive: v})}
+                  />
+                </div>
+                {!settings.paroaraActive && (
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <Label className="text-[9px] font-bold uppercase text-marrom-madeira">Mensagem de Indisponibilidade (Paroara)</Label>
+                    <Input 
+                      value={settings.paroaraMessage}
+                      onChange={(e) => setSettings({...settings, paroaraMessage: e.target.value})}
+                      placeholder="Ex: Não funcionaremos no feriado..."
+                      className="bg-areia-clara/20 border-areia-escura text-xs h-9"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-areia-escura/30" />
+
+              {/* Égua Control */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs font-black uppercase tracking-widest text-fogo-vibrante">Égua na Panela</Label>
+                    <p className="text-[10px] text-cinza-organico italic">Define se o cardápio Égua na Panela está visível.</p>
+                  </div>
+                  <Switch 
+                    checked={settings.eguaActive}
+                    onCheckedChange={(v) => setSettings({...settings, eguaActive: v})}
+                  />
+                </div>
+                {!settings.eguaActive && (
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <Label className="text-[9px] font-bold uppercase text-fogo-vibrante">Mensagem de Indisponibilidade (Égua)</Label>
+                    <Input 
+                      value={settings.eguaMessage}
+                      onChange={(e) => setSettings({...settings, eguaMessage: e.target.value})}
+                      placeholder="Ex: Fechado para manutenção..."
+                      className="bg-areia-clara/20 border-areia-escura text-xs h-9"
+                    />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -147,18 +220,20 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
+        <div className="space-y-8">
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <MessageSquare className="w-5 h-5 text-marrom-terra" />
                 <CardTitle className="text-lg font-headline text-marrom-terra">Contato & WhatsApp</CardTitle>
               </div>
-              <CardDescription>Defina o número que receberá os pedidos via WhatsApp.</CardDescription>
+              <CardDescription>Configurações globais de contato.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Número do WhatsApp (Apenas números)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Número Principal (ADM)</Label>
                 <div className="relative">
                   <Input 
                     value={settings.whatsapp}
@@ -171,9 +246,7 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="space-y-8">
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
