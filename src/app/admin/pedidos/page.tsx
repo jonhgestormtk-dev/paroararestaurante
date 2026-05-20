@@ -307,7 +307,6 @@ const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, onNotify, icon: I
   );
 };
 
-// Componente de formulário isolado para máxima performance e evitar travamentos
 const EditOrderDialogContent = ({ 
   order, 
   onSave, 
@@ -724,7 +723,6 @@ export default function AdminOrders() {
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
         if (!open) {
           setIsEditModalOpen(false);
-          // O reset do editingOrder acontece após o fechamento para suavizar a transição
           setTimeout(() => setEditingOrder(null), 200);
         }
       }}>
