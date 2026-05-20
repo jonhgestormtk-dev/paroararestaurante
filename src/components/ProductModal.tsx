@@ -35,7 +35,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       collection(db, 'products'),
       where('restaurantId', '==', product.restaurantId),
       where('category', '==', 'Bebidas'),
-      where('active', '!=', false),
+      where('active', '==', true),
       limit(4)
     );
   }, [db, product]);

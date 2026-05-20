@@ -332,7 +332,7 @@ export default function AdminOrders() {
   // Buscar Produtos para adição no pedido
   const productsQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'products'), where('active', '!=', false));
+    return query(collection(db, 'products'), where('active', '==', true));
   }, [db]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
 
