@@ -63,6 +63,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [changeFor, setChangeFor] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // Chave Pix unificada conforme solicitado (pode ser ajustada por restaurante se necessário)
   const pixKey = "91985256348";
 
   const handleCopyPix = () => {
@@ -93,7 +94,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     const restaurantId = cart[0]?.restaurantId || 'paroara';
     const restaurantName = restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
-    const whatsappNumber = '5591985256348';
+    
+    // Números diferenciados por unidade
+    const whatsappNumber = restaurantId === 'paroara' ? '559184541085' : '5591985256348';
     
     const baseOrderData = {
       restaurantId,

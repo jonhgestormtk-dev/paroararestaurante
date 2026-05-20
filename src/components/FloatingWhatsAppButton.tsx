@@ -1,12 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export function FloatingWhatsAppButton() {
-  const { totalItems } = useCart();
-  const whatsappNumber = '5591985256348';
+  const { totalItems, cart } = useCart();
+  const pathname = usePathname();
+
+  const restaurantSlug = useMemo(() => {
+    if (pathname.includes('egua-na-panela')) return 'egua-na-panela';
+    if (cart.length > 0) return cart[0].restaurantId;
+    return 'paroara';
+  }, [pathname, cart]);
+
+  const whatsappNumber = restaurantSlug === 'paroara' ? '559184541085' : '5591985256348';
 
   const handleClick = () => {
     window.open(`https://wa.me/${whatsappNumber}`, '_blank');

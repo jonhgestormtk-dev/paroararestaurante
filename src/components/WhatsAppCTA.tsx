@@ -14,7 +14,10 @@ export function WhatsAppCTA() {
   }, [pathname]);
 
   const isEgua = restaurantSlug === 'egua-na-panela';
-  const whatsappNumber = '5591985256348';
+  
+  // Números diferenciados por restaurante
+  const whatsappNumber = isEgua ? '5591985256348' : '559184541085';
+  const whatsappDisplay = isEgua ? '(91) 98525-6348' : '(91) 8454-1085';
 
   const handleOrder = () => {
     window.open(`https://wa.me/${whatsappNumber}`, '_blank');
@@ -75,7 +78,7 @@ export function WhatsAppCTA() {
             <p className={cn(
               "font-black text-xl md:text-2xl tracking-widest",
               isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
-            )}>(91) 98525-6348</p>
+            )}>{whatsappDisplay}</p>
           </div>
         </div>
       </div>
