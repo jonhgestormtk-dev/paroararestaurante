@@ -89,7 +89,7 @@ export default function SplashPage() {
                   </div>
                   
                   <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2 uppercase">{res.name}</h2>
-                  <p className="text-caramelo-palha font-subheadline text-xl font-bold italic mb-6">{res.tagline}</p>
+                  <p className="text-caramelo-palha font-subheadline text-xl font-black italic mb-6">{res.tagline}</p>
                   
                   {res.isActive ? (
                     <>

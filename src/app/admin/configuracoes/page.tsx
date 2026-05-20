@@ -39,11 +39,9 @@ export default function AdminSettings() {
   const db = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Buscar configurações reais
   const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
   const { data: firestoreSettings, loading: settingsLoading } = useDoc<any>(settingsRef);
 
-  // Buscar produtos para os seletores de promoção
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('name', 'asc'));
@@ -57,12 +55,10 @@ export default function AdminSettings() {
     openingHours: 'Terça a Domingo: 9h às 15:30h',
     paroaraPromoId: '',
     eguaPromoId: '',
-    // Controle de disponibilidade
     paroaraActive: true,
     eguaActive: true,
     paroaraMessage: 'Desculpe! Não estamos em funcionamento hoje.',
     eguaMessage: 'Desculpe! Não estamos em funcionamento hoje.',
-    // Metas
     paroaraGoal: 100000,
     eguaGoal: 80000
   });
@@ -119,7 +115,6 @@ export default function AdminSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-8">
-          {/* Disponibilidade do Restaurante */}
           <Card className="bg-white border-areia-escura shadow-sm overflow-hidden">
             <CardHeader className="bg-marrom-escuro text-white">
               <div className="flex items-center gap-3">
@@ -129,7 +124,6 @@ export default function AdminSettings() {
               <CardDescription className="text-areia-clara/60">Ative ou desative o acesso dos clientes ao cardápio de cada unidade.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              {/* Paroara Control */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -156,7 +150,6 @@ export default function AdminSettings() {
 
               <Separator className="bg-areia-escura/30" />
 
-              {/* Égua Control */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -192,7 +185,6 @@ export default function AdminSettings() {
               <CardDescription>Defina o produto em destaque para o banner de cada restaurante.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Promo Paroara */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Oferta do Dia: Paroara</Label>
                 <Select 
@@ -215,7 +207,6 @@ export default function AdminSettings() {
 
               <Separator className="bg-areia-escura/30" />
 
-              {/* Promo Égua */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-fogo-vibrante">Oferta do Dia: Égua na Panela</Label>
                 <Select 
@@ -288,61 +279,6 @@ export default function AdminSettings() {
                   onChange={(e) => setSettings({...settings, storeName: e.target.value})}
                   className="bg-areia-clara/20 border-areia-escura"
                 />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-areia-escura shadow-sm">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-5 h-5 text-marrom-terra" />
-                <CardTitle className="text-lg font-headline text-marrom-terra">Contato & Redes</CardTitle>
-              </div>
-              <CardDescription>Configurações globais de contato.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">WhatsApp Principal (ADM)</Label>
-                <div className="relative">
-                  <Input 
-                    value={settings.whatsapp}
-                    onChange={(e) => setSettings({...settings, whatsapp: e.target.value.replace(/\D/g, '')})}
-                    className="bg-areia-clara/20 border-areia-escura pl-10"
-                    placeholder="Ex: 5591985256348"
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-marrom-terra opacity-40">+</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-areia-escura shadow-sm">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-marrom-terra" />
-                <CardTitle className="text-lg font-headline text-marrom-terra">Localização & Horários</CardTitle>
-              </div>
-              <CardDescription>Endereço físico e horários de funcionamento.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Endereço Completo</Label>
-                <Textarea 
-                  value={settings.address}
-                  onChange={(e) => setSettings({...settings, address: e.target.value})}
-                  className="bg-areia-clara/20 border-areia-escura resize-none h-20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Horário de Funcionamento</Label>
-                <div className="flex items-center gap-3 p-3 bg-areia-clara/10 border border-dashed border-areia-escura rounded-sm">
-                  <Clock className="w-4 h-4 text-marrom-madeira/40" />
-                  <Input 
-                    value={settings.openingHours}
-                    onChange={(e) => setSettings({...settings, openingHours: e.target.value})}
-                    className="bg-transparent border-none p-0 h-auto focus:ring-0 text-sm italic"
-                  />
-                </div>
               </div>
             </CardContent>
           </Card>

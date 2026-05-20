@@ -174,7 +174,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           <div className="p-4 space-y-6">
             {cart.length > 0 && (
               <div className="space-y-6">
-                {/* Dados do Cliente */}
                 <div className={cn(
                   "p-4 rounded-xl border space-y-3",
                   isEgua ? "bg-preto-panela/50 border-white/5" : "bg-white border-marrom-madeira/10 shadow-sm"
@@ -220,7 +219,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </div>
                 </div>
 
-                {/* Forma de Pagamento */}
                 <div className={cn(
                   "p-4 rounded-xl border space-y-4",
                   isEgua ? "bg-preto-panela/50 border-white/5" : "bg-white border-marrom-madeira/10 shadow-sm"
@@ -267,7 +265,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   )}
                 </div>
 
-                {/* Lista de Itens */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 px-1">
                     <ClipboardList className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />

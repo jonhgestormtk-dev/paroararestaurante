@@ -195,7 +195,6 @@ export default function AdminDashboard() {
       return matchesDate && matchesRes;
     });
 
-    // Filtra apenas pedidos ativos (não finalizados ou cancelados)
     const activeOrders = allOrders.filter(o => {
       const date = getOrderDate(o);
       const isToday = date >= todayStart;
@@ -211,28 +210,14 @@ export default function AdminDashboard() {
       hourlyDataMap[h].revenue += o.total || 0;
     });
 
-    const statusDataMap: Record<string, number> = {
-      'Pendente': 0,
-      'Em Preparo': 0,
-      'Saiu para Entrega': 0,
-      'Finalizado': 0,
-      'Cancelado': 0
-    };
-    currentOrders.forEach(o => {
-      if (o.status && statusDataMap[o.status] !== undefined) {
-        statusDataMap[o.status]++;
-      }
+    const statusChartData = Object.entries(STATUS_CONFIG).map(([status, config]) => {
+      const count = currentOrders.filter(o => o.status === status).length;
+      return { name: status, value: count, color: config.color };
     });
 
-    const statusChartData = Object.entries(STATUS_CONFIG).map(([status, config]) => ({
-      name: status,
-      value: statusDataMap[status] || 0,
-      color: config.color
-    }));
-
     const calculateMetrics = (orders: Order[]) => {
-      const p = orders.filter(o => o.restaurantId === 'paroara');
-      const e = orders.filter(o => o.restaurantId === 'egua-na-panela');
+      const p = orders.filter(o => o.restaurantId === 'paroara' && o.status !== 'Cancelado');
+      const e = orders.filter(o => o.restaurantId === 'egua-na-panela' && o.status !== 'Cancelado');
       const pRev = p.reduce((acc, o) => acc + (o.total || 0), 0);
       const eRev = e.reduce((acc, o) => acc + (o.total || 0), 0);
       return {
@@ -331,64 +316,6 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
         ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-marrom-madeira" />
-              <CardTitle className="text-xs font-black uppercase tracking-widest">Fluxo de Vendas</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8 h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stats?.hourlyData}>
-                <defs>
-                  <linearGradient id="colorRev" x1="0" x1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#281A15" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#281A15" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#281A15', borderRadius: '12px', border: 'none', color: '#FFF' }} />
-                <Area type="monotone" dataKey="revenue" stroke="#281A15" strokeWidth={3} fill="url(#colorRev)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-areia-escura rounded-[2rem] shadow-xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-areia-escura/10">
-            <div className="flex items-center gap-2">
-              <PieChartIcon className="w-4 h-4 text-marrom-madeira" />
-              <CardTitle className="text-xs font-black uppercase tracking-widest">Status dos Pedidos</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={stats?.statusChartData} innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value">
-                    {stats?.statusChartData.map((entry, idx) => <Cell key={idx} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              {stats?.statusChartData.filter(i => i.value > 0).map((item) => (
-                <div key={item.name} className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-[10px] font-black text-cinza-organico uppercase tracking-widest truncate">{item.name}</span>
-                  <span className="text-xs font-black ml-auto">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Card className="bg-white border-areia-escura rounded-[2rem] shadow-2xl overflow-hidden">

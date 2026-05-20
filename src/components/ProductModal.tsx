@@ -25,7 +25,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [observations, setObservations] = useState('');
-  const [addedDrinks, setAddedDrinks] = useState<string[]>([]);
 
   const db = useFirestore();
 
@@ -40,19 +39,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     };
   }, [isOpen, onClose]);
 
-  const drinksQuery = useMemo(() => {
-    if (!db || !product || product.category === 'Bebidas') return null;
-    return query(
-      collection(db, 'products'),
-      where('restaurantId', '==', product.restaurantId),
-      where('category', '==', 'Bebidas'),
-      where('active', '==', true),
-      limit(4)
-    );
-  }, [db, product]);
-
-  const { data: suggestedDrinks } = useCollection<Product>(drinksQuery);
-
   if (!product) return null;
 
   const handleAddToCart = () => {
@@ -61,7 +47,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     onClose();
     setQuantity(1);
     setObservations('');
-    setAddedDrinks([]);
   };
 
   const isEgua = product.restaurantId === 'egua-na-panela';
