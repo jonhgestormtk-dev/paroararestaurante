@@ -24,7 +24,8 @@ import {
   Loader2,
   Edit2,
   Check,
-  X
+  X,
+  Store
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -96,7 +97,6 @@ const KPICard = ({ title, value, growth, icon: Icon, isNegative = false, trendDa
       <h3 className="text-2xl font-black text-marrom-escuro tracking-tighter">{value}</h3>
     </div>
     
-    {/* Mini Sparkline Simulation */}
     <div className="absolute bottom-0 left-0 right-0 h-12 opacity-20">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={trendData.map((v: number, i: number) => ({ v, i }))}>
@@ -116,9 +116,11 @@ const KPICard = ({ title, value, growth, icon: Icon, isNegative = false, trendDa
 export default function AdminFinancial() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [companyFilter, setCompanyFilter] = useState('all');
-  const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [monthlyGoal, setMonthlyGoal] = useState(180000);
-  const [editGoalValue, setEditGoalValue] = useState('180000');
+  
+  // Estados de Metas Individuais
+  const [isEditingGoals, setIsEditingGoals] = useState(false);
+  const [goals, setGoals] = useState({ paroara: 100000, egua: 80000 });
+  const [editGoalValues, setEditGoalValues] = useState({ paroara: '100000', egua: '80000' });
   
   const db = useFirestore();
   const { toast } = useToast();
@@ -129,14 +131,15 @@ export default function AdminFinancial() {
   }, [db]);
   const { data: orders, loading } = useCollection<Order>(ordersQuery);
 
-  // Buscar meta mensal das configurações
   const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
   const { data: settingsData } = useDoc<any>(settingsRef);
 
   useEffect(() => {
-    if (settingsData?.monthlyGoal) {
-      setMonthlyGoal(Number(settingsData.monthlyGoal));
-      setEditGoalValue(settingsData.monthlyGoal.toString());
+    if (settingsData) {
+      const pGoal = Number(settingsData.paroaraGoal || 100000);
+      const eGoal = Number(settingsData.eguaGoal || 80000);
+      setGoals({ paroara: pGoal, egua: eGoal });
+      setEditGoalValues({ paroara: pGoal.toString(), egua: eGoal.toString() });
     }
   }, [settingsData]);
 
@@ -177,15 +180,15 @@ export default function AdminFinancial() {
       }).reduce((acc, curr) => acc + curr.total, 0)
     }));
 
-    // Calcular faturamento do mês atual para a meta
+    // Cálculos de Metas Mensais Individuais
     const monthStart = startOfMonth(new Date());
-    const monthRevenue = orders.filter(o => {
+    const monthOrders = orders.filter(o => {
       const date = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt);
       return date >= monthStart && o.status !== 'Cancelado';
-    }).reduce((acc, o) => acc + (o.total || 0), 0);
+    });
 
-    const goalProgress = monthlyGoal > 0 ? Math.min(100, (monthRevenue / monthlyGoal) * 100) : 0;
-    const remainingToGoal = Math.max(0, monthlyGoal - monthRevenue);
+    const paroaraMonthRev = monthOrders.filter(o => o.restaurantId === 'paroara').reduce((acc, o) => acc + (o.total || 0), 0);
+    const eguaMonthRev = monthOrders.filter(o => o.restaurantId === 'egua-na-panela').reduce((acc, o) => acc + (o.total || 0), 0);
 
     return {
       revenue,
@@ -196,41 +199,46 @@ export default function AdminFinancial() {
       paroara: {
         revenue: paroaraOrders.reduce((acc, o) => acc + o.total, 0),
         orders: paroaraOrders.length,
-        avgTicket: paroaraOrders.length > 0 ? paroaraOrders.reduce((acc, o) => acc + o.total, 0) / paroaraOrders.length : 0
+        avgTicket: paroaraOrders.length > 0 ? paroaraOrders.reduce((acc, o) => acc + o.total, 0) / paroaraOrders.length : 0,
+        monthRevenue: paroaraMonthRev,
+        goalProgress: goals.paroara > 0 ? Math.min(100, (paroaraMonthRev / goals.paroara) * 100) : 0
       },
       egua: {
         revenue: eguaOrders.reduce((acc, o) => acc + o.total, 0),
         orders: eguaOrders.length,
-        avgTicket: eguaOrders.length > 0 ? eguaOrders.reduce((acc, o) => acc + o.total, 0) / eguaOrders.length : 0
+        avgTicket: eguaOrders.length > 0 ? eguaOrders.reduce((acc, o) => acc + o.total, 0) / eguaOrders.length : 0,
+        monthRevenue: eguaMonthRev,
+        goalProgress: goals.egua > 0 ? Math.min(100, (eguaMonthRev / goals.egua) * 100) : 0
       },
       paymentData,
-      hourlyData,
-      monthRevenue,
-      goalProgress,
-      remainingToGoal
+      hourlyData
     };
-  }, [orders, companyFilter, selectedDate, monthlyGoal]);
+  }, [orders, companyFilter, selectedDate, goals]);
 
-  const handleSaveGoal = () => {
+  const handleSaveGoals = () => {
     if (!db) return;
-    const val = Number(editGoalValue);
-    if (isNaN(val)) {
-      toast({ variant: "destructive", title: "Erro", description: "Informe um valor numérico válido." });
+    const pVal = Number(editGoalValues.paroara);
+    const eVal = Number(editGoalValues.egua);
+    
+    if (isNaN(pVal) || isNaN(eVal)) {
+      toast({ variant: "destructive", title: "Erro", description: "Informe valores numéricos válidos." });
       return;
     }
 
     const docRef = doc(db, 'settings', 'global');
-    setDoc(docRef, { monthlyGoal: val }, { merge: true })
+    const updateData = { paroaraGoal: pVal, eguaGoal: eVal };
+    
+    setDoc(docRef, updateData, { merge: true })
       .then(() => {
-        setMonthlyGoal(val);
-        setIsEditingGoal(false);
-        toast({ title: "Meta Atualizada", description: "O novo objetivo de faturamento foi salvo." });
+        setGoals({ paroara: pVal, egua: eVal });
+        setIsEditingGoals(false);
+        toast({ title: "Metas Atualizadas", description: "Os novos objetivos de faturamento foram salvos." });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'write',
-          requestResourceData: { monthlyGoal: val }
+          requestResourceData: updateData
         } satisfies SecurityRuleContext));
       });
   };
@@ -342,10 +350,6 @@ export default function AdminFinancial() {
               </CardTitle>
               <CardDescription className="text-[10px]">Evolução financeira consolidada por unidade</CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="text-[8px] font-black border-marrom-terra text-marrom-terra">RECEITA</Badge>
-              <Badge variant="outline" className="text-[8px] font-black border-caramelo-palha text-caramelo-palha opacity-40">PEDIDOS</Badge>
-            </div>
           </CardHeader>
           <CardContent className="p-8 h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -412,155 +416,154 @@ export default function AdminFinancial() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="bg-white border-areia-escura rounded-[2.5rem] shadow-xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-caramelo-palha" /> Performance Comparativa
-            </CardTitle>
-            <Badge className="bg-marrom-terra/5 text-marrom-terra text-[8px] font-black">MARKET SHARE</Badge>
+        {/* Metas Mensais Individuais */}
+        <Card className="bg-marrom-escuro border-none rounded-[2.5rem] shadow-2xl overflow-hidden relative text-areia-clara">
+          <div className="absolute inset-0 bg-rustic-texture opacity-5"></div>
+          <CardHeader className="p-8 relative z-10">
+            <div className="flex justify-between items-center mb-6">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-caramelo-palha">Objetivos de Faturamento</CardTitle>
+              <button 
+                onClick={() => setIsEditingGoals(!isEditingGoals)} 
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                {isEditingGoals ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+              </button>
+            </div>
+
+            <div className="space-y-10">
+              {/* Meta Paroara */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-3.5 h-3.5 text-caramelo-palha" />
+                      <h4 className="text-lg font-headline text-areia-clara">PAROARA</h4>
+                    </div>
+                    {isEditingGoals ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Input 
+                          type="number"
+                          value={editGoalValues.paroara}
+                          onChange={(e) => setEditGoalValues({...editGoalValues, paroara: e.target.value})}
+                          className="bg-white/10 border-white/20 text-white font-black h-10 w-32"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-2xl font-black text-white">{formatBRL(goals.paroara)}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-caramelo-palha uppercase opacity-60">Realizado este mês</p>
+                    <p className="text-lg font-black text-white">{formatBRL(stats?.paroara.monthRevenue || 0)}</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="relative h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats?.paroara.goalProgress || 0}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-caramelo-palha to-marrom-terra"
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                    <span className="text-caramelo-palha">Progresso: {Math.round(stats?.paroara.goalProgress || 0)}%</span>
+                    <span className="opacity-40">Restante: {formatBRL(Math.max(0, goals.paroara - (stats?.paroara.monthRevenue || 0)))}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Meta Égua na Panela */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-3.5 h-3.5 text-fogo-vibrante" />
+                      <h4 className="text-lg font-headline text-areia-clara">ÉGUA NA PANELA</h4>
+                    </div>
+                    {isEditingGoals ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Input 
+                          type="number"
+                          value={editGoalValues.egua}
+                          onChange={(e) => setEditGoalValues({...editGoalValues, egua: e.target.value})}
+                          className="bg-white/10 border-white/20 text-white font-black h-10 w-32"
+                        />
+                        <Button onClick={handleSaveGoals} size="icon" className="bg-caramelo-palha text-marrom-escuro h-10 w-10">
+                          <Check className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-2xl font-black text-white">{formatBRL(goals.egua)}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-fogo-vibrante uppercase opacity-60">Realizado este mês</p>
+                    <p className="text-lg font-black text-white">{formatBRL(stats?.egua.monthRevenue || 0)}</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="relative h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats?.egua.goalProgress || 0}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-fogo-vibrante to-fogo-escuro"
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                    <span className="text-fogo-vibrante">Progresso: {Math.round(stats?.egua.goalProgress || 0)}%</span>
+                    <span className="opacity-40">Restante: {formatBRL(Math.max(0, goals.egua - (stats?.egua.monthRevenue || 0)))}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="p-8 space-y-10">
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div className="space-y-1">
-                  <h4 className="text-lg font-headline text-marrom-terra">PAROARA</h4>
-                  <p className="text-[10px] font-black text-cinza-organico uppercase">Gourmet & Experiência</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-black text-marrom-escuro">{formatBRL(stats?.paroara.revenue || 0)}</p>
-                  <p className="text-[10px] font-bold text-emerald-500">↑ 18.2% CRESCIMENTO</p>
-                </div>
-              </div>
-              <Progress value={65} className="h-3 bg-areia-clara" />
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-4 bg-areia-clara/20 rounded-2xl border border-areia-escura/20">
-                  <p className="text-[9px] font-black text-cinza-organico uppercase opacity-60">Pedidos</p>
-                  <p className="text-lg font-black">{stats?.paroara.orders}</p>
-                </div>
-                <div className="p-4 bg-areia-clara/20 rounded-2xl border border-areia-escura/20">
-                  <p className="text-[9px] font-black text-cinza-organico uppercase opacity-60">Ticket Médio</p>
-                  <p className="text-lg font-black">{formatBRL(stats?.paroara.avgTicket || 0)}</p>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="bg-areia-escura/20" />
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div className="space-y-1">
-                  <h4 className="text-lg font-headline text-fogo-vibrante">ÉGUA NA PANELA</h4>
-                  <p className="text-[10px] font-black text-cinza-organico uppercase">Regional & Agilidade</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-black text-marrom-escuro">{formatBRL(stats?.egua.revenue || 0)}</p>
-                  <p className="text-[10px] font-bold text-amber-500">↑ 9.5% CRESCIMENTO</p>
-                </div>
-              </div>
-              <Progress value={35} className="h-3 bg-areia-clara" />
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-4 bg-fogo-vibrante/5 rounded-2xl border border-fogo-vibrante/10">
-                  <p className="text-[9px] font-black text-cinza-organico uppercase opacity-60">Pedidos</p>
-                  <p className="text-lg font-black">{stats?.egua.orders}</p>
-                </div>
-                <div className="p-4 bg-fogo-vibrante/5 rounded-2xl border border-fogo-vibrante/10">
-                  <p className="text-[9px] font-black text-cinza-organico uppercase opacity-60">Ticket Médio</p>
-                  <p className="text-lg font-black">{formatBRL(stats?.egua.avgTicket || 0)}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
         </Card>
 
+        {/* Insights & Market Share */}
         <div className="space-y-8">
-          <Card className="bg-marrom-escuro border-none rounded-[2.5rem] shadow-2xl overflow-hidden relative text-areia-clara">
-            <div className="absolute inset-0 bg-rustic-texture opacity-5"></div>
-            <CardHeader className="p-8 relative z-10">
-              <div className="flex justify-between items-center mb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-caramelo-palha">Meta de Receita Mensal</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-caramelo-palha text-marrom-escuro font-black text-[9px] border-none uppercase">EM CURSO</Badge>
-                  <button 
-                    onClick={() => setIsEditingGoal(!isEditingGoal)} 
-                    className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
-                  >
-                    {isEditingGoal ? <X className="w-3.5 h-3.5" /> : <Edit2 className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {isEditingGoal ? (
-                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-                    <Input 
-                      type="number"
-                      value={editGoalValue}
-                      onChange={(e) => setEditGoalValue(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white font-black h-12 text-lg"
-                    />
-                    <Button onClick={handleSaveGoal} size="icon" className="bg-caramelo-palha text-marrom-escuro shrink-0 h-12 w-12">
-                      <Check className="w-5 h-5" />
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <h2 className="text-3xl font-black tracking-tighter text-white">{formatBRL(monthlyGoal)}</h2>
-                    <p className="text-xs italic text-areia-media/60">
-                      Faturado este mês: <span className="text-caramelo-palha font-bold">{formatBRL(stats?.monthRevenue || 0)}</span>
-                    </p>
-                  </>
-                )}
-              </div>
+          <Card className="bg-white border-areia-escura rounded-[2.5rem] shadow-xl overflow-hidden">
+            <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-caramelo-palha" /> Performance Diária
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 pt-0 relative z-10 space-y-6">
-              <div className="relative h-4 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${stats?.goalProgress || 0}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-caramelo-palha to-marrom-terra shadow-[0_0_20px_rgba(168,116,66,0.5)]"
-                />
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-cinza-organico uppercase opacity-60">Hoje: Paroara</p>
+                  <p className="text-xl font-black">{formatBRL(stats?.paroara.revenue || 0)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-black text-cinza-organico uppercase opacity-60">Hoje: Égua</p>
+                  <p className="text-xl font-black">{formatBRL(stats?.egua.revenue || 0)}</p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <div className="text-center space-y-1">
-                  <p className="text-[8px] font-black uppercase opacity-40">Progresso</p>
-                  <p className="text-xl font-black">{Math.round(stats?.goalProgress || 0)}%</p>
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="text-[8px] font-black uppercase opacity-40">Restante</p>
-                  <p className="text-xl font-black text-caramelo-palha">{formatBRL(stats?.remainingToGoal || 0)}</p>
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="text-[8px] font-black uppercase opacity-40">Dias Restantes</p>
-                  <p className="text-xl font-black">{30 - new Date().getDate()}</p>
-                </div>
+              <Progress value={(stats?.paroara.revenue || 0) > 0 ? ((stats?.paroara.revenue || 0) / (stats?.revenue || 1)) * 100 : 50} className="h-2 bg-areia-clara" />
+              
+              <div className="grid grid-cols-1 gap-4 pt-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira">Smart Insights</h3>
+                {[
+                  { text: "Ticket médio do grupo subiu 4.2% nesta semana.", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                  { text: "Alta taxa de cancelamento observada entre 14h e 15h.", icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" }
+                ].map((insight, idx) => (
+                  <motion.div 
+                    key={idx}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className={cn("p-4 rounded-2xl border border-transparent flex items-center gap-3 transition-all", insight.bg)}
+                  >
+                    <div className={cn("p-2 rounded-xl bg-white/40", insight.color)}>
+                      <insight.icon className="w-3.5 h-3.5" />
+                    </div>
+                    <p className="text-[11px] font-bold text-marrom-escuro italic leading-tight">{insight.text}</p>
+                  </motion.div>
+                ))}
               </div>
             </CardContent>
           </Card>
-
-          <div className="grid grid-cols-1 gap-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira pl-2">Smart Insights</h3>
-            {[
-              { text: "Paroara atingiu recorde de faturamento diário!", icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10" },
-              { text: "Ticket médio do grupo subiu 4.2% nesta semana.", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-              { text: "Alta taxa de cancelamento observada entre 14h e 15h.", icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" }
-            ].map((insight, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className={cn("p-5 rounded-2xl border border-transparent flex items-center gap-4 transition-all hover:scale-[1.02]", insight.bg)}
-              >
-                <div className={cn("p-2.5 rounded-xl bg-white/40", insight.color)}>
-                  <insight.icon className="w-4 h-4" />
-                </div>
-                <p className="text-xs font-bold text-marrom-escuro italic">{insight.text}</p>
-                <Button variant="ghost" size="icon" className="ml-auto opacity-40 hover:opacity-100">
-                  <ArrowUpRight className="w-4 h-4" />
-                </Button>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
