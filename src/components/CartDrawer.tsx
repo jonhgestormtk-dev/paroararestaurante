@@ -274,10 +274,20 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     {cart.map((item) => (
                       <div key={item.id} className={cn("p-4 rounded-2xl border flex flex-col gap-3", isEgua ? "bg-preto-panela/40 border-white/5" : "bg-white border-marrom-madeira/5 shadow-sm")}>
                         <div className="flex justify-between items-start">
-                          <h4 className={cn("font-subheadline font-bold text-lg md:text-xl uppercase italic leading-tight flex-1 pr-4", isEgua ? "text-white" : "text-marrom-texto")}>
-                            {item.name}
-                          </h4>
-                          <button onClick={() => removeFromCart(item.id)} className="text-destructive/40 hover:text-destructive transition-colors"><X className="w-4 h-4" /></button>
+                          <div className="flex flex-col flex-1 pr-4">
+                            <h4 className={cn("font-subheadline font-bold text-lg md:text-xl uppercase italic leading-tight", isEgua ? "text-white" : "text-marrom-texto")}>
+                              {item.name}
+                            </h4>
+                            {item.observations && (
+                              <p className={cn(
+                                "text-[11px] md:text-xs italic mt-1.5 pl-3 border-l-2 leading-snug",
+                                isEgua ? "text-fogo-vibrante border-fogo-vibrante/30" : "text-caramelo-palha border-caramelo-palha/30"
+                              )}>
+                                ↳ {item.observations}
+                              </p>
+                            )}
+                          </div>
+                          <button onClick={() => removeFromCart(item.id)} className="text-destructive/40 hover:text-destructive transition-colors shrink-0"><X className="w-4 h-4" /></button>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className={cn("flex items-center gap-4 px-3 py-1.5 rounded-xl", isEgua ? "bg-black/60" : "bg-areia-clara/60")}>
