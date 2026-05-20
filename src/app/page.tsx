@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -41,7 +40,7 @@ export default function SplashPage() {
       <div className="max-w-6xl w-full z-10 space-y-12">
         <div className="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-1000">
           <h1 className="text-5xl md:text-8xl font-subheadline font-bold italic text-marrom-terra leading-tight">Seja bem vindo!</h1>
-          <p className="text-cinza-organico font-body text-[10px] md:text-sm max-w-2xl mx-auto opacity-60 uppercase tracking-[0.4em] font-bold">Qual experiência você deseja viver hoje?</p>
+          <p className="text-cinza-organico font-body text-[10px] md:text-sm max-w-2xl mx-auto opacity-60 uppercase tracking-[0.4em] font-bold">Qual experiência você deseja hoje?</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
