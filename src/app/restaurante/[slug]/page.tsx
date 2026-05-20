@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -105,7 +106,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 text-caramelo-palha" />
-                    <span className="text-[10px] font-body uppercase tracking-[0.3em] font-bold text-marrom-madeira">Favoritos da Casa</span>
+                    <span className="text-[10px] font-body uppercase tracking-[0.3em] font-bold text-marrom-terra">Favoritos da Casa</span>
                     <Sparkles className="w-4 h-4 text-caramelo-palha" />
                   </>
                 )}
@@ -118,7 +119,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
               </h2>
               <div className={cn(
                 "w-24 h-1 mx-auto rounded-full",
-                isEgua ? "bg-fogo-vibrante shadow-[0_0_15px_rgba(255,165,0,0.5)]" : "bg-caramelo-palha opacity-40"
+                isEgua ? "bg-fogo-vibrante shadow-[0_0_15px_rgba(255,165,0,0.5)]" : "bg-marrom-terra opacity-20"
               )}></div>
             </div>
 
@@ -187,40 +188,72 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
         </main>
 
         <footer id="contato" className={cn(
-          "py-20 md:py-32 pb-40 transition-colors duration-500",
-          isEgua ? "bg-black text-creme-suave" : "bg-grafite-amadeirado text-areia-clara"
+          "py-20 md:py-32 pb-40 transition-colors duration-500 border-t",
+          isEgua 
+            ? "bg-black text-creme-suave border-fogo-vibrante/20" 
+            : "bg-areia-clara text-marrom-texto border-areia-escura/30 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]"
         )}>
           <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-16">
             <div className="space-y-6 text-center md:text-left">
               <h3 className={cn(
                 "text-4xl uppercase tracking-tighter",
-                isEgua ? "text-fogo-vibrante font-subheadline font-bold italic" : "text-caramelo-palha font-headline"
+                isEgua ? "text-fogo-vibrante font-subheadline font-bold italic" : "text-marrom-terra font-headline"
               )}>
                 {restaurantDisplayName}
               </h3>
-              <p className="text-sm italic opacity-60 max-w-xs mx-auto md:mx-0">
+              <p className={cn(
+                "text-sm italic max-w-xs mx-auto md:mx-0 leading-relaxed",
+                isEgua ? "opacity-60 text-creme-suave" : "text-marrom-madeira font-medium"
+              )}>
                 {isEgua ? 'Sabor que conquista em cada detalhe. O melhor da culinária regional paraense.' : 'Sabor e tradição marajoara servidos com elegância.'}
               </p>
             </div>
             <nav className="flex flex-col items-center md:items-start gap-4">
               <h4 className={cn(
                 "font-headline text-xl mb-2",
-                isEgua ? "text-white" : "text-caramelo-palha"
+                isEgua ? "text-white" : "text-marrom-terra"
               )}>Explorar</h4>
-              <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm hover:text-fogo-vibrante transition-colors uppercase tracking-widest font-bold opacity-80">Início</button>
-              <button onClick={() => document.getElementById('menu')?.scrollIntoView({behavior: 'smooth'})} className="text-sm hover:text-fogo-vibrante transition-colors uppercase tracking-widest font-bold opacity-80">Cardápio</button>
+              <button 
+                onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} 
+                className={cn(
+                  "text-sm transition-colors uppercase tracking-widest font-bold",
+                  isEgua ? "text-creme-suave/80 hover:text-fogo-vibrante" : "text-marrom-madeira hover:text-marrom-terra"
+                )}
+              >
+                Início
+              </button>
+              <button 
+                onClick={() => document.getElementById('menu')?.scrollIntoView({behavior: 'smooth'})} 
+                className={cn(
+                  "text-sm transition-colors uppercase tracking-widest font-bold",
+                  isEgua ? "text-creme-suave/80 hover:text-fogo-vibrante" : "text-marrom-madeira hover:text-marrom-terra"
+                )}
+              >
+                Cardápio
+              </button>
             </nav>
-            <div className="space-y-4 text-sm text-center md:text-left">
+            <div className={cn(
+              "space-y-4 text-sm text-center md:text-left",
+              isEgua ? "text-creme-suave/80" : "text-marrom-madeira"
+            )}>
               <h4 className={cn(
                 "font-headline text-xl mb-2",
-                isEgua ? "text-white" : "text-caramelo-palha"
+                isEgua ? "text-white" : "text-marrom-terra"
               )}>Localização</h4>
-              <p className="opacity-80">Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso</p>
-              <p className="opacity-80">Terça a Domingo: 9h às 15:30h</p>
+              <p className="font-medium">Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso</p>
+              <p className="font-medium">Terça a Domingo: 9h às 15:30h</p>
             </div>
           </div>
-          <div className="container mx-auto px-4 mt-20 pt-8 border-t border-white/5 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-20">© 2024 {restaurantDisplayName} • Todos os direitos reservados</p>
+          <div className={cn(
+            "container mx-auto px-4 mt-20 pt-8 border-t text-center",
+            isEgua ? "border-white/5" : "border-areia-escura/30"
+          )}>
+            <p className={cn(
+              "text-[10px] font-black uppercase tracking-[0.5em]",
+              isEgua ? "opacity-20" : "text-marrom-madeira/40"
+            )}>
+              © 2024 {restaurantDisplayName} • Todos os direitos reservados
+            </p>
           </div>
         </footer>
 

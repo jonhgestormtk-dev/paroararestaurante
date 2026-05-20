@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -47,11 +48,11 @@ export function Hero() {
             </h2>
           </div>
           
-          <div className={cn("w-10 md:w-16 h-[1px] mx-auto lg:mx-0 opacity-40", isEgua ? "bg-fogo-vibrante" : "bg-areia-escura")}></div>
+          <div className={cn("w-10 md:w-16 h-[1px] mx-auto lg:mx-0 opacity-40", isEgua ? "bg-fogo-vibrante" : "bg-marrom-terra")}></div>
 
           <p className={cn(
-            "font-body text-[10px] md:text-base max-w-lg mx-auto lg:mx-0 leading-relaxed font-light italic",
-            isEgua ? "text-creme-legivel/80" : "text-marrom-texto/70"
+            "font-body text-[10px] md:text-base max-w-lg mx-auto lg:mx-0 leading-relaxed font-medium italic",
+            isEgua ? "text-creme-legivel/80" : "text-marrom-texto"
           )}>
             {isEgua 
               ? 'Culinária paraense, com sabores amazônicos e aquele tempero caseiro que lembra tradição e aconchego.' 

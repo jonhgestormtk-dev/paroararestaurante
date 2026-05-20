@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -80,8 +81,8 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         </div>
         
         <p className={cn(
-          "text-xs md:text-sm font-body italic whitespace-pre-wrap mb-4 flex-grow leading-relaxed",
-          isEgua ? "text-creme-legivel/80" : "text-cinza-organico"
+          "text-xs md:text-sm font-body italic whitespace-pre-wrap mb-4 flex-grow leading-relaxed font-medium",
+          isEgua ? "text-creme-legivel/80" : "text-marrom-madeira"
         )}>
           {product.description}
         </p>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -48,7 +49,10 @@ export function WhatsAppCTA() {
               {isEgua ? <>Pediu,<br className="hidden md:block" /> provou, pirou! 😍</> : <>Peça agora pelo <br className="hidden md:block" /> WhatsApp</>}
             </h2>
             <div className={cn("w-20 h-1 mx-auto rounded-full", isEgua ? "bg-fogo-vibrante/30" : "bg-caramelo-palha/30")}></div>
-            <p className="text-areia-clara text-lg md:text-2xl font-body opacity-80 max-w-2xl mx-auto leading-relaxed font-light italic">
+            <p className={cn(
+              "text-lg md:text-2xl font-body max-w-2xl mx-auto leading-relaxed italic font-medium",
+              isEgua ? "text-areia-clara/80" : "text-areia-clara"
+            )}>
               {isEgua 
                 ? 'A panela tá no fogo! Peça seus favoritos e receba o melhor tempero regional em casa.' 
                 : 'Seu pedido chega rápido, fresco e preparado na hora com todo o vigor e sabor do Marajó.'}

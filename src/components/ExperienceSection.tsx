@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -65,15 +66,14 @@ export function ExperienceSection() {
         <div className="text-center mb-20 space-y-4">
           <div className={cn(
             "flex items-center justify-center gap-2 mb-2",
-            isEgua ? "text-fogo-vibrante" : "text-verde-folha/60"
+            isEgua ? "text-fogo-vibrante" : "text-marrom-terra/40"
           )}>
-            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
+            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-marrom-terra/20")} />
             <span className="text-[10px] font-black uppercase tracking-[0.5em]">
               {isEgua ? 'Nossos Valores' : 'Nossa Essência'}
             </span>
-            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
+            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-marrom-terra/20")} />
           </div>
-          {/* Título h2 removido conforme solicitado */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
@@ -101,8 +101,8 @@ export function ExperienceSection() {
                 isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
               )}>{exp.title}</h4>
               <p className={cn(
-                "font-body leading-relaxed text-base italic opacity-80",
-                isEgua ? "text-creme-legivel" : "text-cinza-organico"
+                "font-body leading-relaxed text-base italic",
+                isEgua ? "text-creme-legivel opacity-80" : "text-marrom-madeira font-medium"
               )}>{exp.description}</p>
             </div>
           ))}
