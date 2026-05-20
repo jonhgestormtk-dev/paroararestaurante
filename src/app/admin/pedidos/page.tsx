@@ -346,6 +346,17 @@ export default function AdminOrders() {
   const { toast } = useToast();
   const db = useFirestore();
 
+  // Sincronizar Pointer Events para evitar travamento de tela (Radix Fix)
+  useEffect(() => {
+    if (!isEditModalOpen) {
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = 'auto';
+        document.body.style.overflow = 'auto';
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditModalOpen]);
+
   // Buscar Pedidos
   const ordersQuery = useMemo(() => {
     if (!db) return null;
@@ -446,14 +457,11 @@ export default function AdminOrders() {
     updateDoc(docRef, editFormData)
       .then(() => {
         toast({ title: "Pedido Atualizado" });
-        
-        // ORDEM CRÍTICA: Fecha o modal primeiro
         setIsEditModalOpen(false);
-        
-        // Espera o encerramento da animação de saída do Radix UI antes de limpar estados
+        // Delay maior e único para o reset pós-animação
         setTimeout(() => {
           resetModal();
-        }, 300);
+        }, 500);
       })
       .catch(async () => {
         setIsSaving(false);
@@ -512,103 +520,105 @@ export default function AdminOrders() {
         onOpenChange={(open) => {
           if (!open && !isSaving) {
             setIsEditModalOpen(false);
-            // Limpa o estado somente após o fechamento para evitar quebra de render
-            setTimeout(resetModal, 300);
           }
         }}
       >
         <DialogContent className="max-w-2xl bg-areia-clara p-0 border-none shadow-2xl rounded-3xl overflow-hidden pointer-events-auto">
-          <DialogHeader className="bg-marrom-escuro p-6 text-areia-clara">
-            <DialogTitle className="font-headline tracking-widest uppercase text-xl flex items-center gap-3">
-              <Edit2 className="w-5 h-5 text-caramelo-palha" />
-              Editar Pedido #{editingOrder?.orderNumber || editingOrder?.id.substring(0, 6)}
-            </DialogTitle>
-          </DialogHeader>
+          {editingOrder && (
+            <>
+              <DialogHeader className="bg-marrom-escuro p-6 text-areia-clara">
+                <DialogTitle className="font-headline tracking-widest uppercase text-xl flex items-center gap-3">
+                  <Edit2 className="w-5 h-5 text-caramelo-palha" />
+                  Editar Pedido #{editingOrder?.orderNumber || editingOrder?.id.substring(0, 6)}
+                </DialogTitle>
+              </DialogHeader>
 
-          <div className="max-h-[70vh] overflow-y-auto">
-            {editFormData ? (
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Dados do Cliente</h3>
-                    <div className="space-y-3">
-                      <Input placeholder="Nome" value={editFormData.customer?.name || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, name: e.target.value }})} className="bg-white border-areia-escura/50" />
-                      <Input placeholder="WhatsApp" value={editFormData.customer?.phone || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, phone: e.target.value.replace(/\D/g, '') }})} className="bg-white border-areia-escura/50" />
-                      <Input placeholder="Endereço" value={editFormData.customer?.address || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, address: e.target.value }})} className="bg-white border-areia-escura/50" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Adicionar Produtos</h3>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
-                      <Input placeholder="Pesquisar catálogo..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-10 bg-white border-areia-escura/50" />
-                      {productSearch && allProducts && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-areia-escura/30 shadow-xl rounded-xl z-50 overflow-hidden">
-                          {allProducts.filter(p => p.restaurantId === editingOrder?.restaurantId && p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 5).map(p => (
-                            <button key={p.id} onClick={() => addItemToOrder(p)} className="w-full text-left p-3 hover:bg-areia-clara flex justify-between items-center border-b last:border-0">
-                              <span className="text-xs font-bold">{p.name}</span>
-                              <span className="text-[10px] font-black text-marrom-terra">R$ {p.price.toFixed(2)}</span>
-                            </button>
-                          ))}
+              <div className="max-h-[70vh] overflow-y-auto">
+                {editFormData ? (
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Dados do Cliente</h3>
+                        <div className="space-y-3">
+                          <Input placeholder="Nome" value={editFormData.customer?.name || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, name: e.target.value }})} className="bg-white border-areia-escura/50" />
+                          <Input placeholder="WhatsApp" value={editFormData.customer?.phone || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, phone: e.target.value.replace(/\D/g, '') }})} className="bg-white border-areia-escura/50" />
+                          <Input placeholder="Endereço" value={editFormData.customer?.address || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, address: e.target.value }})} className="bg-white border-areia-escura/50" />
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                      </div>
 
-                <div className="space-y-6">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens da Cesta</h3>
-                  <ScrollArea className="h-64 pr-4">
-                    <div className="space-y-3">
-                      {editFormData.items.map((item: any, idx: number) => (
-                        <div key={`${item.productId}-${idx}`} className="p-3 bg-white rounded-xl border border-areia-escura/20 flex flex-col gap-2">
-                          <div className="flex justify-between items-start">
-                            <span className="text-xs font-bold uppercase truncate">{item.name}</span>
-                            <button onClick={() => {
-                              const newItems = editFormData.items.filter((_: any, i: number) => i !== idx);
-                              setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
-                            }} className="text-rose-500 hover:scale-110 transition-transform"><Trash2 className="w-3.5 h-3.5" /></button>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-black">R$ {item.price.toFixed(2)}</span>
-                            <div className="flex items-center gap-3 border rounded-lg bg-areia-clara/20">
-                              <button onClick={() => {
-                                const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it);
-                                setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
-                              }} className="p-1 hover:bg-areia-clara transition-colors"><Minus className="w-3 h-3" /></button>
-                              <span className="text-xs font-black">{item.quantity}</span>
-                              <button onClick={() => {
-                                const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: it.quantity + 1 } : it);
-                                setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
-                              }} className="p-1 hover:bg-areia-clara transition-colors"><Plus className="w-3 h-3" /></button>
+                      <div className="space-y-4 pt-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Adicionar Produtos</h3>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
+                          <Input placeholder="Pesquisar catálogo..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-10 bg-white border-areia-escura/50" />
+                          {productSearch && allProducts && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-areia-escura/30 shadow-xl rounded-xl z-50 overflow-hidden">
+                              {allProducts.filter(p => p.restaurantId === editingOrder?.restaurantId && p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 5).map(p => (
+                                <button key={p.id} onClick={() => addItemToOrder(p)} className="w-full text-left p-3 hover:bg-areia-clara flex justify-between items-center border-b last:border-0">
+                                  <span className="text-xs font-bold">{p.name}</span>
+                                  <span className="text-[10px] font-black text-marrom-terra">R$ {p.price.toFixed(2)}</span>
+                                </button>
+                              ))}
                             </div>
-                          </div>
+                          )}
                         </div>
-                      ))}
-                      {editFormData.items.length === 0 && <p className="text-center py-10 italic text-xs opacity-40">Cesta vazia</p>}
+                      </div>
                     </div>
-                  </ScrollArea>
-                  <div className="pt-4 border-t border-areia-escura/30 flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total Atualizado</span>
-                    <span className="text-2xl font-black text-marrom-escuro">R$ {editFormData.total.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="h-64 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin opacity-20" />
-              </div>
-            )}
-          </div>
 
-          <DialogFooter className="bg-white p-6 border-t border-areia-escura/20">
-            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} disabled={isSaving} className="uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
-            <Button onClick={saveOrderChanges} disabled={isSaving || !editFormData} className="bg-marrom-terra text-white hover:bg-marrom-escuro px-10 gap-2 uppercase text-[10px] font-black tracking-widest h-11 rounded-xl shadow-xl">
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </DialogFooter>
+                    <div className="space-y-6">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens da Cesta</h3>
+                      <ScrollArea className="h-64 pr-4">
+                        <div className="space-y-3">
+                          {editFormData.items.map((item: any, idx: number) => (
+                            <div key={`${item.productId}-${idx}`} className="p-3 bg-white rounded-xl border border-areia-escura/20 flex flex-col gap-2">
+                              <div className="flex justify-between items-start">
+                                <span className="text-xs font-bold uppercase truncate">{item.name}</span>
+                                <button onClick={() => {
+                                  const newItems = editFormData.items.filter((_: any, i: number) => i !== idx);
+                                  setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
+                                }} className="text-rose-500 hover:scale-110 transition-transform"><Trash2 className="w-3.5 h-3.5" /></button>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-black">R$ {item.price.toFixed(2)}</span>
+                                <div className="flex items-center gap-3 border rounded-lg bg-areia-clara/20">
+                                  <button onClick={() => {
+                                    const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it);
+                                    setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
+                                  }} className="p-1 hover:bg-areia-clara transition-colors"><Minus className="w-3 h-3" /></button>
+                                  <span className="text-xs font-black">{item.quantity}</span>
+                                  <button onClick={() => {
+                                    const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: it.quantity + 1 } : it);
+                                    setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
+                                  }} className="p-1 hover:bg-areia-clara transition-colors"><Plus className="w-3 h-3" /></button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {editFormData.items.length === 0 && <p className="text-center py-10 italic text-xs opacity-40">Cesta vazia</p>}
+                        </div>
+                      </ScrollArea>
+                      <div className="pt-4 border-t border-areia-escura/30 flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total Atualizado</span>
+                        <span className="text-2xl font-black text-marrom-escuro">R$ {editFormData.total.toFixed(2).replace('.', ',')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin opacity-20" />
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="bg-white p-6 border-t border-areia-escura/20">
+                <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} disabled={isSaving} className="uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+                <Button onClick={saveOrderChanges} disabled={isSaving || !editFormData} className="bg-marrom-terra text-white hover:bg-marrom-escuro px-10 gap-2 uppercase text-[10px] font-black tracking-widest h-11 rounded-xl shadow-xl">
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
