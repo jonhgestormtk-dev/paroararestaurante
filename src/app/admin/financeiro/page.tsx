@@ -51,6 +51,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, Timestamp, where } from 'firebase/firestore';
@@ -106,7 +107,6 @@ export default function AdminFinancial() {
   const [companyFilter, setCompanyFilter] = useState('all');
   const db = useFirestore();
 
-  // Queries (Em um app real, buscaríamos de coleções agregadas por Cloud Functions)
   const ordersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
@@ -116,18 +116,15 @@ export default function AdminFinancial() {
   const stats = useMemo(() => {
     if (!orders) return null;
 
-    // Filtros e Cálculos
     const currentOrders = orders.filter(o => companyFilter === 'all' || o.restaurantId === companyFilter);
     const revenue = currentOrders.reduce((acc, o) => acc + (o.total || 0), 0);
     const avgTicket = currentOrders.length > 0 ? revenue / currentOrders.length : 0;
     const cancellations = orders.filter(o => o.status === 'Cancelado').length;
-    const estimatedProfit = revenue * 0.35; // Simulação de 35% de margem
+    const estimatedProfit = revenue * 0.35; 
 
-    // Agrupamento por Empresa
     const paroaraOrders = orders.filter(o => o.restaurantId === 'paroara');
     const eguaOrders = orders.filter(o => o.restaurantId === 'egua-na-panela');
 
-    // Métodos de Pagamento
     const payments = currentOrders.reduce((acc: any, o) => {
       const method = o.payment?.method || 'Outros';
       acc[method] = (acc[method] || 0) + (o.total || 0);
@@ -136,7 +133,6 @@ export default function AdminFinancial() {
 
     const paymentData = Object.entries(payments).map(([name, value]) => ({ name, value }));
 
-    // Dados Horários (Simulado para visual)
     const hourlyData = Array.from({ length: 24 }).map((_, h) => ({
       hour: `${h}h`,
       revenue: currentOrders.filter(o => {
@@ -171,13 +167,12 @@ export default function AdminFinancial() {
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center gap-6 bg-areia-clara/30">
       <Loader2 className="w-12 h-12 animate-spin text-marrom-terra opacity-20" />
-      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira/40">Processando Inteligência Financeira...</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira/40">Sincronizando BI...</p>
     </div>
   );
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-24">
-      {/* Header Premium */}
       <div className="relative overflow-hidden bg-marrom-escuro p-8 md:p-12 rounded-[2.5rem] shadow-2xl">
         <div className="absolute inset-0 bg-rustic-texture opacity-5 pointer-events-none"></div>
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-caramelo-palha/10 rounded-full blur-[80px]"></div>
@@ -191,7 +186,7 @@ export default function AdminFinancial() {
               <Badge className="bg-caramelo-palha text-marrom-escuro text-[9px] font-black tracking-widest border-none">LIVE ANALYTICS</Badge>
             </div>
             <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Financeiro</h1>
-            <p className="text-caramelo-palha/60 font-subheadline italic text-lg">Inteligência e Performance Multiunidade</p>
+            <p className="text-caramelo-palha/60 font-subheadline italic text-lg">Performance SaaS Multiunidade</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md p-2 rounded-2xl border border-white/10">
@@ -227,7 +222,6 @@ export default function AdminFinancial() {
         </div>
       </div>
 
-      {/* KPI Cards Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard 
           title="Receita Líquida" 
@@ -260,7 +254,6 @@ export default function AdminFinancial() {
         />
       </div>
 
-      {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 bg-white border-areia-escura rounded-[2.5rem] shadow-xl overflow-hidden">
           <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between bg-areia-clara/10">
@@ -297,7 +290,6 @@ export default function AdminFinancial() {
           </CardContent>
         </Card>
 
-        {/* Payment Methods Donut */}
         <Card className="bg-white border-areia-escura rounded-[2.5rem] shadow-xl overflow-hidden">
           <CardHeader className="p-8 border-b border-areia-escura/10 bg-areia-clara/10">
             <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
@@ -340,7 +332,6 @@ export default function AdminFinancial() {
         </Card>
       </div>
 
-      {/* Comparison & Goals */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="bg-white border-areia-escura rounded-[2.5rem] shadow-xl overflow-hidden">
           <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
@@ -402,7 +393,6 @@ export default function AdminFinancial() {
           </CardContent>
         </Card>
 
-        {/* Goals & Insights */}
         <div className="space-y-8">
           <Card className="bg-marrom-escuro border-none rounded-[2.5rem] shadow-2xl overflow-hidden relative text-areia-clara">
             <div className="absolute inset-0 bg-rustic-texture opacity-5"></div>
@@ -441,7 +431,6 @@ export default function AdminFinancial() {
             </CardContent>
           </Card>
 
-          {/* Automatic Insights */}
           <div className="grid grid-cols-1 gap-4">
             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira pl-2">Smart Insights</h3>
             {[
