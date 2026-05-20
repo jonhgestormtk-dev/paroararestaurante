@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -69,12 +70,6 @@ export function Header() {
                 {isEgua && <Flame className="w-5 h-5 md:w-6 md:h-6 animate-pulse" />}
                 {restaurantName}
               </h1>
-              <p className={cn(
-                "text-[7px] md:text-[10px] font-subheadline tracking-widest uppercase mt-0.5",
-                isEgua ? "text-fogo-vibrante/60" : "text-areia-media/80"
-              )}>
-                {isEgua ? 'SABOR QUE CONQUISTA' : 'O Restaurante Marajoara'}
-              </p>
             </div>
           </Link>
 
