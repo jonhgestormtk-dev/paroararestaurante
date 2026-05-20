@@ -43,6 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -251,89 +252,91 @@ export default function AdminProducts() {
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara">
+        <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh]">
+          <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara shrink-0">
             <DialogTitle className="font-headline uppercase tracking-widest">{editingProduct ? 'Editar Prato' : 'Novo Prato'}</DialogTitle>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Pertence ao Restaurante *</Label>
-                <Select 
-                  value={formData.restaurantId} 
-                  onValueChange={(v) => {
-                    setFormData({...formData, restaurantId: v as RestaurantSlug, category: ''});
-                  }}
-                >
-                  <SelectTrigger className="bg-white border-areia-escura"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="paroara">Paroara</SelectItem>
-                    <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Categoria *</Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(v) => setFormData({...formData, category: v})}
-                >
-                  <SelectTrigger className="bg-white border-areia-escura">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCategories.length > 0 ? (
-                      availableCategories.map((c: any) => (
-                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>Cadastre categorias para este restaurante primeiro</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Nome do Prato *</Label>
-                <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-white border-areia-escura" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+          <ScrollArea className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Preço *</Label>
-                  <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} className="bg-white border-areia-escura" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Pertence ao Restaurante *</Label>
+                  <Select 
+                    value={formData.restaurantId} 
+                    onValueChange={(v) => {
+                      setFormData({...formData, restaurantId: v as RestaurantSlug, category: ''});
+                    }}
+                  >
+                    <SelectTrigger className="bg-white border-areia-escura"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paroara">Paroara</SelectItem>
+                      <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Categoria *</Label>
+                  <Select 
+                    value={formData.category} 
+                    onValueChange={(v) => setFormData({...formData, category: v})}
+                  >
+                    <SelectTrigger className="bg-white border-areia-escura">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCategories.length > 0 ? (
+                        availableCategories.map((c: any) => (
+                          <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="none" disabled>Cadastre categorias para este restaurante primeiro</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Nome do Prato *</Label>
+                  <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-white border-areia-escura" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Preço *</Label>
+                    <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} className="bg-white border-areia-escura" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Estoque *</Label>
+                    <Input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})} className="bg-white border-areia-escura" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Descrição curta *</Label>
+                  <Textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="h-24 bg-white border-areia-escura" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Estoque *</Label>
-                  <Input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})} className="bg-white border-areia-escura" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest">URL da Imagem</Label>
+                  <Input value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} className="bg-white border-areia-escura" />
+                </div>
+                <div className="flex gap-4 items-center p-3 bg-white/40 rounded-sm border border-areia-escura/50">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={formData.active} onCheckedChange={(v) => setFormData({...formData, active: v})} />
+                    <Label className="text-xs font-bold">Ativo</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={formData.featured} onCheckedChange={(v) => setFormData({...formData, featured: v})} />
+                    <Label className="text-xs font-bold">Destaque</Label>
+                  </div>
                 </div>
               </div>
             </div>
+          </ScrollArea>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Descrição curta *</Label>
-                <Textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="h-24 bg-white border-areia-escura" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">URL da Imagem</Label>
-                <Input value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} className="bg-white border-areia-escura" />
-              </div>
-              <div className="flex gap-4 items-center p-3 bg-white/40 rounded-sm border border-areia-escura/50">
-                <div className="flex items-center gap-2">
-                  <Switch checked={formData.active} onCheckedChange={(v) => setFormData({...formData, active: v})} />
-                  <Label className="text-xs font-bold">Ativo</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch checked={formData.featured} onCheckedChange={(v) => setFormData({...formData, featured: v})} />
-                  <Label className="text-xs font-bold">Destaque</Label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="p-6 bg-white border-t border-areia-escura">
+          <DialogFooter className="p-6 bg-white border-t border-areia-escura shrink-0">
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
             <Button onClick={handleSave} className="bg-marrom-terra text-areia-clara uppercase font-bold tracking-widest text-xs px-10 rounded-sm">
               Salvar
