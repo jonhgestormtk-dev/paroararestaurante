@@ -396,18 +396,22 @@ export default function AdminOrders() {
   };
 
   const handleUpdateItemObs = (idx: number, obs: string) => {
-    if (!editingOrder) return;
-    const newItems = [...editingOrder.items];
-    newItems[idx] = { ...newItems[idx], observations: obs };
-    setEditingOrder({ ...editingOrder, items: newItems });
+    setEditingOrder(prev => {
+      if (!prev) return null;
+      const newItems = [...prev.items];
+      newItems[idx] = { ...newItems[idx], observations: obs };
+      return { ...prev, items: newItems };
+    });
   };
 
   const handleUpdateItemQty = (idx: number, delta: number) => {
-    if (!editingOrder) return;
-    const newItems = [...editingOrder.items];
-    const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
-    newItems[idx] = { ...newItems[idx], quantity: newQty };
-    setEditingOrder({ ...editingOrder, items: newItems });
+    setEditingOrder(prev => {
+      if (!prev) return null;
+      const newItems = [...prev.items];
+      const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
+      newItems[idx] = { ...newItems[idx], quantity: newQty };
+      return { ...prev, items: newItems };
+    });
   };
 
   const handleSaveOrderEdit = () => {
@@ -423,19 +427,20 @@ export default function AdminOrders() {
       updatedAt: serverTimestamp()
     };
 
+    // Atualiza o banco de dados sem aguardar o retorno para evitar travamentos na UI
     updateDoc(docRef, dataToUpdate)
-      .then(() => {
-        toast({ title: "Pedido Atualizado", description: "As informações foram salvas com sucesso." });
-        setIsEditModalOpen(false);
-        setEditingOrder(null);
-      })
-      .catch(async (err) => {
+      .catch((err) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
           requestResourceData: dataToUpdate
         } satisfies SecurityRuleContext));
       });
+
+    // Fecha o modal e limpa o estado imediatamente
+    setIsEditModalOpen(false);
+    setEditingOrder(null);
+    toast({ title: "Pedido Atualizado", description: "As informações foram salvas com sucesso." });
   };
 
   if (loading) return (
@@ -566,7 +571,10 @@ export default function AdminOrders() {
       </div>
 
       {/* Modal de Edição */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} onOpenChange={(open) => {
+        setIsEditModalOpen(open);
+        if (!open) setEditingOrder(null);
+      }}>
         <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col h-[95vh] md:h-auto max-h-[95vh] md:max-h-[90vh]">
           <DialogHeader className="p-5 md:p-6 bg-marrom-escuro text-areia-clara shrink-0">
             <DialogTitle className="font-headline uppercase tracking-widest flex items-center gap-3 text-sm md:text-base">
