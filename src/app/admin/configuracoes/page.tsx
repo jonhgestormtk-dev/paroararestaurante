@@ -55,7 +55,7 @@ export default function AdminSettings() {
     address: 'Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso',
     openingHours: 'Terça a Domingo: 9h às 15:30h',
     promoProductId: '',
-    // Novos campos de controle de disponibilidade
+    // Controle de disponibilidade
     paroaraActive: true,
     eguaActive: true,
     paroaraMessage: 'Desculpe! Não estamos em funcionamento hoje.',
@@ -121,7 +121,7 @@ export default function AdminSettings() {
                 <Power className="w-5 h-5 text-caramelo-palha" />
                 <CardTitle className="text-lg font-headline">Status de Funcionamento</CardTitle>
               </div>
-              <CardDescription className="text-areia-clara/60">Ative ou desative o acesso dos clientes ao cardápio.</CardDescription>
+              <CardDescription className="text-areia-clara/60">Ative ou desative o acesso dos clientes ao cardápio de cada unidade.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {/* Paroara Control */}
