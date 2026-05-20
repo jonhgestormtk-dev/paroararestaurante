@@ -139,7 +139,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 <div className="flex items-center gap-2 mb-4">
                   <Wine className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-terra")} />
                   <h4 className={cn(
-                    "text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em]",
+                    "text-[14px] md:text-lg font-subheadline font-bold",
                     isEgua ? "text-fogo-vibrante" : "text-marrom-madeira"
                   )}>Que tal uma bebida para acompanhar?</h4>
                 </div>
