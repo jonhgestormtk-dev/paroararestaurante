@@ -28,7 +28,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
   const db = useFirestore();
 
-  // Buscar Bebidas Ativas para Upselling
+  // Buscar Bebidas Ativas para Upselling - Corrigido para active == true para evitar erros de índice
   const drinksQuery = useMemo(() => {
     if (!db || !product || product.category === 'Bebidas') return null;
     return query(
@@ -129,7 +129,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               </p>
             </div>
 
-            {/* SEÇÃO DE CROSS-SELLING (Upselling de Bebidas) */}
+            {/* SEÇÃO DE CROSS-SELLING COM TIPOGRAFIA PREMIUM */}
             {suggestedDrinks && suggestedDrinks.length > 0 && (
               <div className={cn(
                 "p-4 md:p-5 rounded-2xl border animate-in fade-in slide-in-from-bottom-2 duration-700",
@@ -138,7 +138,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 <div className="flex items-center gap-2 mb-4">
                   <Wine className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-terra")} />
                   <h4 className={cn(
-                    "text-base md:text-xl font-subheadline font-bold font-subheadline",
+                    "text-lg md:text-2xl font-subheadline font-bold",
                     isEgua ? "text-fogo-vibrante" : "text-marrom-madeira"
                   )}>Que tal uma bebida para acompanhar?</h4>
                 </div>

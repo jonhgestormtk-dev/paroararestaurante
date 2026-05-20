@@ -73,6 +73,7 @@ export function ExperienceSection() {
             </span>
             <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-verde-folha/40")} />
           </div>
+          {/* Título h2 removido conforme solicitado */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">

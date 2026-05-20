@@ -68,7 +68,6 @@ export default function AdminSettings() {
     
     const docRef = doc(db, 'settings', 'global');
     
-    // Seguindo as diretrizes de não usar await direto em mutações
     setDoc(docRef, settings, { merge: true })
       .then(() => {
         toast({
@@ -79,7 +78,6 @@ export default function AdminSettings() {
       })
       .catch(async (error) => {
         setIsLoading(false);
-        // Emite erro contextual para o listener global
         const permissionError = new FirestorePermissionError({
           path: docRef.path,
           operation: 'write',
@@ -107,7 +105,6 @@ export default function AdminSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-8">
-          {/* Informações Gerais */}
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -147,12 +144,10 @@ export default function AdminSettings() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[9px] text-cinza-organico italic">O cliente poderá clicar no banner e ver os detalhes deste item imediatamente.</p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Contato e Atendimento */}
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -173,14 +168,12 @@ export default function AdminSettings() {
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-marrom-terra opacity-40">+</span>
                 </div>
-                <p className="text-[9px] text-cinza-organico italic">Use apenas números, incluindo o código do país (55) e o DDD.</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="space-y-8">
-          {/* Localização e Horário */}
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -212,7 +205,6 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
 
-          {/* Salvar */}
           <div className="pt-4">
             <Button 
               onClick={handleSave}
@@ -222,9 +214,6 @@ export default function AdminSettings() {
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               {isLoading ? 'Salvando Alterações...' : 'Salvar Configurações'}
             </Button>
-            <p className="text-center mt-4 text-[9px] text-cinza-organico uppercase tracking-widest opacity-60">
-              As alterações podem levar alguns minutos para refletir no site público.
-            </p>
           </div>
         </div>
       </div>

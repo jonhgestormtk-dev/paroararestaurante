@@ -128,7 +128,7 @@ const OrderTimer = ({ createdAt }: { createdAt: any }) => {
   );
 };
 
-// Card de Pedido Operacional com Resumo de Itens
+// Card de Pedido Operacional
 const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUpdate: (id: string, s: OrderStatus) => void; onEdit: (order: Order) => void }) => {
   const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
   const type = TYPE_CONFIG[order.type || 'Delivery'];
@@ -195,7 +195,6 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
         </div>
       </div>
 
-      {/* Resumo dos Itens no Kanban */}
       <div className="mb-4 space-y-1.5 px-2 py-2 border-t border-b border-areia-escura/10 bg-areia-clara/5 rounded-sm">
         {order.items?.map((item, idx) => (
           <div key={idx} className="flex flex-col">
@@ -221,14 +220,12 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl bg-areia-clara border-areia-escura shadow-2xl">
-            {order.status === 'Pendente' && (
-              <DropdownMenuItem 
-                onClick={() => onEdit(order)}
-                className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-marrom-terra"
-              >
-                <Edit2 className="w-3.5 h-3.5" /> Editar Pedido
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem 
+              onClick={() => onEdit(order)}
+              className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-marrom-terra"
+            >
+              <Edit2 className="w-3.5 h-3.5" /> Editar Pedido
+            </DropdownMenuItem>
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
               <DropdownMenuItem 
                 key={key} 
@@ -257,23 +254,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
 };
 
 // Coluna do Kanban
-const KanbanColumn = ({ 
-  title, 
-  status, 
-  orders, 
-  onStatusUpdate,
-  onEdit,
-  icon: Icon,
-  accentColor
-}: { 
-  title: string; 
-  status: OrderStatus; 
-  orders: Order[]; 
-  onStatusUpdate: (id: string, s: OrderStatus) => void;
-  onEdit: (order: Order) => void;
-  icon: any;
-  accentColor: string;
-}) => {
+const KanbanColumn = ({ title, status, orders, onStatusUpdate, onEdit, icon: Icon, accentColor }: any) => {
   return (
     <div className="flex flex-col h-full min-w-[310px] md:min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden snap-center md:snap-start">
       <div className="p-4 md:p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
@@ -281,19 +262,14 @@ const KanbanColumn = ({
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
             <Icon className="w-4 h-4" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-marrom-escuro font-headline">
-            {title}
-          </h3>
+          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-marrom-escuro font-headline">{title}</h3>
         </div>
-        <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">
-          {orders.length}
-        </Badge>
+        <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">{orders.length}</Badge>
       </div>
-      
       <ScrollArea className="flex-1">
         <div className="p-3 md:p-4 space-y-4">
           <AnimatePresence mode="popLayout">
-            {orders.map(order => (
+            {orders.map((order: any) => (
               <OrderCard key={order.id} order={order} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />
             ))}
           </AnimatePresence>
@@ -329,7 +305,7 @@ export default function AdminOrders() {
   }, [db]);
   const { data: allOrders, loading } = useCollection<Order>(ordersQuery);
 
-  // Buscar Produtos Ativos
+  // Buscar Produtos Ativos - Corrigido filtro para evitar erro de índice
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), where('active', '==', true));
@@ -361,18 +337,15 @@ export default function AdminOrders() {
     if (!db) return;
     const docRef = doc(db, 'orders', id);
     const data = { status: newStatus };
-    
-    updateDoc(docRef, data)
-      .then(() => {
-        toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
-      })
-      .catch(async () => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: docRef.path,
-          operation: 'update',
-          requestResourceData: data,
-        } satisfies SecurityRuleContext));
-      });
+    updateDoc(docRef, data).then(() => {
+      toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
+    }).catch(async () => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'update',
+        requestResourceData: data,
+      } satisfies SecurityRuleContext));
+    });
   };
 
   const handleEditOrder = (order: Order) => {
@@ -385,44 +358,17 @@ export default function AdminOrders() {
     setIsEditModalOpen(true);
   };
 
-  const calculateTotal = (items: any[]) => {
-    return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  };
-
-  const updateItemQty = (productId: string, delta: number) => {
-    if (!editFormData) return;
-    const newItems = editFormData.items.map((item: any) => {
-      if (item.productId === productId) {
-        return { ...item, quantity: Math.max(1, item.quantity + delta) };
-      }
-      return item;
-    });
-    setEditFormData({ ...editFormData, items: newItems, total: calculateTotal(newItems) });
-  };
-
-  const removeItem = (productId: string) => {
-    if (!editFormData) return;
-    const newItems = editFormData.items.filter((item: any) => item.productId !== productId);
-    setEditFormData({ ...editFormData, items: newItems, total: calculateTotal(newItems) });
-  };
-
   const addItemToOrder = (product: Product) => {
     if (!editFormData) return;
     const existing = editFormData.items.find((i: any) => i.productId === product.id);
     let newItems;
     if (existing) {
-      newItems = editFormData.items.map((i: any) => 
-        i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i
-      );
+      newItems = editFormData.items.map((i: any) => i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i);
     } else {
-      newItems = [...editFormData.items, {
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1
-      }];
+      newItems = [...editFormData.items, { productId: product.id, name: product.name, price: product.price, quantity: 1 }];
     }
-    setEditFormData({ ...editFormData, items: newItems, total: calculateTotal(newItems) });
+    const newTotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+    setEditFormData({ ...editFormData, items: newItems, total: newTotal });
     setProductSearch('');
   };
 
@@ -431,11 +377,10 @@ export default function AdminOrders() {
     setIsSaving(true);
     const docRef = doc(db, 'orders', editingOrder.id);
     
-    // Seguindo diretrizes de performance: evitar await direto
     updateDoc(docRef, editFormData)
       .then(() => {
         toast({ title: "Pedido Atualizado" });
-        setIsEditModalOpen(false); // A limpeza será feita no onOpenChange
+        setIsEditModalOpen(false);
       })
       .catch(async () => {
         setIsSaving(false);
@@ -447,118 +392,54 @@ export default function AdminOrders() {
       });
   };
 
-  const searchProducts = useMemo(() => {
-    if (!allProducts || !productSearch.trim()) return [];
-    return allProducts.filter(p => 
-      p.restaurantId === editingOrder?.restaurantId &&
-      p.name.toLowerCase().includes(productSearch.toLowerCase())
-    ).slice(0, 5);
-  }, [allProducts, productSearch, editingOrder]);
-
   return (
     <div className="h-[calc(100svh-160px)] md:h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 bg-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão Operacional</h1>
-          <p className="text-cinza-organico font-subheadline italic text-[10px] md:text-xs">Acompanhamento multi-restaurante em tempo real.</p>
+          <p className="text-cinza-organico font-subheadline italic text-[10px] md:text-xs">Sincronização multi-restaurante em tempo real.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
-            <Input 
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-xs"
-            />
+            <Input placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-xs" />
           </div>
-
-          <div className="flex gap-2 w-full md:w-auto">
-            <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
-              <SelectTrigger className="flex-1 md:w-40 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-[10px]">
-                <div className="flex items-center gap-2">
-                  <Store className="w-3.5 h-3.5 text-marrom-madeira" />
-                  <SelectValue placeholder="Restaurante" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Consolidado</SelectItem>
-                <SelectItem value="paroara">Paroara</SelectItem>
-                <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex-1 md:w-auto h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[9px] uppercase tracking-widest px-3">
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                  {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  locale={ptBR}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
+            <SelectTrigger className="flex-1 md:w-40 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-[10px]">
+              <div className="flex items-center gap-2"><Store className="w-3.5 h-3.5" /><SelectValue placeholder="Restaurante" /></div>
+            </SelectTrigger>
+            <SelectContent><SelectItem value="all">Consolidado</SelectItem><SelectItem value="paroara">Paroara</SelectItem><SelectItem value="egua-na-panela">Égua na Panela</SelectItem></SelectContent>
+          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex-1 md:w-auto h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[9px] uppercase tracking-widest px-3">
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
+              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={ptBR} initialFocus />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
         <div className="flex gap-4 md:gap-6 h-full min-w-max px-1">
-          <KanbanColumn 
-            title="Pendentes" 
-            status="Pendente" 
-            orders={kanbanData.pendentes} 
-            onStatusUpdate={handleStatusUpdate}
-            onEdit={handleEditOrder}
-            icon={Clock}
-            accentColor="#F59E0B"
-          />
-          <KanbanColumn 
-            title="Em Preparo" 
-            status="Em Preparo" 
-            orders={kanbanData.preparando} 
-            onStatusUpdate={handleStatusUpdate}
-            onEdit={handleEditOrder}
-            icon={Timer}
-            accentColor="#3B82F6"
-          />
-          <KanbanColumn 
-            title="Saiu Entrega" 
-            status="Saiu para Entrega" 
-            orders={kanbanData.rota} 
-            onStatusUpdate={handleStatusUpdate}
-            onEdit={handleEditOrder}
-            icon={Truck}
-            accentColor="#8B5CF6"
-          />
-          <KanbanColumn 
-            title="Finalizados" 
-            status="Finalizado" 
-            orders={kanbanData.finalizados} 
-            onStatusUpdate={handleStatusUpdate}
-            onEdit={handleEditOrder}
-            icon={CheckCircle2}
-            accentColor="#10B981"
-          />
+          <KanbanColumn title="Pendentes" status="Pendente" orders={kanbanData.pendentes} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Clock} accentColor="#F59E0B" />
+          <KanbanColumn title="Em Preparo" status="Em Preparo" orders={kanbanData.preparando} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Timer} accentColor="#3B82F6" />
+          <KanbanColumn title="Saiu Entrega" status="Saiu para Entrega" orders={kanbanData.rota} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Truck} accentColor="#8B5CF6" />
+          <KanbanColumn title="Finalizados" status="Finalizado" orders={kanbanData.finalizados} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={CheckCircle2} accentColor="#10B981" />
         </div>
       </div>
 
-      {/* Modal de Edição de Pedido Centralizado para prevenir travamentos */}
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
         if (!open) {
-          // Limpeza imediata ao fechar o modal (independente de como foi fechado)
           setEditingOrder(null);
           setEditFormData(null);
-          setProductSearch('');
           setIsSaving(false);
+          setProductSearch('');
         }
         setIsEditModalOpen(open);
       }}>
@@ -576,63 +457,22 @@ export default function AdminOrders() {
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Dados do Cliente</h3>
                   <div className="space-y-3">
-                    <div className="space-y-1">
-                      <Label className="text-[9px] font-bold uppercase opacity-60">Nome</Label>
-                      <Input 
-                        value={editFormData.customer.name}
-                        onChange={(e) => setEditFormData({
-                          ...editFormData, 
-                          customer: { ...editFormData.customer, name: e.target.value }
-                        })}
-                        className="bg-white border-areia-escura/50"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[9px] font-bold uppercase opacity-60">WhatsApp</Label>
-                      <Input 
-                        value={editFormData.customer.phone}
-                        onChange={(e) => setEditFormData({
-                          ...editFormData, 
-                          customer: { ...editFormData.customer, phone: e.target.value.replace(/\D/g, '') }
-                        })}
-                        className="bg-white border-areia-escura/50"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[9px] font-bold uppercase opacity-60">Endereço de Entrega</Label>
-                      <Input 
-                        value={editFormData.customer.address}
-                        onChange={(e) => setEditFormData({
-                          ...editFormData, 
-                          customer: { ...editFormData.customer, address: e.target.value }
-                        })}
-                        className="bg-white border-areia-escura/50"
-                      />
-                    </div>
+                    <Input placeholder="Nome" value={editFormData.customer.name} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, name: e.target.value }})} className="bg-white border-areia-escura/50" />
+                    <Input placeholder="WhatsApp" value={editFormData.customer.phone} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, phone: e.target.value.replace(/\D/g, '') }})} className="bg-white border-areia-escura/50" />
+                    <Input placeholder="Endereço" value={editFormData.customer.address} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, address: e.target.value }})} className="bg-white border-areia-escura/50" />
                   </div>
                 </div>
 
-                <Separator className="bg-areia-escura/20" />
-
-                <div className="space-y-4">
+                <div className="space-y-4 pt-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Adicionar Produtos</h3>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
-                    <Input 
-                      placeholder="Pesquisar no catálogo..."
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      className="pl-10 bg-white border-areia-escura/50"
-                    />
-                    {searchProducts.length > 0 && (
+                    <Input placeholder="Pesquisar catálogo..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-10 bg-white border-areia-escura/50" />
+                    {productSearch && allProducts && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-areia-escura/30 shadow-xl rounded-xl z-50 overflow-hidden">
-                        {searchProducts.map(p => (
-                          <button
-                            key={p.id}
-                            onClick={() => addItemToOrder(p)}
-                            className="w-full text-left p-3 hover:bg-areia-clara flex justify-between items-center border-b last:border-0"
-                          >
-                            <span className="text-xs font-bold text-marrom-escuro">{p.name}</span>
+                        {allProducts.filter(p => p.restaurantId === editingOrder?.restaurantId && p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 5).map(p => (
+                          <button key={p.id} onClick={() => addItemToOrder(p)} className="w-full text-left p-3 hover:bg-areia-clara flex justify-between items-center border-b last:border-0">
+                            <span className="text-xs font-bold">{p.name}</span>
                             <span className="text-[10px] font-black text-marrom-terra">R$ {p.price.toFixed(2)}</span>
                           </button>
                         ))}
@@ -645,31 +485,37 @@ export default function AdminOrders() {
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens da Cesta</h3>
                 <ScrollArea className="h-64 pr-4">
-                  <div className="space-y-4">
-                    {editFormData.items.map((item: any) => (
-                      <div key={item.productId} className="p-3 bg-white rounded-xl border border-areia-escura/20 flex flex-col gap-2">
+                  <div className="space-y-3">
+                    {editFormData.items.map((item: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-white rounded-xl border border-areia-escura/20 flex flex-col gap-2">
                         <div className="flex justify-between items-start">
-                          <span className="text-xs font-bold text-marrom-escuro uppercase pr-4">{item.name}</span>
-                          <button onClick={() => removeItem(item.productId)} className="text-rose-500 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <span className="text-xs font-bold uppercase truncate">{item.name}</span>
+                          <button onClick={() => {
+                            const newItems = editFormData.items.filter((_: any, i: number) => i !== idx);
+                            setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
+                          }} className="text-rose-500"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-black text-marrom-terra">R$ {item.price.toFixed(2)}</span>
-                          <div className="flex items-center gap-3 border border-areia-escura/30 rounded-lg bg-areia-clara/20">
-                            <button onClick={() => updateItemQty(item.productId, -1)} className="p-1 hover:bg-areia-media"><Minus className="w-3 h-3" /></button>
-                            <span className="text-xs font-black min-w-[20px] text-center">{item.quantity}</span>
-                            <button onClick={() => updateItemQty(item.productId, 1)} className="p-1 hover:bg-areia-media"><Plus className="w-3 h-3" /></button>
+                          <span className="text-[10px] font-black">R$ {item.price.toFixed(2)}</span>
+                          <div className="flex items-center gap-3 border rounded-lg bg-areia-clara/20">
+                            <button onClick={() => {
+                              const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it);
+                              setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
+                            }} className="p-1"><Minus className="w-3 h-3" /></button>
+                            <span className="text-xs font-black">{item.quantity}</span>
+                            <button onClick={() => {
+                              const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: it.quantity + 1 } : it);
+                              setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
+                            }} className="p-1"><Plus className="w-3 h-3" /></button>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </ScrollArea>
-
-                <div className="pt-4 border-t border-areia-escura/30">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total Atualizado</span>
-                    <span className="text-2xl font-black text-marrom-escuro">R$ {editFormData.total.toFixed(2).replace('.', ',')}</span>
-                  </div>
+                <div className="pt-4 border-t border-areia-escura/30 flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Total Atualizado</span>
+                  <span className="text-2xl font-black text-marrom-escuro">R$ {editFormData.total.toFixed(2).replace('.', ',')}</span>
                 </div>
               </div>
             </div>
@@ -677,11 +523,7 @@ export default function AdminOrders() {
 
           <DialogFooter className="bg-white p-6 border-t border-areia-escura/20">
             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
-            <Button 
-              onClick={saveOrderChanges} 
-              disabled={isSaving}
-              className="bg-marrom-terra text-white hover:bg-marrom-escuro px-10 gap-2 uppercase text-[10px] font-black tracking-widest h-11 rounded-xl shadow-xl"
-            >
+            <Button onClick={saveOrderChanges} disabled={isSaving} className="bg-marrom-terra text-white hover:bg-marrom-escuro px-10 gap-2 uppercase text-[10px] font-black tracking-widest h-11 rounded-xl shadow-xl">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Salvar Alterações
             </Button>
