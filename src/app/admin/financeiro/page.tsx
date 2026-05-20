@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -21,7 +21,10 @@ import {
   Briefcase,
   PieChart as PieIcon,
   BarChart3,
-  Loader2
+  Loader2,
+  Edit2,
+  Check,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -54,12 +57,16 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy, Timestamp, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc } from '@/firebase';
+import { collection, query, orderBy, Timestamp, doc, setDoc } from 'firebase/firestore';
 import { Order } from '@/lib/types';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 // Mock Sparkline Data for KPIs
 const SPARKLINE_UP = [10, 15, 12, 25, 30, 28, 45];
@@ -109,13 +116,29 @@ const KPICard = ({ title, value, growth, icon: Icon, isNegative = false, trendDa
 export default function AdminFinancial() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [companyFilter, setCompanyFilter] = useState('all');
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [monthlyGoal, setMonthlyGoal] = useState(180000);
+  const [editGoalValue, setEditGoalValue] = useState('180000');
+  
   const db = useFirestore();
+  const { toast } = useToast();
 
   const ordersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   }, [db]);
   const { data: orders, loading } = useCollection<Order>(ordersQuery);
+
+  // Buscar meta mensal das configurações
+  const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
+  const { data: settingsData } = useDoc<any>(settingsRef);
+
+  useEffect(() => {
+    if (settingsData?.monthlyGoal) {
+      setMonthlyGoal(Number(settingsData.monthlyGoal));
+      setEditGoalValue(settingsData.monthlyGoal.toString());
+    }
+  }, [settingsData]);
 
   const stats = useMemo(() => {
     if (!orders) return null;
@@ -154,6 +177,16 @@ export default function AdminFinancial() {
       }).reduce((acc, curr) => acc + curr.total, 0)
     }));
 
+    // Calcular faturamento do mês atual para a meta
+    const monthStart = startOfMonth(new Date());
+    const monthRevenue = orders.filter(o => {
+      const date = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt);
+      return date >= monthStart && o.status !== 'Cancelado';
+    }).reduce((acc, o) => acc + (o.total || 0), 0);
+
+    const goalProgress = monthlyGoal > 0 ? Math.min(100, (monthRevenue / monthlyGoal) * 100) : 0;
+    const remainingToGoal = Math.max(0, monthlyGoal - monthRevenue);
+
     return {
       revenue,
       avgTicket,
@@ -171,9 +204,36 @@ export default function AdminFinancial() {
         avgTicket: eguaOrders.length > 0 ? eguaOrders.reduce((acc, o) => acc + o.total, 0) / eguaOrders.length : 0
       },
       paymentData,
-      hourlyData
+      hourlyData,
+      monthRevenue,
+      goalProgress,
+      remainingToGoal
     };
-  }, [orders, companyFilter, selectedDate]);
+  }, [orders, companyFilter, selectedDate, monthlyGoal]);
+
+  const handleSaveGoal = () => {
+    if (!db) return;
+    const val = Number(editGoalValue);
+    if (isNaN(val)) {
+      toast({ variant: "destructive", title: "Erro", description: "Informe um valor numérico válido." });
+      return;
+    }
+
+    const docRef = doc(db, 'settings', 'global');
+    setDoc(docRef, { monthlyGoal: val }, { merge: true })
+      .then(() => {
+        setMonthlyGoal(val);
+        setIsEditingGoal(false);
+        toast({ title: "Meta Atualizada", description: "O novo objetivo de faturamento foi salvo." });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'write',
+          requestResourceData: { monthlyGoal: val }
+        } satisfies SecurityRuleContext));
+      });
+  };
 
   const formatBRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -418,33 +478,60 @@ export default function AdminFinancial() {
             <CardHeader className="p-8 relative z-10">
               <div className="flex justify-between items-center mb-2">
                 <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-caramelo-palha">Meta de Receita Mensal</CardTitle>
-                <Badge className="bg-caramelo-palha text-marrom-escuro font-black text-[9px] border-none">EM CURSO</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-caramelo-palha text-marrom-escuro font-black text-[9px] border-none uppercase">EM CURSO</Badge>
+                  <button 
+                    onClick={() => setIsEditingGoal(!isEditingGoal)} 
+                    className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    {isEditingGoal ? <X className="w-3.5 h-3.5" /> : <Edit2 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
-              <div className="space-y-1">
-                <h2 className="text-3xl font-black tracking-tighter text-white">R$ 180.000,00</h2>
-                <p className="text-xs italic text-areia-media/60">Restam R$ 38.000 para atingir a meta</p>
+              <div className="space-y-2">
+                {isEditingGoal ? (
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
+                    <Input 
+                      type="number"
+                      value={editGoalValue}
+                      onChange={(e) => setEditGoalValue(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white font-black h-12 text-lg"
+                    />
+                    <Button onClick={handleSaveGoal} size="icon" className="bg-caramelo-palha text-marrom-escuro shrink-0 h-12 w-12">
+                      <Check className="w-5 h-5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-3xl font-black tracking-tighter text-white">{formatBRL(monthlyGoal)}</h2>
+                    <p className="text-xs italic text-areia-media/60">
+                      Faturado este mês: <span className="text-caramelo-palha font-bold">{formatBRL(stats?.monthRevenue || 0)}</span>
+                    </p>
+                  </>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-8 pt-0 relative z-10 space-y-6">
               <div className="relative h-4 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: '78%' }}
+                  animate={{ width: `${stats?.goalProgress || 0}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
                   className="absolute inset-y-0 left-0 bg-gradient-to-r from-caramelo-palha to-marrom-terra shadow-[0_0_20px_rgba(168,116,66,0.5)]"
                 />
               </div>
               <div className="flex justify-between items-center">
                 <div className="text-center space-y-1">
-                  <p className="text-[8px] font-black uppercase opacity-40">Realizado</p>
-                  <p className="text-xl font-black">78%</p>
+                  <p className="text-[8px] font-black uppercase opacity-40">Progresso</p>
+                  <p className="text-xl font-black">{Math.round(stats?.goalProgress || 0)}%</p>
                 </div>
                 <div className="text-center space-y-1">
-                  <p className="text-[8px] font-black uppercase opacity-40">Previsão Fechamento</p>
-                  <p className="text-xl font-black text-caramelo-palha">R$ 192.450</p>
+                  <p className="text-[8px] font-black uppercase opacity-40">Restante</p>
+                  <p className="text-xl font-black text-caramelo-palha">{formatBRL(stats?.remainingToGoal || 0)}</p>
                 </div>
                 <div className="text-center space-y-1">
                   <p className="text-[8px] font-black uppercase opacity-40">Dias Restantes</p>
-                  <p className="text-xl font-black">12</p>
+                  <p className="text-xl font-black">{30 - new Date().getDate()}</p>
                 </div>
               </div>
             </CardContent>
