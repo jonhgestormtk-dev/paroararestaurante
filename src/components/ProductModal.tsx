@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { Minus, Plus, Wine, Check } from 'lucide-react';
 import { Product } from '@/lib/types';
@@ -28,7 +28,32 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
   const db = useFirestore();
 
-  // Buscar Bebidas Ativas para Upselling - Corrigido para active == true para evitar erros de índice
+  // Efeito para interceptar o botão voltar no mobile e fechar o modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Adiciona um estado fictício no histórico para o botão voltar interceptar
+    window.history.pushState({ modalOpen: true }, '');
+
+    const handlePopState = () => {
+      // Quando o usuário clica em "voltar" no celular/navegador
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      
+      // Se o modal fechar por meios normais (X ou clique fora), 
+      // precisamos remover o estado que injetamos para não "sujar" o histórico
+      if (window.history.state?.modalOpen) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
+
+  // Buscar Bebidas Ativas para Upselling
   const drinksQuery = useMemo(() => {
     if (!db || !product || product.category === 'Bebidas') return null;
     return query(
@@ -104,7 +129,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                   {product.name}
                 </DialogTitle>
                 <p className={cn(
-                  "font-subheadline text-xs md:text-lg italic opacity-60 mt-1",
+                  "font-subheadline text-xs md:text-lg italic mt-1 opacity-60",
                   isEgua ? "text-creme-legivel" : "text-marrom-madeira"
                 )}>
                   {product.category}
@@ -129,7 +154,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               </p>
             </div>
 
-            {/* SEÇÃO DE CROSS-SELLING COM TIPOGRAFIA PREMIUM */}
+            {/* SEÇÃO DE CROSS-SELLING */}
             {suggestedDrinks && suggestedDrinks.length > 0 && (
               <div className={cn(
                 "p-4 md:p-5 rounded-2xl border animate-in fade-in slide-in-from-bottom-2 duration-700",
