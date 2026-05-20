@@ -220,12 +220,16 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl bg-areia-clara border-areia-escura shadow-2xl">
-            <DropdownMenuItem 
-              onClick={() => onEdit(order)}
-              className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-marrom-terra"
-            >
-              <Edit2 className="w-3.5 h-3.5" /> Editar Pedido
-            </DropdownMenuItem>
+            {/* EDIÇÃO APENAS PARA PEDIDOS PENDENTES */}
+            {order.status === 'Pendente' && (
+              <DropdownMenuItem 
+                onClick={() => onEdit(order)}
+                className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-marrom-terra"
+              >
+                <Edit2 className="w-3.5 h-3.5" /> Editar Pedido
+              </DropdownMenuItem>
+            )}
+            
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
               <DropdownMenuItem 
                 key={key} 
@@ -305,7 +309,7 @@ export default function AdminOrders() {
   }, [db]);
   const { data: allOrders, loading } = useCollection<Order>(ordersQuery);
 
-  // Buscar Produtos Ativos - Corrigido filtro para evitar erro de índice
+  // Buscar Produtos Ativos
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), where('active', '==', true));
