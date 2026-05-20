@@ -307,7 +307,7 @@ const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, onNotify, icon: I
   );
 };
 
-// Componente de formulário isolado para evitar travamento da tela principal ao digitar
+// Componente de formulário isolado para máxima performance e evitar travamentos
 const EditOrderDialogContent = ({ 
   order, 
   onSave, 
@@ -318,6 +318,7 @@ const EditOrderDialogContent = ({
   onClose: () => void 
 }) => {
   const [localOrder, setLocalOrder] = useState<Order>(() => JSON.parse(JSON.stringify(order)));
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleUpdateItemObs = (idx: number, obs: string) => {
     const newItems = [...localOrder.items];
@@ -330,6 +331,12 @@ const EditOrderDialogContent = ({
     const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
     newItems[idx] = { ...newItems[idx], quantity: newQty };
     setLocalOrder({ ...localOrder, items: newItems });
+  };
+
+  const handleTriggerSave = () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    onSave(localOrder);
   };
 
   const currentTotal = localOrder.items.reduce((acc, i) => acc + (i.price * i.quantity), 0);
@@ -440,15 +447,16 @@ const EditOrderDialogContent = ({
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <Button variant="ghost" onClick={onClose} className="flex-1 md:flex-none text-[10px] font-bold uppercase h-12 rounded-xl">
+          <Button variant="ghost" onClick={onClose} disabled={isSaving} className="flex-1 md:flex-none text-[10px] font-bold uppercase h-12 rounded-xl">
             Cancelar
           </Button>
           <Button 
-            onClick={() => onSave(localOrder)}
+            onClick={handleTriggerSave}
+            disabled={isSaving}
             className="flex-[2] md:flex-none bg-marrom-terra text-areia-clara h-12 px-8 gap-2 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl"
           >
-            <Save className="w-4 h-4" />
-            Salvar Alterações
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </div>
       </DialogFooter>
@@ -465,6 +473,16 @@ export default function AdminOrders() {
   
   const { toast } = useToast();
   const db = useFirestore();
+
+  // Trava de Segurança de Interface: Força restauração de eventos de ponteiro ao fechar o modal
+  useEffect(() => {
+    if (!isEditModalOpen) {
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = 'auto';
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditModalOpen]);
 
   const ordersQuery = useMemo(() => {
     if (!db) return null;
@@ -547,10 +565,9 @@ export default function AdminOrders() {
   const handleSaveOrderEdit = (updatedOrder: Order) => {
     if (!db) return;
     
-    // Fecha o modal e limpa o estado IMEDIATAMENTE para evitar travamento na UI
+    // Fecha o modal imediatamente para evitar travamento na UI
     setIsEditModalOpen(false);
-    setEditingOrder(null);
-
+    
     const docRef = doc(db, 'orders', updatedOrder.id);
     const newTotal = updatedOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     
@@ -563,9 +580,11 @@ export default function AdminOrders() {
 
     updateDoc(docRef, dataToUpdate)
       .then(() => {
+        setEditingOrder(null);
         toast({ title: "Pedido Atualizado", description: "As informações foram salvas com sucesso." });
       })
       .catch((err) => {
+        setEditingOrder(null);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
@@ -582,7 +601,7 @@ export default function AdminOrders() {
   );
 
   return (
-    <div className="h-[calc(100vh-140px)] md:h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
+    <div className="h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
       {/* Header com Filtros */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
@@ -701,11 +720,12 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Modal de Edição com componente isolado para performance */}
+      {/* Modal de Edição */}
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
         if (!open) {
           setIsEditModalOpen(false);
-          setEditingOrder(null);
+          // O reset do editingOrder acontece após o fechamento para suavizar a transição
+          setTimeout(() => setEditingOrder(null), 200);
         }
       }}>
         <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col h-[95vh] md:h-auto max-h-[95vh] md:max-h-[90vh]">
