@@ -181,11 +181,13 @@ export default function AdminDashboard() {
       return matchesDate && matchesRes;
     });
 
+    // Filtra apenas pedidos de hoje que NÃO estão finalizados ou cancelados para o painel operacional
     const todayOrders = allOrders.filter(o => {
       const date = getOrderDate(o);
       const isToday = date >= todayStart;
       const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
-      return isToday && matchesRes;
+      const isOngoing = o.status !== 'Finalizado' && o.status !== 'Cancelado';
+      return isToday && matchesRes && isOngoing;
     });
 
     const hourlyDataMap: Record<number, { hour: string; revenue: number }> = {};
@@ -329,7 +331,7 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={stats?.hourlyData}>
                 <defs>
-                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="colorRev" x1="0" x1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#281A15" stopOpacity={0.1}/>
                     <stop offset="95%" stopColor="#281A15" stopOpacity={0}/>
                   </linearGradient>
@@ -382,7 +384,7 @@ export default function AdminDashboard() {
               <Activity className="w-5 h-5" />
               <CardTitle className="text-sm font-black uppercase tracking-[0.2em]">Painel Operacional Real-time</CardTitle>
             </div>
-            <CardDescription className="font-subheadline italic text-xs">Exibindo apenas pedidos de hoje ({new Date().toLocaleDateString('pt-BR')}).</CardDescription>
+            <CardDescription className="font-subheadline italic text-xs">Exibindo apenas pedidos ativos de hoje ({new Date().toLocaleDateString('pt-BR')}).</CardDescription>
           </div>
           <Badge className="bg-marrom-terra text-white uppercase text-[10px] font-black px-4 py-1">Ativo Agora</Badge>
         </CardHeader>
@@ -511,7 +513,7 @@ export default function AdminDashboard() {
             {(!stats?.recentOrders || stats.recentOrders.length === 0) && (
               <div className="p-20 text-center space-y-4">
                 <ShoppingBag className="w-12 h-12 mx-auto text-areia-escura opacity-20" />
-                <p className="text-sm italic text-cinza-organico">Nenhum pedido registrado para o dia de hoje.</p>
+                <p className="text-sm italic text-cinza-organico">Nenhum pedido em andamento registrado para hoje.</p>
               </div>
             )}
           </AnimatePresence>
@@ -520,4 +522,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
