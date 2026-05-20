@@ -39,7 +39,7 @@ import {
   Timestamp, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { Order, OrderStatus, RestaurantSlug, OrderType } from '@/lib/types';
+import { Order, OrderStatus, RestaurantSlug } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -307,6 +307,155 @@ const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, onNotify, icon: I
   );
 };
 
+// Componente de formulário isolado para evitar travamento da tela principal ao digitar
+const EditOrderDialogContent = ({ 
+  order, 
+  onSave, 
+  onClose 
+}: { 
+  order: Order; 
+  onSave: (updatedOrder: Order) => void; 
+  onClose: () => void 
+}) => {
+  const [localOrder, setLocalOrder] = useState<Order>(() => JSON.parse(JSON.stringify(order)));
+
+  const handleUpdateItemObs = (idx: number, obs: string) => {
+    const newItems = [...localOrder.items];
+    newItems[idx] = { ...newItems[idx], observations: obs };
+    setLocalOrder({ ...localOrder, items: newItems });
+  };
+
+  const handleUpdateItemQty = (idx: number, delta: number) => {
+    const newItems = [...localOrder.items];
+    const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
+    newItems[idx] = { ...newItems[idx], quantity: newQty };
+    setLocalOrder({ ...localOrder, items: newItems });
+  };
+
+  const currentTotal = localOrder.items.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+
+  return (
+    <>
+      <ScrollArea className="flex-1">
+        <div className="p-4 md:p-6 space-y-6 md:space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <User className="w-3.5 h-3.5 text-marrom-madeira" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</Label>
+              </div>
+              <div className="space-y-3">
+                <Input 
+                  placeholder="Nome do Cliente"
+                  value={localOrder.customer.name}
+                  onChange={(e) => setLocalOrder({...localOrder, customer: {...localOrder.customer, name: e.target.value}})}
+                  className="bg-white border-areia-escura h-11 text-sm font-bold rounded-xl"
+                />
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
+                  <Input 
+                    placeholder="WhatsApp"
+                    value={localOrder.customer.phone}
+                    onChange={(e) => setLocalOrder({...localOrder, customer: {...localOrder.customer, phone: e.target.value.replace(/\D/g, '')}})}
+                    className="bg-white border-areia-escura h-11 pl-10 text-sm rounded-xl"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <MapPin className="w-3.5 h-3.5 text-marrom-madeira" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Endereço</Label>
+              </div>
+              <Textarea 
+                placeholder="Endereço de Entrega"
+                value={localOrder.customer.address}
+                onChange={(e) => setLocalOrder({...localOrder, customer: {...localOrder.customer, address: e.target.value}})}
+                className="bg-white border-areia-escura min-h-[90px] text-sm italic rounded-xl resize-none"
+              />
+            </div>
+          </div>
+
+          <Separator className="bg-areia-escura/30" />
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Package className="w-3.5 h-3.5 text-marrom-madeira" />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens do Pedido</Label>
+            </div>
+
+            <div className="space-y-4">
+              {localOrder.items?.map((item, idx) => (
+                <div key={idx} className="p-4 bg-white/60 rounded-2xl border border-areia-escura/20 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 pr-4">
+                      <p className="font-subheadline font-bold text-lg text-marrom-escuro uppercase italic leading-tight">
+                        {item.name}
+                      </p>
+                      <p className="text-[10px] font-black text-marrom-madeira/60">
+                        un. R$ {item.price.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white border border-areia-escura/40 rounded-xl p-1 shadow-sm">
+                      <button 
+                        type="button"
+                        onClick={() => handleUpdateItemQty(idx, -1)}
+                        className="p-1 hover:bg-areia-media/20 rounded-md"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="w-6 text-center font-black text-sm">{item.quantity}</span>
+                      <button 
+                        type="button"
+                        onClick={() => handleUpdateItemQty(idx, 1)}
+                        className="p-1 hover:bg-areia-media/20 rounded-md"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-fogo-vibrante/70">Observação do Item</Label>
+                    <Input 
+                      placeholder="Ex: Sem cebola..."
+                      value={item.observations || ''}
+                      onChange={(e) => handleUpdateItemObs(idx, e.target.value)}
+                      className="h-9 text-xs bg-white/40 border-areia-escura/50 rounded-lg"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+
+      <DialogFooter className="p-5 md:p-6 bg-white border-t border-areia-escura shrink-0 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="text-center md:text-left w-full md:w-auto">
+          <p className="text-[9px] font-black uppercase text-marrom-madeira/40 tracking-widest">Novo Total</p>
+          <p className="text-2xl font-black text-marrom-escuro tracking-tighter">
+            R$ {currentTotal.toFixed(2).replace('.', ',')}
+          </p>
+        </div>
+        <div className="flex gap-3 w-full md:w-auto">
+          <Button variant="ghost" onClick={onClose} className="flex-1 md:flex-none text-[10px] font-bold uppercase h-12 rounded-xl">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={() => onSave(localOrder)}
+            className="flex-[2] md:flex-none bg-marrom-terra text-areia-clara h-12 px-8 gap-2 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl"
+          >
+            <Save className="w-4 h-4" />
+            Salvar Alterações
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
+  );
+};
+
 export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [restaurantFilter, setRestaurantFilter] = useState<string>('all');
@@ -391,44 +540,31 @@ export default function AdminOrders() {
   };
 
   const handleOpenEdit = (order: Order) => {
-    setEditingOrder(JSON.parse(JSON.stringify(order)));
+    setEditingOrder(order);
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateItemObs = (idx: number, obs: string) => {
-    setEditingOrder(prev => {
-      if (!prev) return null;
-      const newItems = [...prev.items];
-      newItems[idx] = { ...newItems[idx], observations: obs };
-      return { ...prev, items: newItems };
-    });
-  };
-
-  const handleUpdateItemQty = (idx: number, delta: number) => {
-    setEditingOrder(prev => {
-      if (!prev) return null;
-      const newItems = [...prev.items];
-      const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
-      newItems[idx] = { ...newItems[idx], quantity: newQty };
-      return { ...prev, items: newItems };
-    });
-  };
-
-  const handleSaveOrderEdit = () => {
-    if (!db || !editingOrder) return;
+  const handleSaveOrderEdit = (updatedOrder: Order) => {
+    if (!db) return;
     
-    const docRef = doc(db, 'orders', editingOrder.id);
-    const newTotal = editingOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    // Fecha o modal e limpa o estado IMEDIATAMENTE para evitar travamento na UI
+    setIsEditModalOpen(false);
+    setEditingOrder(null);
+
+    const docRef = doc(db, 'orders', updatedOrder.id);
+    const newTotal = updatedOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     
     const dataToUpdate = {
-      customer: editingOrder.customer,
-      items: editingOrder.items,
+      customer: updatedOrder.customer,
+      items: updatedOrder.items,
       total: newTotal,
       updatedAt: serverTimestamp()
     };
 
-    // Atualiza o banco de dados sem aguardar o retorno para evitar travamentos na UI
     updateDoc(docRef, dataToUpdate)
+      .then(() => {
+        toast({ title: "Pedido Atualizado", description: "As informações foram salvas com sucesso." });
+      })
       .catch((err) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
@@ -436,11 +572,6 @@ export default function AdminOrders() {
           requestResourceData: dataToUpdate
         } satisfies SecurityRuleContext));
       });
-
-    // Fecha o modal e limpa o estado imediatamente
-    setIsEditModalOpen(false);
-    setEditingOrder(null);
-    toast({ title: "Pedido Atualizado", description: "As informações foram salvas com sucesso." });
   };
 
   if (loading) return (
@@ -570,10 +701,12 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Modal de Edição */}
+      {/* Modal de Edição com componente isolado para performance */}
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
-        setIsEditModalOpen(open);
-        if (!open) setEditingOrder(null);
+        if (!open) {
+          setIsEditModalOpen(false);
+          setEditingOrder(null);
+        }
       }}>
         <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col h-[95vh] md:h-auto max-h-[95vh] md:max-h-[90vh]">
           <DialogHeader className="p-5 md:p-6 bg-marrom-escuro text-areia-clara shrink-0">
@@ -584,123 +717,12 @@ export default function AdminOrders() {
           </DialogHeader>
 
           {editingOrder && (
-            <ScrollArea className="flex-1">
-              <div className="p-4 md:p-6 space-y-6 md:space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <User className="w-3.5 h-3.5 text-marrom-madeira" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</Label>
-                    </div>
-                    <div className="space-y-3">
-                      <Input 
-                        placeholder="Nome do Cliente"
-                        value={editingOrder.customer.name}
-                        onChange={(e) => setEditingOrder({...editingOrder, customer: {...editingOrder.customer, name: e.target.value}})}
-                        className="bg-white border-areia-escura h-11 text-sm font-bold rounded-xl"
-                      />
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
-                        <Input 
-                          placeholder="WhatsApp"
-                          value={editingOrder.customer.phone}
-                          onChange={(e) => setEditingOrder({...editingOrder, customer: {...editingOrder.customer, phone: e.target.value.replace(/\D/g, '')}})}
-                          className="bg-white border-areia-escura h-11 pl-10 text-sm rounded-xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MapPin className="w-3.5 h-3.5 text-marrom-madeira" />
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Endereço</Label>
-                    </div>
-                    <Textarea 
-                      placeholder="Endereço de Entrega"
-                      value={editingOrder.customer.address}
-                      onChange={(e) => setEditingOrder({...editingOrder, customer: {...editingOrder.customer, address: e.target.value}})}
-                      className="bg-white border-areia-escura min-h-[90px] text-sm italic rounded-xl resize-none"
-                    />
-                  </div>
-                </div>
-
-                <Separator className="bg-areia-escura/30" />
-
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <Package className="w-3.5 h-3.5 text-marrom-madeira" />
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens do Pedido</Label>
-                  </div>
-
-                  <div className="space-y-4">
-                    {editingOrder.items?.map((item, idx) => (
-                      <div key={idx} className="p-4 bg-white/60 rounded-2xl border border-areia-escura/20 space-y-3 shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 pr-4">
-                            <p className="font-subheadline font-bold text-lg text-marrom-escuro uppercase italic leading-tight">
-                              {item.name}
-                            </p>
-                            <p className="text-[10px] font-black text-marrom-madeira/60">
-                              un. R$ {item.price.toFixed(2).replace('.', ',')}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3 bg-white border border-areia-escura/40 rounded-xl p-1 shadow-sm">
-                            <button 
-                              type="button"
-                              onClick={() => handleUpdateItemQty(idx, -1)}
-                              className="p-1 hover:bg-areia-media/20 rounded-md"
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            <span className="w-6 text-center font-black text-sm">{item.quantity}</span>
-                            <button 
-                              type="button"
-                              onClick={() => handleUpdateItemQty(idx, 1)}
-                              className="p-1 hover:bg-areia-media/20 rounded-md"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] font-bold uppercase text-fogo-vibrante/70">Observação do Item</Label>
-                          <Input 
-                            placeholder="Ex: Sem cebola..."
-                            value={item.observations || ''}
-                            onChange={(e) => handleUpdateItemObs(idx, e.target.value)}
-                            className="h-9 text-xs bg-white/40 border-areia-escura/50 rounded-lg"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </ScrollArea>
+            <EditOrderDialogContent 
+              order={editingOrder} 
+              onClose={() => setIsEditModalOpen(false)}
+              onSave={handleSaveOrderEdit} 
+            />
           )}
-
-          <DialogFooter className="p-5 md:p-6 bg-white border-t border-areia-escura shrink-0 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-center md:text-left w-full md:w-auto">
-              <p className="text-[9px] font-black uppercase text-marrom-madeira/40 tracking-widest">Novo Total</p>
-              <p className="text-2xl font-black text-marrom-escuro tracking-tighter">
-                R$ {editingOrder?.items?.reduce((acc, i) => acc + (i.price * i.quantity), 0).toFixed(2).replace('.', ',')}
-              </p>
-            </div>
-            <div className="flex gap-3 w-full md:w-auto">
-              <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="flex-1 md:flex-none text-[10px] font-bold uppercase h-12 rounded-xl">
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleSaveOrderEdit}
-                className="flex-[2] md:flex-none bg-marrom-terra text-areia-clara h-12 px-8 gap-2 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl"
-              >
-                <Save className="w-4 h-4" />
-                Salvar Alterações
-              </Button>
-            </div>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
