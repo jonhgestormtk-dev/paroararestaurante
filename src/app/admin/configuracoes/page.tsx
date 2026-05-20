@@ -3,21 +3,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Save, 
-  MessageSquare, 
-  MapPin, 
-  Clock, 
   Store,
   Sparkles,
   Loader2,
   Power,
-  TrendingUp,
   Target
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   Select, 
   SelectContent, 

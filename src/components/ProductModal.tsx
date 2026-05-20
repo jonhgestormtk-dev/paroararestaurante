@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, Wine, Check, ShoppingCart, Loader2 } from 'lucide-react';
+import { Minus, Plus, Wine, ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 
 interface ProductModalProps {
   product: Product | null;
@@ -40,11 +39,10 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     );
   }, [db, product, isOpen]);
 
-  const { data: beverages, loading: loadingBevs } = useCollection<Product>(beveragesQuery);
+  const { data: beverages } = useCollection<Product>(beveragesQuery);
 
   const filteredBeverages = useMemo(() => {
     if (!beverages) return [];
-    // Filtrar apenas ativas e garantir que não seja o próprio produto (caso raro de abrir uma bebida)
     return beverages.filter(b => b.active !== false && b.id !== product?.id);
   }, [beverages, product]);
 
@@ -54,14 +52,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       setObservations('');
       return;
     }
-    window.history.pushState({ modalOpen: true }, '');
-    const handlePopState = () => onClose();
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      if (window.history.state?.modalOpen) window.history.back();
-    };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!product) return null;
 
@@ -124,7 +115,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
             <div className="space-y-8">
               <p className={cn(
-                "text-sm md:text-lg italic leading-relaxed", 
+                "text-sm md:text-lg italic leading-relaxed font-medium", 
                 isEgua ? "text-creme-legivel/80" : "text-marrom-texto/90"
               )}>
                 {product.longDescription || product.description}
@@ -132,7 +123,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
               {/* MODO SUGESTIVO: Bebidas para acompanhar */}
               {filteredBeverages.length > 0 && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="flex items-center gap-2 mb-4">
                     <Wine className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-caramelo-palha")} />
                     <h3 className={cn(
@@ -203,7 +194,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
           </div>
         </div>
 
-        {/* Rodapé de Ação fixo */}
         <div className={cn(
           "p-5 md:p-8 shrink-0 border-t shadow-[0_-10px_30px_rgba(0,0,0,0.05)]", 
           isEgua ? "bg-black/90 border-white/5" : "bg-white/95 border-areia-escura/30"

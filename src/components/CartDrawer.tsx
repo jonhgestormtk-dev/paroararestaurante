@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -280,7 +279,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </h4>
                             {item.observations && (
                               <p className={cn(
-                                "text-[11px] md:text-xs italic mt-1.5 pl-3 border-l-2 leading-snug",
+                                "text-[11px] md:text-xs italic mt-1.5 pl-3 border-l-2 leading-snug font-medium",
                                 isEgua ? "text-fogo-vibrante border-fogo-vibrante/30" : "text-caramelo-palha border-caramelo-palha/30"
                               )}>
                                 ↳ {item.observations}
