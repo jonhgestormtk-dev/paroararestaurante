@@ -489,7 +489,7 @@ export default function AdminOrders() {
     <div className="h-[calc(100svh-160px)] md:h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 bg-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão Operacional</h1>
+          <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão de Pedidos</h1>
           <p className="text-cinza-organico font-subheadline italic text-[10px] md:text-xs">Sincronização multi-restaurante em tempo real.</p>
         </div>
 

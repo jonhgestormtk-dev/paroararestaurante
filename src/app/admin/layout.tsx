@@ -167,7 +167,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             
             <div className="flex flex-col lg:hidden">
               <h1 className="text-lg font-headline tracking-widest text-marrom-terra leading-none">GESTÃO ADM</h1>
-              <p className="text-[7px] font-black tracking-widest uppercase opacity-40">Painel de Controle</p>
             </div>
           </div>
 
