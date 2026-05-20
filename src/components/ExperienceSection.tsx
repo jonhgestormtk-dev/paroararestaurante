@@ -65,14 +65,16 @@ export function ExperienceSection() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-20 space-y-4">
           <div className={cn(
-            "flex items-center justify-center gap-2 mb-2",
-            isEgua ? "text-fogo-vibrante" : "text-marrom-terra"
+            "flex items-center justify-center gap-4 mb-4 px-8 py-3 rounded-full border w-fit mx-auto backdrop-blur-sm shadow-sm",
+            isEgua 
+              ? "text-fogo-vibrante border-fogo-vibrante/20 bg-fogo-vibrante/5" 
+              : "text-marrom-terra border-marrom-terra/20 bg-marrom-terra/5"
           )}>
-            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-marrom-terra/50")} />
-            <span className="text-[11px] font-black uppercase tracking-[0.5em]">
+            <Star className={cn("w-5 h-5 md:w-6 md:h-6", isEgua ? "fill-fogo-vibrante" : "fill-marrom-terra")} />
+            <span className="text-[12px] md:text-sm font-black uppercase tracking-[0.6em]">
               {isEgua ? 'Nossos Valores' : 'Nossa Essência'}
             </span>
-            <Star className={cn("w-4 h-4", isEgua ? "fill-fogo-vibrante" : "fill-marrom-terra/50")} />
+            <Star className={cn("w-5 h-5 md:w-6 md:h-6", isEgua ? "fill-fogo-vibrante" : "fill-marrom-terra")} />
           </div>
         </div>
 
@@ -111,3 +113,4 @@ export function ExperienceSection() {
     </section>
   );
 }
+
