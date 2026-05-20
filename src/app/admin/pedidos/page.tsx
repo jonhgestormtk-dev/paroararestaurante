@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -32,7 +31,7 @@ import {
   Phone
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, updateDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
+import { collection, updateDoc, doc, query, orderBy, Timestamp, where, serverTimestamp } from 'firebase/firestore';
 import { Order, OrderStatus, RestaurantSlug, PaymentMethod, OrderType, Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,11 +97,11 @@ const getSafeDate = (createdAt: any) => {
 
 const handleSendWhatsAppUpdate = (order: Order) => {
   const restaurantName = order.restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
-  const status = STATUS_CONFIG[order.status]?.label || order.status;
+  const statusLabel = STATUS_CONFIG[order.status]?.label || order.status;
   
   let message = `Olá, *${order.customer.name}*! 👋\n\n`;
   message += `Temos uma atualização do seu pedido no *${restaurantName}*.\n\n`;
-  message += `📍 *Status Atual:* _${status}_\n`;
+  message += `📍 *Status Atual:* _${statusLabel}_\n`;
   message += `🔢 *Pedido:* #${order.orderNumber || order.id.substring(0, 6)}\n\n`;
   
   message += `*Resumo do Pedido:*\n`;
@@ -118,6 +117,8 @@ const handleSendWhatsAppUpdate = (order: Order) => {
     message += `\n👨‍🍳 Nossos chefs já estão preparando seu prato com todo carinho.`;
   } else if (order.status === 'Pendente') {
     message += `\n✅ Recebemos seu pedido e estamos processando agora.`;
+  } else if (order.status === 'Finalizado') {
+    message += `\n✨ Seu pedido foi finalizado! Esperamos que aproveite a experiência.`;
   }
 
   const phone = order.customer.phone.replace(/\D/g, '');
@@ -253,7 +254,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
             size="icon" 
             className="h-8 w-8 rounded-full text-verde-folha hover:bg-verde-folha/10"
             onClick={() => handleSendWhatsAppUpdate(order)}
-            title="Enviar status p/ WhatsApp"
+            title="Notificar Cliente no WhatsApp"
           >
             <MessageCircle className="w-4 h-4" />
           </Button>
