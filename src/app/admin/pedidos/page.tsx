@@ -93,10 +93,13 @@ const getSafeDate = (createdAt: any) => {
 };
 
 // Componente de Contador Realtime
-const OrderTimer = ({ createdAt }: { createdAt: any }) => {
+const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus }) => {
   const [minutes, setMinutes] = useState(0);
 
   useEffect(() => {
+    // Não inicia o timer para pedidos já concluídos
+    if (status === 'Finalizado' || status === 'Cancelado') return;
+
     const calculate = () => {
       const date = getSafeDate(createdAt);
       const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
@@ -105,7 +108,17 @@ const OrderTimer = ({ createdAt }: { createdAt: any }) => {
     calculate();
     const interval = setInterval(calculate, 60000);
     return () => clearInterval(interval);
-  }, [createdAt]);
+  }, [createdAt, status]);
+
+  // Se o pedido estiver finalizado ou cancelado, exibimos apenas um marcador neutro sem alerta
+  if (status === 'Finalizado' || status === 'Cancelado') {
+    return (
+      <div className="flex items-center gap-2 text-cinza-organico/40">
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Concluído</span>
+      </div>
+    );
+  }
 
   const isCritical = minutes >= 36;
   const isAttention = minutes >= 26 && minutes < 36;
@@ -256,7 +269,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
       </div>
 
       <div className="flex items-center justify-between">
-        <OrderTimer createdAt={order.createdAt} />
+        <OrderTimer createdAt={order.createdAt} status={order.status} />
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
