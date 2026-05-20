@@ -211,14 +211,16 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <User className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
                     <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Identificação</Label>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     <Input 
                       value={customerInfo.name} 
                       onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} 
                       placeholder="Nome Completo *"
                       className={cn(
-                        "h-10 border-none rounded-lg text-xs",
-                        isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
+                        "h-12 border rounded-xl text-sm font-medium transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
+                        isEgua 
+                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                          : "bg-areia-clara/50 border-marrom-madeira/10 text-marrom-texto"
                       )}
                     />
                     <Input 
@@ -226,8 +228,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value.replace(/\D/g, '')})} 
                       placeholder="WhatsApp (com DDD) *"
                       className={cn(
-                        "h-10 border-none rounded-lg text-xs",
-                        isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
+                        "h-12 border rounded-xl text-sm font-medium transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
+                        isEgua 
+                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                          : "bg-areia-clara/50 border-marrom-madeira/10 text-marrom-texto"
                       )}
                     />
                     <Input 
@@ -235,8 +239,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})} 
                       placeholder="Endereço Completo *"
                       className={cn(
-                        "h-10 border-none rounded-lg text-xs",
-                        isEgua ? "bg-black/40 text-white placeholder:text-white/20" : "bg-areia-clara/50 text-marrom-texto"
+                        "h-12 border rounded-xl text-sm font-medium transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
+                        isEgua 
+                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                          : "bg-areia-clara/50 border-marrom-madeira/10 text-marrom-texto"
                       )}
                     />
                   </div>
@@ -325,7 +331,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {paymentMethod === 'Dinheiro' && (
                     <div className="space-y-2.5 animate-in fade-in slide-in-from-top-3 duration-300 px-1">
                       <Label className={cn(
-                        "text-creme-legivel/80",
+                        "text-sm font-medium",
                         isEgua ? "text-white" : "text-marrom-madeira"
                       )}>Precisa de troco para quanto?</Label>
                       <div className="relative">
@@ -335,8 +341,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           onChange={(e) => setChangeFor(e.target.value)}
                           placeholder="Ex: 100,00"
                           className={cn(
-                            "h-12 border-none rounded-xl text-sm font-bold pl-10",
-                            isEgua ? "bg-black/60 text-white placeholder:text-white/10" : "bg-areia-clara text-marrom-texto placeholder:text-marrom-texto/20"
+                            "h-12 border rounded-xl text-sm font-bold pl-10 transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
+                            isEgua 
+                              ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                              : "bg-areia-clara border-marrom-madeira/10 text-marrom-texto"
                           )}
                         />
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black opacity-40">R$</span>

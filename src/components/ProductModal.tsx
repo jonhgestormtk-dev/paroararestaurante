@@ -214,8 +214,10 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               <Textarea 
                 placeholder="Ex: Sem cebola, ponto da carne mal passado..."
                 className={cn(
-                  "resize-none rounded-lg min-h-[80px] md:min-h-[100px] text-sm",
-                  isEgua ? "bg-black/40 border-white/10 text-white placeholder:text-white/20" : "bg-white/60 border-areia-escura/50 text-marrom-texto focus:ring-marrom-terra"
+                  "resize-none border rounded-xl min-h-[80px] md:min-h-[100px] text-sm transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
+                  isEgua 
+                    ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                    : "bg-white/60 border-areia-escura/50 text-marrom-texto focus:ring-marrom-terra"
                 )}
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
