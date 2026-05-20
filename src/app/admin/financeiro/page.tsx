@@ -12,7 +12,7 @@ import {
   ArrowUpRight, 
   ArrowDownRight,
   Filter,
-  Calendar,
+  Calendar as CalendarIcon,
   Download,
   AlertCircle,
   Trophy,
@@ -52,10 +52,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, Timestamp, where } from 'firebase/firestore';
 import { Order } from '@/lib/types';
+import { format, isSameDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // Mock Sparkline Data for KPIs
 const SPARKLINE_UP = [10, 15, 12, 25, 30, 28, 45];
@@ -103,7 +107,7 @@ const KPICard = ({ title, value, growth, icon: Icon, isNegative = false, trendDa
 );
 
 export default function AdminFinancial() {
-  const [timeFilter, setTimeFilter] = useState('7days');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [companyFilter, setCompanyFilter] = useState('all');
   const db = useFirestore();
 
@@ -116,14 +120,23 @@ export default function AdminFinancial() {
   const stats = useMemo(() => {
     if (!orders) return null;
 
-    const currentOrders = orders.filter(o => companyFilter === 'all' || o.restaurantId === companyFilter);
+    const currentOrders = orders.filter(o => {
+      const oDate = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt);
+      const matchesDate = !selectedDate || isSameDay(oDate, selectedDate);
+      const matchesRes = companyFilter === 'all' || o.restaurantId === companyFilter;
+      return matchesDate && matchesRes;
+    });
+
     const revenue = currentOrders.reduce((acc, o) => acc + (o.total || 0), 0);
     const avgTicket = currentOrders.length > 0 ? revenue / currentOrders.length : 0;
-    const cancellations = orders.filter(o => o.status === 'Cancelado').length;
+    const cancellations = orders.filter(o => {
+      const oDate = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt);
+      return o.status === 'Cancelado' && (!selectedDate || isSameDay(oDate, selectedDate));
+    }).length;
     const estimatedProfit = revenue * 0.35; 
 
-    const paroaraOrders = orders.filter(o => o.restaurantId === 'paroara');
-    const eguaOrders = orders.filter(o => o.restaurantId === 'egua-na-panela');
+    const paroaraOrders = currentOrders.filter(o => o.restaurantId === 'paroara');
+    const eguaOrders = currentOrders.filter(o => o.restaurantId === 'egua-na-panela');
 
     const payments = currentOrders.reduce((acc: any, o) => {
       const method = o.payment?.method || 'Outros';
@@ -160,7 +173,7 @@ export default function AdminFinancial() {
       paymentData,
       hourlyData
     };
-  }, [orders, companyFilter]);
+  }, [orders, companyFilter, selectedDate]);
 
   const formatBRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -202,18 +215,25 @@ export default function AdminFinancial() {
                 </SelectContent>
               </Select>
             </div>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-40 bg-transparent border-none text-areia-clara text-xs font-bold focus:ring-0 h-10">
-                <Calendar className="w-4 h-4 mr-2 text-caramelo-palha" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-marrom-escuro border-white/10 text-areia-clara">
-                <SelectItem value="today">Hoje</SelectItem>
-                <SelectItem value="7days">Últimos 7 dias</SelectItem>
-                <SelectItem value="30days">Últimos 30 dias</SelectItem>
-                <SelectItem value="monthly">Mês Atual</SelectItem>
-              </SelectContent>
-            </Select>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-44 bg-transparent border-none text-areia-clara text-xs font-bold focus:ring-0 h-10 gap-2">
+                  <CalendarIcon className="w-4 h-4 text-caramelo-palha" />
+                  {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
+                <Calendar 
+                  mode="single" 
+                  selected={selectedDate} 
+                  onSelect={setSelectedDate} 
+                  locale={ptBR} 
+                  initialFocus 
+                />
+              </PopoverContent>
+            </Popover>
+
             <Button variant="ghost" size="icon" className="h-10 w-10 text-areia-clara hover:bg-white/10">
               <Download className="w-4 h-4" />
             </Button>
