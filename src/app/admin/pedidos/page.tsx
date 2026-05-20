@@ -153,6 +153,43 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }, [order.createdAt]);
 
+  const handleSendWhatsAppUpdate = () => {
+    const restaurantName = order.restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
+    const customerName = order.customer.name;
+    const phone = order.customer.phone.replace(/\D/g, '');
+    const orderNumber = order.orderNumber || order.id.substring(0, 6);
+    const currentStatus = STATUS_CONFIG[order.status]?.label.toUpperCase() || order.status.toUpperCase();
+    const address = order.customer.address || 'Venda Balcão / Local';
+    const paymentMethod = order.payment.method;
+    const total = order.total.toFixed(2).replace('.', ',');
+
+    let message = `Olá *${customerName}*! Passando para atualizar o status do seu pedido no *${restaurantName}*:\n\n`;
+    message += `📌 *STATUS:* ${currentStatus}\n\n`;
+    message += `🛒 *PEDIDO #${orderNumber}*\n\n`;
+    message += `👤 *Cliente:* ${customerName}\n`;
+    message += `📞 *Contato:* ${order.customer.phone}\n`;
+    message += `📍 *Entrega:* ${address}\n`;
+    message += `\n---------------------------\n`;
+    message += `*RESUMO DOS ITENS:*\n`;
+    
+    order.items?.forEach(item => {
+      message += `• ${item.quantity}x *${item.name}* — R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}\n`;
+      if (item.observations) {
+        message += `  _Obs: ${item.observations}_\n`;
+      }
+    });
+
+    message += `\n*Total: R$ ${total}*\n`;
+    message += `💳 *Pagamento:* ${paymentMethod}${order.payment.changeFor ? ` (Troco para R$ ${order.payment.changeFor.toFixed(2).replace('.', ',')})` : ''}\n`;
+    
+    message += `\n---------------------------\n`;
+    message += `_Agradecemos a preferência!_ 🧡`;
+
+    // Garante que o link funcione independente do formato inicial do telefone
+    const finalPhone = phone.startsWith('55') ? phone : `55${phone}`;
+    window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -250,13 +287,10 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
             ))}
             <div className="h-px bg-areia-escura/20 my-1" />
             <DropdownMenuItem 
-              onClick={() => {
-                const phone = order.customer.phone.replace(/\D/g, '');
-                window.open(`https://wa.me/${phone}`, '_blank');
-              }}
+              onClick={handleSendWhatsAppUpdate}
               className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-verde-folha"
             >
-              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              <MessageCircle className="w-3.5 h-3.5" /> Enviar Status
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -405,6 +439,7 @@ export default function AdminOrders() {
       .then(() => {
         toast({ title: "Pedido Atualizado" });
         setIsEditModalOpen(false);
+        setIsSaving(false);
       })
       .catch(async () => {
         setIsSaving(false);
