@@ -83,15 +83,24 @@ const PAYMENT_ICONS: Record<string, any> = {
   'Crédito': CreditCard
 };
 
+// Utilitário para extrair data com segurança
+const getSafeDate = (createdAt: any) => {
+  if (!createdAt) return new Date();
+  if (createdAt instanceof Timestamp) return createdAt.toDate();
+  if (typeof createdAt?.toDate === 'function') return createdAt.toDate();
+  if (createdAt?.seconds) return new Date(createdAt.seconds * 1000);
+  return new Date(createdAt);
+};
+
 // Componente de Contador Realtime
 const OrderTimer = ({ createdAt }: { createdAt: any }) => {
   const [minutes, setMinutes] = useState(0);
 
   useEffect(() => {
     const calculate = () => {
-      const date = createdAt instanceof Timestamp ? createdAt.toDate() : new Date(createdAt?.seconds * 1000 || createdAt);
+      const date = getSafeDate(createdAt);
       const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
-      setMinutes(diff);
+      setMinutes(Math.max(0, diff));
     };
     calculate();
     const interval = setInterval(calculate, 60000);
@@ -133,19 +142,19 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
   const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
   const type = TYPE_CONFIG[order.type || 'Delivery'];
   const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
+  
   const isLate = useMemo(() => {
-    const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000 || order.createdAt);
+    const date = getSafeDate(order.createdAt);
     return Math.floor((new Date().getTime() - date.getTime()) / 60000) >= 36;
   }, [order.createdAt]);
 
   const orderTime = useMemo(() => {
-    const date = order.createdAt instanceof Timestamp ? order.createdAt.toDate() : new Date(order.createdAt?.seconds * 1000 || order.createdAt);
+    const date = getSafeDate(order.createdAt);
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }, [order.createdAt]);
 
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -220,7 +229,6 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl bg-areia-clara border-areia-escura shadow-2xl">
-            {/* EDIÇÃO APENAS PARA PEDIDOS PENDENTES */}
             {order.status === 'Pendente' && (
               <DropdownMenuItem 
                 onClick={() => onEdit(order)}
@@ -258,9 +266,9 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
 };
 
 // Coluna do Kanban
-const KanbanColumn = ({ title, status, orders, onStatusUpdate, onEdit, icon: Icon, accentColor }: any) => {
+const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, icon: Icon, accentColor }: any) => {
   return (
-    <div className="flex flex-col h-full min-w-[310px] md:min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden snap-center md:snap-start">
+    <div className="flex flex-col h-full min-w-[310px] md:min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden">
       <div className="p-4 md:p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
@@ -293,6 +301,8 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [restaurantFilter, setRestaurantFilter] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
+  // Estados de Edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
@@ -309,7 +319,7 @@ export default function AdminOrders() {
   }, [db]);
   const { data: allOrders, loading } = useCollection<Order>(ordersQuery);
 
-  // Buscar Produtos Ativos
+  // Buscar Produtos Ativos para o seletor da edição
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), where('active', '==', true));
@@ -319,7 +329,7 @@ export default function AdminOrders() {
   const filteredOrders = useMemo(() => {
     if (!allOrders) return [];
     return allOrders.filter(o => {
-      const orderDate = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt?.seconds * 1000 || o.createdAt);
+      const orderDate = getSafeDate(o.createdAt);
       const matchesDate = !selectedDate || isSameDay(orderDate, selectedDate);
       const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
       const matchesSearch = o.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -356,21 +366,31 @@ export default function AdminOrders() {
     setEditingOrder(order);
     setEditFormData({
       customer: { ...order.customer },
-      items: [...order.items],
-      total: order.total
+      items: order.items ? [...order.items] : [],
+      total: order.total || 0
     });
     setIsEditModalOpen(true);
   };
 
   const addItemToOrder = (product: Product) => {
     if (!editFormData) return;
-    const existing = editFormData.items.find((i: any) => i.productId === product.id);
-    let newItems;
-    if (existing) {
-      newItems = editFormData.items.map((i: any) => i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+    const existingIndex = editFormData.items.findIndex((i: any) => i.productId === product.id);
+    let newItems = [...editFormData.items];
+    
+    if (existingIndex > -1) {
+      newItems[existingIndex] = { 
+        ...newItems[existingIndex], 
+        quantity: (newItems[existingIndex].quantity || 0) + 1 
+      };
     } else {
-      newItems = [...editFormData.items, { productId: product.id, name: product.name, price: product.price, quantity: 1 }];
+      newItems.push({ 
+        productId: product.id, 
+        name: product.name, 
+        price: product.price, 
+        quantity: 1 
+      });
     }
+    
     const newTotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
     setEditFormData({ ...editFormData, items: newItems, total: newTotal });
     setProductSearch('');
@@ -394,6 +414,14 @@ export default function AdminOrders() {
           requestResourceData: editFormData,
         } satisfies SecurityRuleContext));
       });
+  };
+
+  const resetModal = () => {
+    if (!isSaving) {
+      setEditingOrder(null);
+      setEditFormData(null);
+      setProductSearch('');
+    }
   };
 
   return (
@@ -429,22 +457,17 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
+      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar">
         <div className="flex gap-4 md:gap-6 h-full min-w-max px-1">
-          <KanbanColumn title="Pendentes" status="Pendente" orders={kanbanData.pendentes} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Clock} accentColor="#F59E0B" />
-          <KanbanColumn title="Em Preparo" status="Em Preparo" orders={kanbanData.preparando} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Timer} accentColor="#3B82F6" />
-          <KanbanColumn title="Saiu Entrega" status="Saiu para Entrega" orders={kanbanData.rota} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Truck} accentColor="#8B5CF6" />
-          <KanbanColumn title="Finalizados" status="Finalizado" orders={kanbanData.finalizados} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={CheckCircle2} accentColor="#10B981" />
+          <KanbanColumn title="Pendentes" orders={kanbanData.pendentes} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Clock} accentColor="#F59E0B" />
+          <KanbanColumn title="Em Preparo" orders={kanbanData.preparando} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Timer} accentColor="#3B82F6" />
+          <KanbanColumn title="Saiu Entrega" orders={kanbanData.rota} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={Truck} accentColor="#8B5CF6" />
+          <KanbanColumn title="Finalizados" orders={kanbanData.finalizados} onStatusUpdate={handleStatusUpdate} onEdit={handleEditOrder} icon={CheckCircle2} accentColor="#10B981" />
         </div>
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
-        if (!open) {
-          setEditingOrder(null);
-          setEditFormData(null);
-          setIsSaving(false);
-          setProductSearch('');
-        }
+        if (!open) resetModal();
         setIsEditModalOpen(open);
       }}>
         <DialogContent className="max-w-2xl bg-areia-clara p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
@@ -455,15 +478,15 @@ export default function AdminOrders() {
             </DialogTitle>
           </DialogHeader>
 
-          {editFormData && (
+          {editFormData ? (
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Dados do Cliente</h3>
                   <div className="space-y-3">
-                    <Input placeholder="Nome" value={editFormData.customer.name} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, name: e.target.value }})} className="bg-white border-areia-escura/50" />
-                    <Input placeholder="WhatsApp" value={editFormData.customer.phone} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, phone: e.target.value.replace(/\D/g, '') }})} className="bg-white border-areia-escura/50" />
-                    <Input placeholder="Endereço" value={editFormData.customer.address} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, address: e.target.value }})} className="bg-white border-areia-escura/50" />
+                    <Input placeholder="Nome" value={editFormData.customer?.name || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, name: e.target.value }})} className="bg-white border-areia-escura/50" />
+                    <Input placeholder="WhatsApp" value={editFormData.customer?.phone || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, phone: e.target.value.replace(/\D/g, '') }})} className="bg-white border-areia-escura/50" />
+                    <Input placeholder="Endereço" value={editFormData.customer?.address || ''} onChange={(e) => setEditFormData({...editFormData, customer: { ...editFormData.customer, address: e.target.value }})} className="bg-white border-areia-escura/50" />
                   </div>
                 </div>
 
@@ -491,13 +514,13 @@ export default function AdminOrders() {
                 <ScrollArea className="h-64 pr-4">
                   <div className="space-y-3">
                     {editFormData.items.map((item: any, idx: number) => (
-                      <div key={idx} className="p-3 bg-white rounded-xl border border-areia-escura/20 flex flex-col gap-2">
+                      <div key={`${item.productId}-${idx}`} className="p-3 bg-white rounded-xl border border-areia-escura/20 flex flex-col gap-2">
                         <div className="flex justify-between items-start">
                           <span className="text-xs font-bold uppercase truncate">{item.name}</span>
                           <button onClick={() => {
                             const newItems = editFormData.items.filter((_: any, i: number) => i !== idx);
                             setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
-                          }} className="text-rose-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                          }} className="text-rose-500 hover:scale-110 transition-transform"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] font-black">R$ {item.price.toFixed(2)}</span>
@@ -505,16 +528,17 @@ export default function AdminOrders() {
                             <button onClick={() => {
                               const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it);
                               setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
-                            }} className="p-1"><Minus className="w-3 h-3" /></button>
+                            }} className="p-1 hover:bg-areia-clara transition-colors"><Minus className="w-3 h-3" /></button>
                             <span className="text-xs font-black">{item.quantity}</span>
                             <button onClick={() => {
                               const newItems = editFormData.items.map((it: any, i: number) => i === idx ? { ...it, quantity: it.quantity + 1 } : it);
                               setEditFormData({...editFormData, items: newItems, total: newItems.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)});
-                            }} className="p-1"><Plus className="w-3 h-3" /></button>
+                            }} className="p-1 hover:bg-areia-clara transition-colors"><Plus className="w-3 h-3" /></button>
                           </div>
                         </div>
                       </div>
                     ))}
+                    {editFormData.items.length === 0 && <p className="text-center py-10 italic text-xs opacity-40">Cesta vazia</p>}
                   </div>
                 </ScrollArea>
                 <div className="pt-4 border-t border-areia-escura/30 flex justify-between items-center">
@@ -523,11 +547,15 @@ export default function AdminOrders() {
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin opacity-20" />
+            </div>
           )}
 
           <DialogFooter className="bg-white p-6 border-t border-areia-escura/20">
-            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
-            <Button onClick={saveOrderChanges} disabled={isSaving} className="bg-marrom-terra text-white hover:bg-marrom-escuro px-10 gap-2 uppercase text-[10px] font-black tracking-widest h-11 rounded-xl shadow-xl">
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} disabled={isSaving} className="uppercase text-[10px] font-bold tracking-widest">Cancelar</Button>
+            <Button onClick={saveOrderChanges} disabled={isSaving || !editFormData} className="bg-marrom-terra text-white hover:bg-marrom-escuro px-10 gap-2 uppercase text-[10px] font-black tracking-widest h-11 rounded-xl shadow-xl">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Salvar Alterações
             </Button>
