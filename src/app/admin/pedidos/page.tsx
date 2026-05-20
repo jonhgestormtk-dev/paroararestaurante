@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Search, 
   Clock, 
@@ -107,36 +108,6 @@ const getSafeDate = (createdAt: any) => {
   return new Date(createdAt);
 };
 
-const handleSendWhatsAppUpdate = (order: Order) => {
-  const restaurantName = order.restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
-  const statusLabel = STATUS_CONFIG[order.status]?.label || order.status;
-  
-  let message = `Olá, *${order.customer.name}*! 👋\n\n`;
-  message += `Temos uma atualização do seu pedido no *${restaurantName}*.\n\n`;
-  message += `📍 *Status Atual:* _${statusLabel}_\n`;
-  message += `🔢 *Pedido:* #${order.orderNumber || order.id.substring(0, 6)}\n\n`;
-  
-  message += `*Resumo do Pedido:*\n`;
-  order.items.forEach(item => {
-    message += `• ${item.quantity}x ${item.name}${item.observations ? ` (_${item.observations}_)` : ''}\n`;
-  });
-  
-  message += `\n💰 *Total:* R$ ${order.total.toFixed(2).replace('.', ',')}\n`;
-  
-  if (order.status === 'Saiu para Entrega') {
-    message += `\n🚀 Prepare a mesa! O entregador já está a caminho do seu endereço.`;
-  } else if (order.status === 'Em Preparo') {
-    message += `\n👨‍🍳 Nossos chefs já estão preparando seu prato com todo carinho.`;
-  } else if (order.status === 'Pendente') {
-    message += `\n✅ Recebemos seu pedido e estamos processando agora.`;
-  } else if (order.status === 'Finalizado') {
-    message += `\n✨ Seu pedido foi finalizado! Esperamos que aproveite a experiência.`;
-  }
-
-  const phone = order.customer.phone.replace(/\D/g, '');
-  window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, '_blank');
-};
-
 const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus }) => {
   const [minutes, setMinutes] = useState(0);
 
@@ -181,7 +152,17 @@ const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus
   );
 };
 
-const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUpdate: (id: string, s: OrderStatus) => void; onEdit: (order: Order) => void }) => {
+const OrderCard = ({ 
+  order, 
+  onStatusUpdate, 
+  onEdit,
+  onNotify 
+}: { 
+  order: Order; 
+  onStatusUpdate: (id: string, s: OrderStatus) => void; 
+  onEdit: (order: Order) => void;
+  onNotify: (order: Order) => void;
+}) => {
   const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
   const type = TYPE_CONFIG[order.type || 'Delivery'] || TYPE_CONFIG['Delivery'];
   const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
@@ -199,6 +180,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
 
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -265,7 +247,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 rounded-full text-verde-folha hover:bg-verde-folha/10"
-            onClick={() => handleSendWhatsAppUpdate(order)}
+            onClick={() => onNotify(order)}
             title="Notificar Cliente no WhatsApp"
           >
             <MessageCircle className="w-4 h-4" />
@@ -287,16 +269,19 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
                   Editar Pedido
                 </DropdownMenuItem>
               )}
-              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                <DropdownMenuItem 
-                  key={key} 
-                  onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
-                  className="text-[10px] font-black uppercase gap-3 py-2.5"
-                >
-                  <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
-                  Mudar para: {cfg.label}
-                </DropdownMenuItem>
-              ))}
+              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
+                if (key === order.status) return null;
+                return (
+                  <DropdownMenuItem 
+                    key={key} 
+                    onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
+                    className="text-[10px] font-black uppercase gap-3 py-2.5"
+                  >
+                    <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
+                    Mudar para: {cfg.label}
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -305,7 +290,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
   );
 };
 
-const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, icon: Icon, accentColor }: any) => {
+const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, onNotify, icon: Icon, accentColor }: any) => {
   return (
     <div className="flex flex-col h-full min-w-[310px] md:min-w-[320px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden">
       <div className="p-4 md:p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
@@ -321,7 +306,13 @@ const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, icon: Icon, accen
         <div className="p-3 md:p-4 space-y-4">
           <AnimatePresence mode="popLayout">
             {orders.map((order: any) => (
-              <OrderCard key={order.id} order={order} onStatusUpdate={onStatusUpdate} onEdit={onEdit} />
+              <OrderCard 
+                key={order.id} 
+                order={order} 
+                onStatusUpdate={onStatusUpdate} 
+                onEdit={onEdit}
+                onNotify={onNotify}
+              />
             ))}
           </AnimatePresence>
         </div>
@@ -370,9 +361,69 @@ export default function AdminOrders() {
   const handleStatusUpdate = (id: string, newStatus: OrderStatus) => {
     if (!db) return;
     const docRef = doc(db, 'orders', id);
-    updateDoc(docRef, { status: newStatus }).then(() => {
-      toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
+    const dataToUpdate = { status: newStatus, updatedAt: serverTimestamp() };
+    
+    updateDoc(docRef, dataToUpdate)
+      .then(() => {
+        toast({ title: "Status Atualizado", description: `Pedido movido para: ${newStatus}` });
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: dataToUpdate
+        } satisfies SecurityRuleContext));
+      });
+  };
+
+  const handleNotifyClient = (order: Order) => {
+    const restaurantName = order.restaurantId === 'paroara' ? 'PAROARA' : 'Égua na Panela';
+    const statusLabel = STATUS_CONFIG[order.status]?.label || order.status;
+    
+    let message = `Olá, *${order.customer.name}*! 👋\n\n`;
+    message += `Temos uma atualização do seu pedido no *${restaurantName}*.\n\n`;
+    message += `📍 *Status Atual:* _${statusLabel}_\n`;
+    message += `🔢 *Pedido:* #${order.orderNumber || order.id.substring(0, 6)}\n\n`;
+    
+    message += `*Resumo do Pedido:*\n`;
+    order.items.forEach(item => {
+      message += `• ${item.quantity}x ${item.name}${item.observations ? ` (_${item.observations}_)` : ''}\n`;
     });
+    
+    message += `\n💰 *Total:* R$ ${order.total.toFixed(2).replace('.', ',')}\n`;
+    
+    if (order.status === 'Saiu para Entrega') {
+      message += `\n🚀 Prepare a mesa! O entregador já está a caminho do seu endereço.`;
+    } else if (order.status === 'Em Preparo') {
+      message += `\n👨‍🍳 Nossos chefs já estão preparando seu prato com todo carinho.`;
+    } else if (order.status === 'Pendente') {
+      message += `\n✅ Recebemos seu pedido e estamos processando agora.`;
+    } else if (order.status === 'Finalizado') {
+      message += `\n✨ Seu pedido foi finalizado! Esperamos que aproveite a experiência.`;
+    }
+
+    const phone = order.customer.phone.replace(/\D/g, '');
+    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const handleOpenEdit = (order: Order) => {
+    setEditingOrder(JSON.parse(JSON.stringify(order)));
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateItemObs = (idx: number, obs: string) => {
+    if (!editingOrder) return;
+    const newItems = [...editingOrder.items];
+    newItems[idx] = { ...newItems[idx], observations: obs };
+    setEditingOrder({ ...editingOrder, items: newItems });
+  };
+
+  const handleUpdateItemQty = (idx: number, delta: number) => {
+    if (!editingOrder) return;
+    const newItems = [...editingOrder.items];
+    const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
+    newItems[idx] = { ...newItems[idx], quantity: newQty };
+    setEditingOrder({ ...editingOrder, items: newItems });
   };
 
   const handleSaveOrderEdit = () => {
@@ -395,33 +446,12 @@ export default function AdminOrders() {
         setEditingOrder(null);
       })
       .catch(async (err) => {
-        console.error("Erro ao salvar edição:", err);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
           requestResourceData: dataToUpdate
         } satisfies SecurityRuleContext));
       });
-  };
-
-  const handleUpdateItemObs = (idx: number, obs: string) => {
-    if (!editingOrder) return;
-    const newItems = [...editingOrder.items];
-    newItems[idx] = { ...newItems[idx], observations: obs };
-    setEditingOrder({ ...editingOrder, items: newItems });
-  };
-
-  const handleUpdateItemQty = (idx: number, delta: number) => {
-    if (!editingOrder) return;
-    const newItems = [...editingOrder.items];
-    const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
-    newItems[idx] = { ...newItems[idx], quantity: newQty };
-    setEditingOrder({ ...editingOrder, items: newItems });
-  };
-
-  const handleOpenEdit = (order: Order) => {
-    setEditingOrder(JSON.parse(JSON.stringify(order))); // Deep copy para evitar mutação direta
-    setIsEditModalOpen(true);
   };
 
   return (
@@ -435,14 +465,23 @@ export default function AdminOrders() {
         <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
-            <Input placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-xs" />
+            <Input 
+              placeholder="Buscar..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              className="pl-10 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-xs" 
+            />
           </div>
           <div className="flex items-center gap-2 w-full md:w-auto">
             <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
               <SelectTrigger className="flex-1 md:w-40 h-10 md:h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-[10px]">
                 <div className="flex items-center gap-2"><Store className="w-3.5 h-3.5" /><SelectValue placeholder="Restaurante" /></div>
               </SelectTrigger>
-              <SelectContent><SelectItem value="all">Consolidado</SelectItem><SelectItem value="paroara">Paroara</SelectItem><SelectItem value="egua-na-panela">Égua na Panela</SelectItem></SelectContent>
+              <SelectContent>
+                <SelectItem value="all">Consolidado</SelectItem>
+                <SelectItem value="paroara">Paroara</SelectItem>
+                <SelectItem value="egua-na-panela">Égua na Panela</SelectItem>
+              </SelectContent>
             </Select>
             <Popover>
               <PopoverTrigger asChild>
@@ -466,6 +505,7 @@ export default function AdminOrders() {
             orders={kanbanData.pendentes} 
             onStatusUpdate={handleStatusUpdate} 
             onEdit={handleOpenEdit} 
+            onNotify={handleNotifyClient}
             icon={Clock} 
             accentColor="#F59E0B" 
           />
@@ -474,6 +514,7 @@ export default function AdminOrders() {
             orders={kanbanData.preparando} 
             onStatusUpdate={handleStatusUpdate} 
             onEdit={handleOpenEdit} 
+            onNotify={handleNotifyClient}
             icon={Timer} 
             accentColor="#3B82F6" 
           />
@@ -482,6 +523,7 @@ export default function AdminOrders() {
             orders={kanbanData.rota} 
             onStatusUpdate={handleStatusUpdate} 
             onEdit={handleOpenEdit} 
+            onNotify={handleNotifyClient}
             icon={Truck} 
             accentColor="#8B5CF6" 
           />
@@ -490,6 +532,7 @@ export default function AdminOrders() {
             orders={kanbanData.finalizados} 
             onStatusUpdate={handleStatusUpdate} 
             onEdit={handleOpenEdit} 
+            onNotify={handleNotifyClient}
             icon={CheckCircle2} 
             accentColor="#10B981" 
           />
