@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -40,15 +39,6 @@ export function Hero() {
         {/* Text Content */}
         <div className="space-y-3 md:space-y-6 text-center lg:text-left z-10 animate-in fade-in slide-in-from-left-8 duration-1000 order-2 lg:order-1">
           <div className="space-y-1 md:space-y-2">
-            <div className="flex items-center justify-center lg:justify-start gap-2 md:gap-3">
-              <div className={cn("h-[1px] w-4 md:w-6 hidden lg:block", isEgua ? "bg-fogo-vibrante/40" : "bg-verde-folha/40")}></div>
-              <p className={cn(
-                "font-subheadline text-[10px] md:text-sm italic tracking-wide",
-                isEgua ? "text-fogo-vibrante" : "text-verde-folha"
-              )}>
-                {isEgua ? 'Sabor que incendeia a tradição' : 'Sabor autêntico da Amazônia'}
-              </p>
-            </div>
             <h2 className={cn(
               "text-3xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight",
               isEgua ? "text-white font-subheadline font-bold italic" : "text-marrom-terra font-headline"
