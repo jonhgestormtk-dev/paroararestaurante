@@ -219,7 +219,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       className={cn(
                         "h-12 border rounded-xl text-sm font-medium transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
                         isEgua 
-                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/80" 
                           : "bg-areia-clara/50 border-marrom-madeira/10 text-marrom-texto"
                       )}
                     />
@@ -230,7 +230,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       className={cn(
                         "h-12 border rounded-xl text-sm font-medium transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
                         isEgua 
-                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/80" 
                           : "bg-areia-clara/50 border-marrom-madeira/10 text-marrom-texto"
                       )}
                     />
@@ -241,7 +241,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       className={cn(
                         "h-12 border rounded-xl text-sm font-medium transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
                         isEgua 
-                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                          ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/80" 
                           : "bg-areia-clara/50 border-marrom-madeira/10 text-marrom-texto"
                       )}
                     />
@@ -343,7 +343,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           className={cn(
                             "h-12 border rounded-xl text-sm font-bold pl-10 transition-all focus:ring-1 focus:ring-fogo-vibrante/50",
                             isEgua 
-                              ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/60" 
+                              ? "bg-black/80 border-white/10 text-white placeholder:text-creme-legivel/80" 
                               : "bg-areia-clara border-marrom-madeira/10 text-marrom-texto"
                           )}
                         />
@@ -353,58 +353,66 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   )}
                 </div>
 
-                {/* Lista de Itens */}
+                {/* Lista de Itens - Resumo do Pedido */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 px-1">
                     <ClipboardList className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] opacity-60">Resumo do Pedido</h3>
+                    <h3 className={cn(
+                      "text-base font-subheadline font-bold uppercase tracking-[0.1em]",
+                      isEgua ? "text-white/80" : "text-marrom-madeira/80"
+                    )}>Resumo do Pedido</h3>
                   </div>
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     {cart.map((item) => (
                       <div 
                         key={item.id} 
                         className={cn(
-                          "p-3 rounded-2xl border flex flex-col gap-2 animate-in fade-in slide-in-from-right-4 duration-300",
-                          isEgua ? "bg-preto-panela/30 border-white/5" : "bg-white border-marrom-madeira/5 shadow-sm"
+                          "p-4 rounded-2xl border flex flex-col gap-3 animate-in fade-in slide-in-from-right-4 duration-300",
+                          isEgua ? "bg-preto-panela/40 border-white/5" : "bg-white border-marrom-madeira/5 shadow-sm"
                         )}
                       >
                         <div className="flex gap-4">
-                          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-inner">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-inner">
                             <img 
                               src={item.imageUrl || `https://picsum.photos/seed/${item.id}/200/200`} 
                               alt={item.name} 
                               className="object-cover w-full h-full" 
                             />
                           </div>
-                          <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <div className="flex justify-between items-start mb-0.5">
-                              <h4 className={cn("font-bold text-xs uppercase truncate", isEgua ? "text-white" : "text-marrom-texto")}>
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                              <h4 className={cn(
+                                "font-subheadline font-bold text-lg md:text-xl uppercase italic leading-tight truncate",
+                                isEgua ? "text-white" : "text-marrom-texto"
+                              )}>
                                 {item.name}
                               </h4>
                               <button 
                                 onClick={() => removeFromCart(item.id)}
-                                className="text-destructive/40 hover:text-destructive p-1 transition-colors"
+                                className="text-destructive/40 hover:text-destructive p-1.5 transition-colors"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
-                            <p className={cn("text-[9px] font-subheadline italic mb-2", isEgua ? "text-creme-legivel/40" : "text-cinza-organico/60")}>
+                            
+                            <p className={cn("text-[10px] font-bold uppercase tracking-widest opacity-40 -mt-1", isEgua ? "text-creme-suave" : "text-marrom-madeira")}>
                               {item.restaurantId === 'paroara' ? 'Paroara' : 'Égua na Panela'}
                             </p>
-                            <div className="flex items-center justify-between mt-auto">
+
+                            <div className="flex items-center justify-between mt-2">
                               <div className={cn(
-                                "flex items-center gap-3 px-2 py-1 rounded-full",
+                                "flex items-center gap-4 px-3 py-1.5 rounded-xl",
                                 isEgua ? "bg-black/60" : "bg-areia-clara/60"
                               )}>
                                 <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
-                                  <Minus className="w-3 h-3"/>
+                                  <Minus className="w-3.5 h-3.5"/>
                                 </button>
-                                <span className="text-[10px] font-black w-4 text-center">{item.quantity}</span>
+                                <span className="text-xs font-black w-4 text-center">{item.quantity}</span>
                                 <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className={cn("hover:text-fogo-vibrante transition-colors", isEgua ? "text-white/40" : "text-marrom-madeira/40")}>
-                                  <Plus className="w-3 h-3"/>
+                                  <Plus className="w-3.5 h-3.5"/>
                                 </button>
                               </div>
-                              <span className={cn("font-black text-[13px] tracking-tight", isEgua ? "text-white" : "text-marrom-escuro")}>
+                              <span className={cn("font-black text-base md:text-lg tracking-tighter", isEgua ? "text-white" : "text-marrom-escuro")}>
                                 R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
                               </span>
                             </div>
@@ -412,10 +420,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </div>
                         {item.observations && (
                           <div className={cn(
-                            "px-3 py-2 rounded-lg text-[10px] italic",
-                            isEgua ? "bg-white/5 text-white/60" : "bg-areia-clara/50 text-marrom-madeira/70"
+                            "px-4 py-2.5 rounded-xl text-xs italic leading-relaxed",
+                            isEgua ? "bg-white/5 text-white/70" : "bg-areia-clara/50 text-marrom-madeira/80"
                           )}>
-                            <span className="font-bold not-italic uppercase tracking-widest text-[8px] opacity-40 mr-2">Obs:</span>
+                            <span className="font-bold not-italic uppercase tracking-widest text-[9px] opacity-40 mr-2">Obs:</span>
                             {item.observations}
                           </div>
                         )}
