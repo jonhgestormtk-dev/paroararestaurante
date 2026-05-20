@@ -290,7 +290,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
               onClick={handleSendWhatsAppUpdate}
               className="text-[10px] font-black uppercase tracking-widest gap-3 py-2.5 text-verde-folha"
             >
-              <MessageCircle className="w-3.5 h-3.5" /> Enviar Status
+              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -406,6 +406,13 @@ export default function AdminOrders() {
     setIsEditModalOpen(true);
   };
 
+  const resetModal = () => {
+    setEditingOrder(null);
+    setEditFormData(null);
+    setProductSearch('');
+    setIsSaving(false);
+  };
+
   const addItemToOrder = (product: Product) => {
     if (!editFormData) return;
     const existingIndex = editFormData.items.findIndex((i: any) => i.productId === product.id);
@@ -430,13 +437,6 @@ export default function AdminOrders() {
     setProductSearch('');
   };
 
-  const resetModal = () => {
-    setEditingOrder(null);
-    setEditFormData(null);
-    setProductSearch('');
-    setIsSaving(false);
-  };
-
   const saveOrderChanges = () => {
     if (!db || !editingOrder || !editFormData || isSaving) return;
     setIsSaving(true);
@@ -446,9 +446,14 @@ export default function AdminOrders() {
     updateDoc(docRef, editFormData)
       .then(() => {
         toast({ title: "Pedido Atualizado" });
-        setIsSaving(false);
+        
+        // ORDEM CRÍTICA: Fecha o modal primeiro
         setIsEditModalOpen(false);
-        // O resetModal será chamado pelo onOpenChange do Dialog
+        
+        // Espera o encerramento da animação de saída do Radix UI antes de limpar estados
+        setTimeout(() => {
+          resetModal();
+        }, 300);
       })
       .catch(async () => {
         setIsSaving(false);
@@ -502,12 +507,17 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <Dialog open={isEditModalOpen} onOpenChange={(open) => {
-        if (isSaving) return; // Impede fechar enquanto salva para evitar travamentos de UI
-        if (!open) resetModal();
-        setIsEditModalOpen(open);
-      }}>
-        <DialogContent className="max-w-2xl bg-areia-clara p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
+      <Dialog 
+        open={isEditModalOpen} 
+        onOpenChange={(open) => {
+          if (!open && !isSaving) {
+            setIsEditModalOpen(false);
+            // Limpa o estado somente após o fechamento para evitar quebra de render
+            setTimeout(resetModal, 300);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl bg-areia-clara p-0 border-none shadow-2xl rounded-3xl overflow-hidden pointer-events-auto">
           <DialogHeader className="bg-marrom-escuro p-6 text-areia-clara">
             <DialogTitle className="font-headline tracking-widest uppercase text-xl flex items-center gap-3">
               <Edit2 className="w-5 h-5 text-caramelo-palha" />
@@ -604,3 +614,4 @@ export default function AdminOrders() {
     </div>
   );
 }
+
