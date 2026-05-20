@@ -54,7 +54,6 @@ export default function SplashPage() {
                 idx === 0 ? "delay-300" : "delay-500"
               )}
             >
-              {/* Background Image */}
               <div className="absolute inset-0">
                 <img 
                   src={res.image} 
@@ -63,7 +62,6 @@ export default function SplashPage() {
                 />
               </div>
 
-              {/* Top Badge */}
               <div className="absolute top-6 left-6 z-20">
                 <div className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-full text-white font-black text-[9px] tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/10",
@@ -85,7 +83,6 @@ export default function SplashPage() {
                 <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2 uppercase">{res.name}</h2>
                 <p className="text-caramelo-palha font-subheadline text-xl italic mb-6">{res.tagline}</p>
                 
-                {/* Description - Hidden by default, slides up on hover on desktop, always visible on mobile if needed but here we keep the hover effect */}
                 <div className="overflow-hidden max-h-0 group-hover:max-h-32 transition-all duration-700 ease-in-out opacity-0 group-hover:opacity-100">
                   <p className="text-white/80 font-body text-sm max-w-sm mb-8 leading-relaxed italic">
                     {res.description}

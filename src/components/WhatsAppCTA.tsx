@@ -14,9 +14,10 @@ export function WhatsAppCTA() {
   }, [pathname]);
 
   const isEgua = restaurantSlug === 'egua-na-panela';
+  const whatsappNumber = '5591985256348';
 
   const handleOrder = () => {
-    window.open('https://wa.me/5591985256348', '_blank');
+    window.open(`https://wa.me/${whatsappNumber}`, '_blank');
   };
 
   return (
@@ -24,7 +25,6 @@ export function WhatsAppCTA() {
       "py-24 md:py-32 relative overflow-hidden transition-colors",
       isEgua ? "bg-preto-carvao" : "bg-marrom-escuro"
     )}>
-      {/* Texture and Gradients */}
       <div className={cn(
         "absolute top-0 left-0 w-full h-full opacity-[0.08] pointer-events-none",
         isEgua ? "bg-carbon-texture" : "bg-rustic-texture"
@@ -75,7 +75,7 @@ export function WhatsAppCTA() {
             <p className={cn(
               "font-black text-xl md:text-2xl tracking-widest",
               isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
-            )}>+55 91 98525-6348</p>
+            )}>(91) 98525-6348</p>
           </div>
         </div>
       </div>

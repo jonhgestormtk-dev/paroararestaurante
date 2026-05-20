@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, Wine, Loader2, Check } from 'lucide-react';
+import { Minus, Plus, Wine, Check } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
   const db = useFirestore();
 
-  // Buscar Bebidas para Sugestão (Upselling)
+  // Buscar Bebidas Ativas para Upselling
   const drinksQuery = useMemo(() => {
     if (!db || !product || product.category === 'Bebidas') return null;
     return query(
@@ -40,7 +40,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     );
   }, [db, product]);
 
-  const { data: suggestedDrinks, loading: loadingDrinks } = useCollection<Product>(drinksQuery);
+  const { data: suggestedDrinks } = useCollection<Product>(drinksQuery);
 
   if (!product) return null;
 
@@ -51,7 +51,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       description: `${quantity}x ${product.name} na sua sacola.`
     });
     onClose();
-    // Limpar estados
     setQuantity(1);
     setObservations('');
     setAddedDrinks([]);
@@ -139,7 +138,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 <div className="flex items-center gap-2 mb-4">
                   <Wine className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-terra")} />
                   <h4 className={cn(
-                    "text-[14px] md:text-lg font-subheadline font-bold",
+                    "text-base md:text-xl font-subheadline font-bold",
                     isEgua ? "text-fogo-vibrante" : "text-marrom-madeira"
                   )}>Que tal uma bebida para acompanhar?</h4>
                 </div>

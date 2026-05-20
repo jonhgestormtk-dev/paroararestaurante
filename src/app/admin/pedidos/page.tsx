@@ -128,7 +128,7 @@ const OrderTimer = ({ createdAt }: { createdAt: any }) => {
   );
 };
 
-// Card de Pedido Operacional
+// Card de Pedido Operacional com Resumo de Itens
 const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUpdate: (id: string, s: OrderStatus) => void; onEdit: (order: Order) => void }) => {
   const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
   const type = TYPE_CONFIG[order.type || 'Delivery'];
@@ -195,15 +195,15 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
         </div>
       </div>
 
-      <div className="mb-4 space-y-1 px-1 py-2 border-t border-b border-areia-escura/10 bg-areia-clara/5 rounded-sm">
+      {/* Resumo dos Itens no Kanban */}
+      <div className="mb-4 space-y-1.5 px-2 py-2 border-t border-b border-areia-escura/10 bg-areia-clara/5 rounded-sm">
         {order.items?.map((item, idx) => (
-          <div key={idx} className="space-y-0.5">
+          <div key={idx} className="flex flex-col">
             <div className="flex justify-between items-center text-[10px] font-bold text-marrom-madeira/80 leading-tight">
               <span className="truncate pr-2">{item.quantity}x {item.name}</span>
-              <span className="shrink-0 opacity-40 font-mono text-[9px]">R${(item.price * item.quantity).toFixed(2)}</span>
             </div>
             {item.observations && (
-              <p className="text-[9px] italic text-fogo-vibrante/70 pl-3 leading-tight border-l border-fogo-vibrante/20 py-0.5">
+              <p className="text-[9px] italic text-fogo-vibrante/70 pl-3 leading-tight border-l-2 border-fogo-vibrante/20 mt-0.5">
                 ↳ {item.observations}
               </p>
             )}
@@ -329,7 +329,7 @@ export default function AdminOrders() {
   }, [db]);
   const { data: allOrders, loading } = useCollection<Order>(ordersQuery);
 
-  // Buscar Produtos para adição no pedido
+  // Buscar Produtos Ativos
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), where('active', '==', true));
@@ -431,21 +431,19 @@ export default function AdminOrders() {
     setIsSaving(true);
     const docRef = doc(db, 'orders', editingOrder.id);
     
-    // Mutações não-bloqueantes seguindo diretrizes de performance
+    // Seguindo diretrizes de performance: evitar await direto
     updateDoc(docRef, editFormData)
       .then(() => {
         toast({ title: "Pedido Atualizado" });
-        setIsEditModalOpen(false); // O fechamento disparará a limpeza via onOpenChange
+        setIsEditModalOpen(false); // A limpeza será feita no onOpenChange
       })
       .catch(async () => {
+        setIsSaving(false);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
           requestResourceData: editFormData,
         } satisfies SecurityRuleContext));
-      })
-      .finally(() => {
-        setIsSaving(false);
       });
   };
 
@@ -553,9 +551,10 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Modal de Edição de Pedido Centralizado para prevenir travamentos */}
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
         if (!open) {
-          // Centraliza a limpeza de estado no evento de fechamento para evitar freezes
+          // Limpeza imediata ao fechar o modal (independente de como foi fechado)
           setEditingOrder(null);
           setEditFormData(null);
           setProductSearch('');
