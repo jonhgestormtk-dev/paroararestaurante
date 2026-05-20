@@ -81,7 +81,7 @@ export default function AdminSettings() {
       .then(() => {
         toast({
           title: "Configurações Salvas",
-          description: "As informações do restaurante foram atualizadas com sucesso.",
+          description: "As informações e o status dos restaurantes foram atualizados.",
         });
         setIsLoading(false);
       })

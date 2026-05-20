@@ -24,7 +24,7 @@ export default function SplashPage() {
       image: 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg',
       badge: 'DIA A DIA / RÁPIDO',
       badgeIcon: <Zap className="w-3 h-3" />,
-      isActive: settings?.eguaActive ?? true,
+      isActive: settings?.eguaActive !== false, // Default true
       inactiveMessage: settings?.eguaMessage || 'Desculpe! Não estamos em funcionamento hoje.'
     },
     {
@@ -38,7 +38,7 @@ export default function SplashPage() {
       image: 'https://i.ibb.co/MyTx3cXr/file.jpg',
       badge: 'GOURMET / EXPERIÊNCIA',
       badgeIcon: <Sparkles className="w-3 h-3" />,
-      isActive: settings?.paroaraActive ?? true,
+      isActive: settings?.paroaraActive !== false, // Default true
       inactiveMessage: settings?.paroaraMessage || 'Desculpe! Não estamos em funcionamento hoje.'
     }
   ];
@@ -91,23 +91,24 @@ export default function SplashPage() {
                   <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2 uppercase">{res.name}</h2>
                   <p className="text-caramelo-palha font-subheadline text-xl font-bold italic mb-6">{res.tagline}</p>
                   
-                  <div className="overflow-hidden max-h-0 group-hover:max-h-32 transition-all duration-700 ease-in-out opacity-0 group-hover:opacity-100">
-                    <p className="text-white/80 font-body text-sm max-w-sm mb-8 leading-relaxed italic">
-                      {res.description}
-                    </p>
-                  </div>
-                  
                   {res.isActive ? (
-                    <div className={cn(
-                      "flex items-center gap-2 px-8 py-4 mt-4 rounded-full text-white font-black uppercase tracking-widest text-xs transition-all",
-                      res.color, res.hoverColor, "shadow-2xl"
-                    )}>
-                      Explorar Sabores
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                    </div>
+                    <>
+                      <div className="overflow-hidden max-h-0 group-hover:max-h-32 transition-all duration-700 ease-in-out opacity-0 group-hover:opacity-100">
+                        <p className="text-white/80 font-body text-sm max-w-sm mb-8 leading-relaxed italic">
+                          {res.description}
+                        </p>
+                      </div>
+                      <div className={cn(
+                        "flex items-center gap-2 px-8 py-4 mt-4 rounded-full text-white font-black uppercase tracking-widest text-xs transition-all",
+                        res.color, res.hoverColor, "shadow-2xl"
+                      )}>
+                        Explorar Sabores
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                      </div>
+                    </>
                   ) : (
-                    <div className="mt-4 p-4 rounded-2xl bg-black/60 border border-white/10 backdrop-blur-sm">
-                      <p className="text-white font-subheadline italic text-lg">{res.inactiveMessage}</p>
+                    <div className="mt-4 p-6 rounded-2xl bg-black/60 border border-white/10 backdrop-blur-md animate-in zoom-in duration-500">
+                      <p className="text-white font-subheadline italic text-lg leading-tight">{res.inactiveMessage}</p>
                     </div>
                   )}
                 </div>

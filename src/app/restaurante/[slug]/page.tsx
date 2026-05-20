@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -13,11 +12,12 @@ import { WhatsAppCTA } from '@/components/WhatsAppCTA';
 import { CartTray } from '@/components/CartTray';
 import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
 import { CartProvider } from '@/context/CartContext';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc } from '@/firebase';
+import { collection, query, orderBy, where, doc } from 'firebase/firestore';
 import { Product, RestaurantSlug } from '@/lib/types';
-import { Sparkles, Loader2, Flame, Utensils } from 'lucide-react';
+import { Sparkles, Loader2, Flame, Utensils, AlertCircle, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function RestaurantHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -27,6 +27,21 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
   const db = useFirestore();
 
   const isEgua = restaurantId === 'egua-na-panela';
+
+  // Buscar Status de Funcionamento
+  const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
+  const { data: settings, loading: settingsLoading } = useDoc<any>(settingsRef);
+
+  const isActive = useMemo(() => {
+    if (settingsLoading) return true;
+    if (isEgua) return settings?.eguaActive !== false;
+    return settings?.paroaraActive !== false;
+  }, [settings, isEgua, settingsLoading]);
+
+  const inactiveMessage = useMemo(() => {
+    if (isEgua) return settings?.eguaMessage || 'Desculpe! Não estamos em funcionamento hoje.';
+    return settings?.paroaraMessage || 'Desculpe! Não estamos em funcionamento hoje.';
+  }, [settings, isEgua]);
 
   const restaurantDisplayName = useMemo(() => {
     if (isEgua) return 'Égua na Panela';
@@ -80,6 +95,39 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     if (activeCategory === 'Todos') return activeOnly;
     return activeOnly.filter(p => p.category === activeCategory);
   }, [activeCategory, allProductsRaw]);
+
+  // Se o restaurante estiver inativo, mostra tela de bloqueio
+  if (!settingsLoading && !isActive) {
+    return (
+      <div className={cn(
+        "min-h-screen flex flex-col items-center justify-center p-6 text-center",
+        isEgua ? "bg-preto-carvao text-white" : "bg-areia-clara text-marrom-terra"
+      )}>
+        <div className="absolute inset-0 bg-rustic-texture opacity-[0.03] pointer-events-none"></div>
+        <div className="max-w-md space-y-8 animate-in zoom-in duration-500">
+          <div className={cn(
+            "w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6",
+            isEgua ? "bg-fogo-vibrante/20" : "bg-marrom-terra/10"
+          )}>
+            <AlertCircle className={cn("w-10 h-10", isEgua ? "text-fogo-vibrante" : "text-marrom-terra")} />
+          </div>
+          <h1 className="text-4xl font-headline uppercase tracking-widest">{restaurantDisplayName}</h1>
+          <div className={cn("p-8 rounded-3xl border shadow-2xl", isEgua ? "bg-black/40 border-white/10" : "bg-white border-areia-escura/30")}>
+            <p className="text-xl font-subheadline italic mb-8">{inactiveMessage}</p>
+            <Link href="/">
+              <Button className={cn(
+                "w-full gap-3 font-black uppercase tracking-widest text-xs h-14 rounded-xl",
+                isEgua ? "bg-fogo-vibrante text-white" : "bg-marrom-terra text-white"
+              )}>
+                <Home className="w-4 h-4" />
+                Voltar para o Início
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <CartProvider>
