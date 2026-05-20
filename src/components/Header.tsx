@@ -61,12 +61,12 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2 md:gap-5 group">
             <div className="flex flex-col items-start">
               <h1 className={cn(
-                "text-2xl md:text-4xl leading-none flex items-center gap-2",
+                "text-3xl md:text-5xl leading-none flex items-center gap-2",
                 isEgua 
                   ? "text-fogo-vibrante tracking-tighter font-subheadline font-bold italic" 
                   : "font-headline text-caramelo-palha tracking-[0.2em] uppercase"
               )}>
-                {isEgua && <Flame className="w-5 h-5 animate-pulse" />}
+                {isEgua && <Flame className="w-5 h-5 md:w-6 md:h-6 animate-pulse" />}
                 {restaurantName}
               </h1>
               <p className={cn(
