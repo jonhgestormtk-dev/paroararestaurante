@@ -97,7 +97,7 @@ const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus
   const [minutes, setMinutes] = useState(0);
 
   useEffect(() => {
-    // Não inicia o timer para pedidos já concluídos
+    // Congelar cronômetro se estiver finalizado ou cancelado
     if (status === 'Finalizado' || status === 'Cancelado') return;
 
     const calculate = () => {
@@ -110,7 +110,7 @@ const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus
     return () => clearInterval(interval);
   }, [createdAt, status]);
 
-  // Se o pedido estiver finalizado ou cancelado, exibimos apenas um marcador neutro sem alerta
+  // Se o pedido estiver finalizado ou cancelado, removemos o alerta e o cronômetro ativo
   if (status === 'Finalizado' || status === 'Cancelado') {
     return (
       <div className="flex items-center gap-2 text-cinza-organico/40">
@@ -157,9 +157,11 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
   const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
   
   const isLate = useMemo(() => {
+    // Alerta de atraso apenas se NÃO estiver finalizado/cancelado
+    if (order.status === 'Finalizado' || order.status === 'Cancelado') return false;
     const date = getSafeDate(order.createdAt);
     return Math.floor((new Date().getTime() - date.getTime()) / 60000) >= 36;
-  }, [order.createdAt]);
+  }, [order.createdAt, order.status]);
 
   const orderTime = useMemo(() => {
     const date = getSafeDate(order.createdAt);
@@ -209,10 +211,10 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
       exit={{ opacity: 0, scale: 0.95 }}
       className={cn(
         "group relative bg-white rounded-2xl p-4 border border-areia-escura/30 shadow-sm hover:shadow-xl transition-all duration-300",
-        isLate && order.status !== 'Finalizado' && "ring-1 ring-rose-500/20 bg-rose-50/20 shadow-rose-100"
+        isLate && "ring-1 ring-rose-500/20 bg-rose-50/20 shadow-rose-100"
       )}
     >
-      {isLate && order.status !== 'Finalizado' && (
+      {isLate && (
         <div className="absolute -top-2 -right-2 bg-rose-500 text-white text-[8px] font-black px-2 py-1 rounded-full animate-bounce shadow-lg z-10">
           ATRASADO
         </div>
@@ -638,3 +640,4 @@ export default function AdminOrders() {
     </div>
   );
 }
+
