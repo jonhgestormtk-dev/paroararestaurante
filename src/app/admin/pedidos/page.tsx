@@ -207,7 +207,7 @@ const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUp
 
       <div className="flex justify-between items-start mb-3">
         <div className="space-y-0.5 min-w-0">
-          <h4 className="font-headline text-sm text-marrom-escuro truncate uppercase tracking-tight">
+          <h4 className="font-subheadline font-bold text-base md:text-lg text-marrom-escuro truncate uppercase tracking-tight italic">
             {order.customer.name}
           </h4>
           <p className={cn(
