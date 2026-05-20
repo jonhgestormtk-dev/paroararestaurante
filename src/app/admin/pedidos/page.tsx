@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
   Clock, 
   Truck, 
   CheckCircle2, 
@@ -25,14 +24,21 @@ import {
   Trash2,
   Loader2,
   Save,
-  ChevronRight,
   MapPin,
   User,
   Phone
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, updateDoc, doc, query, orderBy, Timestamp, where, serverTimestamp } from 'firebase/firestore';
-import { Order, OrderStatus, RestaurantSlug, PaymentMethod, OrderType, Product } from '@/lib/types';
+import { 
+  collection, 
+  updateDoc, 
+  doc, 
+  query, 
+  orderBy, 
+  Timestamp, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { Order, OrderStatus, RestaurantSlug, OrderType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -58,7 +64,13 @@ import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,7 +86,7 @@ const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: str
   'Cancelado': { color: '#EF4444', bg: 'bg-rose-500/10', label: 'Cancelado', icon: XCircle },
 };
 
-const TYPE_CONFIG: Record<OrderType, { icon: any; label: string }> = {
+const TYPE_CONFIG: Record<string, { icon: any; label: string }> = {
   'Delivery': { icon: Truck, label: 'Delivery' },
   'Retirada': { icon: Package, label: 'Retirada' },
   'Salão': { icon: UtensilsCrossed, label: 'No Salão' },
@@ -171,7 +183,7 @@ const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus
 
 const OrderCard = ({ order, onStatusUpdate, onEdit }: { order: Order; onStatusUpdate: (id: string, s: OrderStatus) => void; onEdit: (order: Order) => void }) => {
   const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
-  const type = TYPE_CONFIG[order.type || 'Delivery'];
+  const type = TYPE_CONFIG[order.type || 'Delivery'] || TYPE_CONFIG['Delivery'];
   const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
   
   const isLate = useMemo(() => {
@@ -382,7 +394,8 @@ export default function AdminOrders() {
         setIsEditModalOpen(false);
         setEditingOrder(null);
       })
-      .catch(async () => {
+      .catch(async (err) => {
+        console.error("Erro ao salvar edição:", err);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
@@ -394,15 +407,21 @@ export default function AdminOrders() {
   const handleUpdateItemObs = (idx: number, obs: string) => {
     if (!editingOrder) return;
     const newItems = [...editingOrder.items];
-    newItems[idx].observations = obs;
+    newItems[idx] = { ...newItems[idx], observations: obs };
     setEditingOrder({ ...editingOrder, items: newItems });
   };
 
   const handleUpdateItemQty = (idx: number, delta: number) => {
     if (!editingOrder) return;
     const newItems = [...editingOrder.items];
-    newItems[idx].quantity = Math.max(1, newItems[idx].quantity + delta);
+    const newQty = Math.max(1, (newItems[idx].quantity || 0) + delta);
+    newItems[idx] = { ...newItems[idx], quantity: newQty };
     setEditingOrder({ ...editingOrder, items: newItems });
+  };
+
+  const handleOpenEdit = (order: Order) => {
+    setEditingOrder(JSON.parse(JSON.stringify(order))); // Deep copy para evitar mutação direta
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -446,7 +465,7 @@ export default function AdminOrders() {
             title="Pendentes" 
             orders={kanbanData.pendentes} 
             onStatusUpdate={handleStatusUpdate} 
-            onEdit={(order: Order) => { setEditingOrder(order); setIsEditModalOpen(true); }} 
+            onEdit={handleOpenEdit} 
             icon={Clock} 
             accentColor="#F59E0B" 
           />
@@ -454,7 +473,7 @@ export default function AdminOrders() {
             title="Em Preparo" 
             orders={kanbanData.preparando} 
             onStatusUpdate={handleStatusUpdate} 
-            onEdit={(order: Order) => { setEditingOrder(order); setIsEditModalOpen(true); }} 
+            onEdit={handleOpenEdit} 
             icon={Timer} 
             accentColor="#3B82F6" 
           />
@@ -462,7 +481,7 @@ export default function AdminOrders() {
             title="Saiu Entrega" 
             orders={kanbanData.rota} 
             onStatusUpdate={handleStatusUpdate} 
-            onEdit={(order: Order) => { setEditingOrder(order); setIsEditModalOpen(true); }} 
+            onEdit={handleOpenEdit} 
             icon={Truck} 
             accentColor="#8B5CF6" 
           />
@@ -470,7 +489,7 @@ export default function AdminOrders() {
             title="Finalizados" 
             orders={kanbanData.finalizados} 
             onStatusUpdate={handleStatusUpdate} 
-            onEdit={(order: Order) => { setEditingOrder(order); setIsEditModalOpen(true); }} 
+            onEdit={handleOpenEdit} 
             icon={CheckCircle2} 
             accentColor="#10B981" 
           />
@@ -500,7 +519,7 @@ export default function AdminOrders() {
                     <Input 
                       placeholder="Nome do Cliente"
                       value={editingOrder?.customer.name || ''}
-                      onChange={(e) => setEditingOrder(editingOrder ? {...editingOrder, customer: {...editingOrder.customer, name: e.target.value}} : null)}
+                      onChange={(e) => setEditingOrder(prev => prev ? {...prev, customer: {...prev.customer, name: e.target.value}} : null)}
                       className="bg-white border-areia-escura h-11 text-sm font-bold"
                     />
                     <div className="relative">
@@ -508,7 +527,7 @@ export default function AdminOrders() {
                       <Input 
                         placeholder="WhatsApp"
                         value={editingOrder?.customer.phone || ''}
-                        onChange={(e) => setEditingOrder(editingOrder ? {...editingOrder, customer: {...editingOrder.customer, phone: e.target.value.replace(/\D/g, '')}} : null)}
+                        onChange={(e) => setEditingOrder(prev => prev ? {...prev, customer: {...prev.customer, phone: e.target.value.replace(/\D/g, '')}} : null)}
                         className="bg-white border-areia-escura h-11 pl-10 text-sm"
                       />
                     </div>
@@ -523,7 +542,7 @@ export default function AdminOrders() {
                   <Textarea 
                     placeholder="Endereço de Entrega"
                     value={editingOrder?.customer.address || ''}
-                    onChange={(e) => setEditingOrder(editingOrder ? {...editingOrder, customer: {...editingOrder.customer, address: e.target.value}} : null)}
+                    onChange={(e) => setEditingOrder(prev => prev ? {...prev, customer: {...prev.customer, address: e.target.value}} : null)}
                     className="bg-white border-areia-escura min-h-[90px] text-sm italic"
                   />
                 </div>
@@ -539,7 +558,7 @@ export default function AdminOrders() {
                 </div>
 
                 <div className="space-y-4">
-                  {editingOrder?.items.map((item, idx) => (
+                  {editingOrder?.items?.map((item, idx) => (
                     <div key={idx} className="p-4 bg-white/60 rounded-2xl border border-areia-escura/20 space-y-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1 pr-4">
@@ -552,6 +571,7 @@ export default function AdminOrders() {
                         </div>
                         <div className="flex items-center gap-3 bg-white border border-areia-escura/40 rounded-xl p-1 shadow-sm">
                           <button 
+                            type="button"
                             onClick={() => handleUpdateItemQty(idx, -1)}
                             className="p-1 hover:bg-areia-media/20 rounded-md transition-colors"
                           >
@@ -559,6 +579,7 @@ export default function AdminOrders() {
                           </button>
                           <span className="w-6 text-center font-black text-sm">{item.quantity}</span>
                           <button 
+                            type="button"
                             onClick={() => handleUpdateItemQty(idx, 1)}
                             className="p-1 hover:bg-areia-media/20 rounded-md transition-colors"
                           >
@@ -587,7 +608,7 @@ export default function AdminOrders() {
             <div className="flex-1 text-left w-full">
               <p className="text-[10px] font-black uppercase text-marrom-madeira/40 tracking-widest">Novo Total Estimado</p>
               <p className="text-2xl font-black text-marrom-escuro tracking-tighter">
-                R$ {editingOrder?.items.reduce((acc, i) => acc + (i.price * i.quantity), 0).toFixed(2).replace('.', ',')}
+                R$ {editingOrder?.items?.reduce((acc, i) => acc + (i.price * i.quantity), 0).toFixed(2).replace('.', ',')}
               </p>
             </div>
             <div className="flex gap-3 w-full md:w-auto">
