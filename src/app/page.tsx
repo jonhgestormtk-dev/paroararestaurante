@@ -81,7 +81,7 @@ export default function SplashPage() {
                 </div>
                 
                 <h2 className="text-4xl md:text-5xl font-headline text-white tracking-widest mb-2 uppercase">{res.name}</h2>
-                <p className="text-caramelo-palha font-subheadline text-xl italic mb-6">{res.tagline}</p>
+                <p className="text-caramelo-palha font-subheadline text-xl font-bold italic mb-6">{res.tagline}</p>
                 
                 <div className="overflow-hidden max-h-0 group-hover:max-h-32 transition-all duration-700 ease-in-out opacity-0 group-hover:opacity-100">
                   <p className="text-white/80 font-body text-sm max-w-sm mb-8 leading-relaxed italic">
