@@ -49,7 +49,7 @@ export default function AdminSettings() {
     storeName: 'Paroara | Restaurante | Beer Drik’s',
     whatsapp: '5591985256348',
     address: 'Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso',
-    openingHours: 'Terça a Domingo: 11h às 15h e 18h às 23h30',
+    openingHours: 'Terça a Domingo: 9h às 15:30h',
     promoProductId: ''
   });
 
@@ -169,7 +169,7 @@ export default function AdminSettings() {
                     value={settings.whatsapp}
                     onChange={(e) => setSettings({...settings, whatsapp: e.target.value.replace(/\D/g, '')})}
                     className="bg-areia-clara/20 border-areia-escura pl-10"
-                    placeholder="Ex: 5591988887777"
+                    placeholder="Ex: 5591985256348"
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-marrom-terra opacity-40">+</span>
                 </div>

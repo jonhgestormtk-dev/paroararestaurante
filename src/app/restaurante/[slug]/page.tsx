@@ -216,7 +216,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
                 isEgua ? "text-white" : "text-caramelo-palha"
               )}>Localização</h4>
               <p className="opacity-80">Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso</p>
-              <p className="opacity-80">Terça a Domingo: 11h às 15h e 18h às 23h30</p>
+              <p className="opacity-80">Terça a Domingo: 9h às 15:30h</p>
             </div>
           </div>
           <div className="container mx-auto px-4 mt-20 pt-8 border-t border-white/5 text-center">
