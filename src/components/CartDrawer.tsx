@@ -178,8 +178,8 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   isEgua ? "bg-preto-panela/50 border-white/5" : "bg-white border-marrom-madeira/10 shadow-sm"
                 )}>
                   <div className="flex items-center gap-2 mb-1">
-                    <User className={cn("w-3 h-3", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
-                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Identificação</Label>
+                    <User className={cn("w-3.5 h-3.5", isEgua ? "text-fogo-vibrante" : "text-marrom-madeira")} />
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Identificação</Label>
                   </div>
                   <div className="space-y-2.5">
                     <Input 
