@@ -27,7 +27,9 @@ import {
   Package,
   TrendingDown,
   Banknote,
-  CreditCard
+  CreditCard,
+  MessageCircle,
+  MoreVertical
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useCollection } from '@/firebase';
@@ -36,7 +38,8 @@ import {
   query, 
   orderBy, 
   Timestamp,
-  where
+  updateDoc,
+  doc
 } from 'firebase/firestore';
 import { Order, OrderStatus, RestaurantSlug, OrderType } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -61,12 +64,17 @@ import {
   Cell,
   Pie
 } from 'recharts';
-import { Progress } from '@/components/ui/progress';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
-  'Pendente': { color: '#F97316', bg: 'bg-orange-500/10', label: 'Pendente', icon: Clock },
-  'Em Preparo': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Em Preparo', icon: AlertCircle },
-  'Saiu para Entrega': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Em Rota', icon: Truck },
+  'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente', icon: Clock },
+  'Em Preparo': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Preparando', icon: AlertCircle },
+  'Saiu para Entrega': { color: '#8B5CF6', bg: 'bg-violet-500/10', label: 'Em Rota', icon: Truck },
   'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado', icon: CheckCircle2 },
   'Cancelado': { color: '#EF4444', bg: 'bg-rose-500/10', label: 'Cancelado', icon: XCircle },
 };
@@ -142,6 +150,12 @@ export default function AdminDashboard() {
   }, [db]);
   const { data: allOrders, loading } = useCollection<Order>(allOrdersQuery);
 
+  const handleStatusUpdate = (id: string, newStatus: OrderStatus) => {
+    if (!db) return;
+    const docRef = doc(db, 'orders', id);
+    updateDoc(docRef, { status: newStatus });
+  };
+
   const stats = useMemo(() => {
     if (!allOrders) return null;
 
@@ -181,8 +195,8 @@ export default function AdminDashboard() {
       return matchesDate && matchesRes;
     });
 
-    // Filtra apenas pedidos de hoje que NÃO estão finalizados ou cancelados para o painel operacional
-    const todayOrders = allOrders.filter(o => {
+    // Filtra apenas pedidos ativos (não finalizados ou cancelados)
+    const activeOrders = allOrders.filter(o => {
       const date = getOrderDate(o);
       const isToday = date >= todayStart;
       const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
@@ -231,7 +245,7 @@ export default function AdminDashboard() {
       current: calculateMetrics(currentOrders),
       hourlyData: Object.values(hourlyDataMap),
       statusChartData,
-      recentOrders: todayOrders
+      recentOrders: activeOrders
     };
   }, [allOrders, timeFilter, restaurantFilter]);
 
@@ -382,11 +396,11 @@ export default function AdminDashboard() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-marrom-terra">
               <Activity className="w-5 h-5" />
-              <CardTitle className="text-sm font-black uppercase tracking-[0.2em]">Painel Operacional Real-time</CardTitle>
+              <CardTitle className="text-sm font-black uppercase tracking-[0.2em]">Painel Operacional Ativo</CardTitle>
             </div>
-            <CardDescription className="font-subheadline italic text-xs">Exibindo apenas pedidos ativos de hoje ({new Date().toLocaleDateString('pt-BR')}).</CardDescription>
+            <CardDescription className="font-subheadline italic text-xs">Exibindo apenas pedidos em andamento de hoje ({new Date().toLocaleDateString('pt-BR')}).</CardDescription>
           </div>
-          <Badge className="bg-marrom-terra text-white uppercase text-[10px] font-black px-4 py-1">Ativo Agora</Badge>
+          <Badge className="bg-marrom-terra text-white uppercase text-[10px] font-black px-4 py-1">Em Preparo/Rota</Badge>
         </CardHeader>
         
         <div className="divide-y divide-areia-escura/10">
@@ -397,8 +411,7 @@ export default function AdminDashboard() {
               const type = TYPE_CONFIG[order.type || 'Delivery'];
               const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
               
-              const isLate = (order.status !== 'Finalizado' && order.status !== 'Cancelado') && 
-                            Math.floor((new Date().getTime() - orderDate.getTime()) / 60000) >= 36;
+              const isLate = Math.floor((new Date().getTime() - orderDate.getTime()) / 60000) >= 36;
 
               return (
                 <motion.div
@@ -497,15 +510,27 @@ export default function AdminDashboard() {
                         {formatBRL(order.total)}
                       </p>
                     </div>
-                    <div className={cn(
-                      "px-4 py-2 rounded-full flex items-center gap-2 border shadow-sm transition-transform group-hover:scale-105",
-                      status.bg
-                    )} style={{ borderColor: `${status.color}40` }}>
-                      <status.icon className="w-3 h-3" style={{ color: status.color }} />
-                      <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: status.color }}>
-                        {status.label}
-                      </span>
-                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className={cn(
+                          "px-4 py-2 rounded-full flex items-center gap-2 border shadow-sm transition-transform hover:scale-105",
+                          status.bg
+                        )} style={{ borderColor: `${status.color}40` }}>
+                          <status.icon className="w-3 h-3" style={{ color: status.color }} />
+                          <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: status.color }}>
+                            {status.label}
+                          </span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-areia-clara border-areia-escura">
+                        {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                          <DropdownMenuItem key={key} onClick={() => handleStatusUpdate(order.id, key as OrderStatus)} className="text-[10px] font-black uppercase gap-2">
+                            <cfg.icon className="w-3 h-3" style={{ color: cfg.color }} /> {cfg.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </motion.div>
               );

@@ -10,7 +10,8 @@ import {
   Sparkles,
   Loader2,
   Power,
-  AlertCircle
+  TrendingUp,
+  Target
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +61,10 @@ export default function AdminSettings() {
     paroaraActive: true,
     eguaActive: true,
     paroaraMessage: 'Desculpe! Não estamos em funcionamento hoje.',
-    eguaMessage: 'Desculpe! Não estamos em funcionamento hoje.'
+    eguaMessage: 'Desculpe! Não estamos em funcionamento hoje.',
+    // Metas
+    paroaraGoal: 100000,
+    eguaGoal: 80000
   });
 
   useEffect(() => {
@@ -236,6 +240,38 @@ export default function AdminSettings() {
         </div>
 
         <div className="space-y-8">
+          <Card className="bg-white border-areia-escura shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Target className="w-5 h-5 text-marrom-terra" />
+                <CardTitle className="text-lg font-headline text-marrom-terra">Metas Mensais</CardTitle>
+              </div>
+              <CardDescription>Objetivos de faturamento bruto por unidade.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-marrom-madeira">Meta Paroara</Label>
+                  <Input 
+                    type="number"
+                    value={settings.paroaraGoal}
+                    onChange={(e) => setSettings({...settings, paroaraGoal: Number(e.target.value)})}
+                    className="bg-areia-clara/20 border-areia-escura"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-fogo-vibrante">Meta Égua</Label>
+                  <Input 
+                    type="number"
+                    value={settings.eguaGoal}
+                    onChange={(e) => setSettings({...settings, eguaGoal: Number(e.target.value)})}
+                    className="bg-areia-clara/20 border-areia-escura"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">

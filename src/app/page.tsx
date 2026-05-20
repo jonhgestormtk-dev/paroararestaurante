@@ -24,7 +24,7 @@ export default function SplashPage() {
       image: 'https://i.ibb.co/20cdybn2/Whats-App-Image-2026-05-18-at-10-30-24.jpg',
       badge: 'DIA A DIA / RÁPIDO',
       badgeIcon: <Zap className="w-3 h-3" />,
-      isActive: settings?.eguaActive !== false, // Default true
+      isActive: settings?.eguaActive !== false,
       inactiveMessage: settings?.eguaMessage || 'Desculpe! Não estamos em funcionamento hoje.'
     },
     {
@@ -38,7 +38,7 @@ export default function SplashPage() {
       image: 'https://i.ibb.co/MyTx3cXr/file.jpg',
       badge: 'GOURMET / EXPERIÊNCIA',
       badgeIcon: <Sparkles className="w-3 h-3" />,
-      isActive: settings?.paroaraActive !== false, // Default true
+      isActive: settings?.paroaraActive !== false,
       inactiveMessage: settings?.paroaraMessage || 'Desculpe! Não estamos em funcionamento hoje.'
     }
   ];

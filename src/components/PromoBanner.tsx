@@ -17,7 +17,6 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
   const db = useFirestore();
   const pathname = usePathname();
 
-  // Detectar restaurante atual pela URL
   const restaurantId = useMemo(() => {
     const parts = pathname.split('/');
     if (parts[1] === 'restaurante' && parts[2]) return parts[2] as RestaurantSlug;
@@ -26,26 +25,20 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
 
   const isEgua = restaurantId === 'egua-na-panela';
   
-  // Buscar as configurações globais
   const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
   const { data: settings } = useDoc<any>(settingsRef);
   
-  // Selecionar o ID da promoção específico do restaurante atual
   const promoProductId = useMemo(() => {
     if (!settings) return null;
     return isEgua ? settings.eguaPromoId : settings.paroaraPromoId;
   }, [settings, isEgua]);
 
-  // Buscar detalhes do produto promocional
   const productRef = useMemo(() => 
     (db && promoProductId && promoProductId !== 'none') ? doc(db, 'products', promoProductId) : null
   , [db, promoProductId]);
   const { data: promoProduct, loading: productLoading } = useDoc<Product>(productRef);
 
-  // Se não houver promoção configurada ou for 'none', não exibe o banner
   if (!promoProductId || promoProductId === 'none') return null;
-
-  // Segurança: Só mostra a promoção se ela pertencer ao restaurante atual
   if (promoProduct && promoProduct.restaurantId !== restaurantId) return null;
 
   return (
@@ -56,7 +49,6 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
           ? "bg-preto-panela border-fogo-vibrante/30 shadow-fogo-vibrante/20" 
           : "bg-marrom-terra border-caramelo-palha/30 shadow-marrom-terra/40"
       )}>
-        {/* Camada de Textura */}
         <div className={cn(
           "absolute inset-0 pointer-events-none",
           isEgua ? "bg-carbon-texture opacity-5" : "bg-rustic-texture opacity-10"
@@ -70,10 +62,6 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
             )}>
               <Flame className="w-6 h-6 md:w-8 md:h-8" />
             </div>
-            <Star className={cn(
-              "absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 animate-spin-slow",
-              isEgua ? "text-fogo-vibrante fill-fogo-vibrante" : "text-caramelo-palha fill-caramelo-palha"
-            )} />
           </div>
           
           <div className="space-y-1 md:space-y-2">
@@ -98,11 +86,7 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
                   R$ {promoProduct.price.toFixed(2).replace('.', ',')}
                 </span>
               </p>
-            ) : (
-              <p className="text-areia-clara font-subheadline text-base md:text-xl italic opacity-90 leading-tight">
-                Confira nossos destaques regionais!
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -111,8 +95,8 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
             className={cn(
               "w-full lg:w-auto px-8 md:px-14 py-5 md:py-7 text-sm md:text-lg font-black rounded-none shadow-2xl transition-all hover:scale-105 active:scale-95 uppercase tracking-widest",
               isEgua 
-                ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro" 
-                : "bg-caramelo-palha text-marrom-escuro hover:bg-areia-clara"
+                ? "bg-fogo-vibrante text-white hover:bg-fogo-escuro shadow-fogo-vibrante/30" 
+                : "bg-marrom-terra text-areia-clara hover:bg-marrom-escuro"
             )}
             onClick={() => {
               if (promoProduct && onProductClick) {

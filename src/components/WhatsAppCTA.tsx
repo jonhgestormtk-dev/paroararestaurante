@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -16,7 +15,6 @@ export function WhatsAppCTA() {
 
   const isEgua = restaurantSlug === 'egua-na-panela';
   
-  // Números diferenciados por restaurante
   const whatsappNumber = isEgua ? '5591985256348' : '559184541085';
   const whatsappDisplay = isEgua ? '(91) 98525-6348' : '(91) 8454-1085';
 
@@ -32,11 +30,6 @@ export function WhatsAppCTA() {
       <div className={cn(
         "absolute top-0 left-0 w-full h-full opacity-[0.08] pointer-events-none",
         isEgua ? "bg-carbon-texture" : "bg-rustic-texture"
-      )}></div>
-      
-      <div className={cn(
-        "absolute -top-40 -right-40 w-96 h-96 rounded-full blur-[100px]",
-        isEgua ? "bg-fogo-vibrante/20" : "bg-caramelo-palha/10"
       )}></div>
       
       <div className="container mx-auto px-4 text-center relative z-10">
@@ -62,22 +55,16 @@ export function WhatsAppCTA() {
           <div className="flex flex-col items-center gap-6">
             <Button 
               className={cn(
-                "text-white px-10 md:px-16 py-8 md:py-10 text-xl md:text-2xl font-black rounded-full transition-all hover:scale-105 active:scale-95 gap-4 group",
+                "text-white px-10 md:px-16 py-8 md:py-10 text-xl md:text-2xl font-black rounded-full transition-all hover:scale-105 active:scale-95 gap-4 group shadow-2xl",
                 isEgua 
-                  ? "bg-fogo-vibrante hover:bg-fogo-escuro shadow-[0_20px_60px_rgba(230,57,70,0.4)]" 
-                  : "bg-verde-folha hover:bg-verde-escuro shadow-[0_20px_60px_rgba(78,91,44,0.4)]"
+                  ? "bg-fogo-vibrante hover:bg-fogo-escuro" 
+                  : "bg-verde-folha hover:bg-verde-escuro"
               )}
               onClick={handleOrder}
             >
               <MessageCircle className="w-8 h-8 md:w-10 md:h-10 group-hover:rotate-12 transition-transform" />
               Fazer Pedido Agora
             </Button>
-            
-            <div className="flex items-center gap-3 text-areia-media/60 uppercase tracking-[0.4em] font-bold text-[8px] md:text-[10px]">
-              <span className="w-8 md:w-10 h-[1px] bg-white/20"></span>
-              Atendimento Exclusivo Belém/PA
-              <span className="w-8 md:w-10 h-[1px] bg-white/20"></span>
-            </div>
             
             <p className={cn(
               "font-black text-xl md:text-2xl tracking-widest",

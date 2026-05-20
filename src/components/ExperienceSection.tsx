@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -113,4 +112,3 @@ export function ExperienceSection() {
     </section>
   );
 }
-
