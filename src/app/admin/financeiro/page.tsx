@@ -186,7 +186,6 @@ export default function AdminFinancial() {
               <Badge className="bg-caramelo-palha text-marrom-escuro text-[9px] font-black tracking-widest border-none">LIVE ANALYTICS</Badge>
             </div>
             <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Financeiro</h1>
-            <p className="text-caramelo-palha/60 font-subheadline italic text-lg">Performance SaaS Multiunidade</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md p-2 rounded-2xl border border-white/10">
