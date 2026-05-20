@@ -79,7 +79,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
         "max-w-2xl p-0 overflow-hidden border-none transition-colors duration-500 max-h-[95vh] md:max-h-[90vh] overflow-y-auto",
         isEgua ? "bg-preto-carvao text-creme-suave" : "bg-areia-clara text-marrom-texto"
       )}>
-        <div className="relative h-[200px] md:h-[350px] w-full flex-shrink-0">
+        <div className="relative h-[250px] md:h-[450px] w-full flex-shrink-0">
           <Image
             src={displayImage}
             alt={product.name}
@@ -138,7 +138,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 <div className="flex items-center gap-2 mb-4">
                   <Wine className={cn("w-4 h-4", isEgua ? "text-fogo-vibrante" : "text-marrom-terra")} />
                   <h4 className={cn(
-                    "text-base md:text-xl font-subheadline font-bold",
+                    "text-base md:text-xl font-subheadline font-bold font-subheadline",
                     isEgua ? "text-fogo-vibrante" : "text-marrom-madeira"
                   )}>Que tal uma bebida para acompanhar?</h4>
                 </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -42,7 +41,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           : "bg-white border-areia-escura/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]"
       )}
     >
-      <div className="relative aspect-square overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden">
         <Image
           src={displayImage}
           alt={product.name}
