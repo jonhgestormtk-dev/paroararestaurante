@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -12,7 +11,8 @@ import {
   Menu,
   X,
   Tags,
-  Monitor
+  Monitor,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -52,6 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+    { label: 'Financeiro', icon: TrendingUp, path: '/admin/financeiro' },
     { label: 'Venda PDV', icon: Monitor, path: '/admin/pdv' },
     { label: 'Produtos', icon: Package, path: '/admin/produtos' },
     { label: 'Categorias', icon: Tags, path: '/admin/categorias' },
