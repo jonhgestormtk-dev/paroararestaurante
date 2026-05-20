@@ -75,6 +75,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
@@ -264,30 +265,41 @@ const OrderCard = ({
   );
 };
 
-const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, onNotify, icon: Icon, accentColor }: any) => {
+const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, onNotify, icon: Icon, accentColor, isMobile = false }: any) => {
   return (
-    <div className="flex flex-col h-full min-w-[310px] max-w-[400px] bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden">
-      <div className="p-4 md:p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
-            <Icon className="w-4 h-4" style={{ color: accentColor }} />
+    <div className={cn(
+      "flex flex-col h-full bg-areia-clara/10 rounded-3xl border border-areia-escura/20 overflow-hidden",
+      isMobile ? "w-full" : "min-w-[310px] max-w-[400px]"
+    )}>
+      {!isMobile && (
+        <div className="p-4 md:p-5 border-b border-areia-escura/20 bg-white/40 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
+              <Icon className="w-4 h-4" style={{ color: accentColor }} />
+            </div>
+            <h3 className="text-xl font-bold font-subheadline text-marrom-escuro tracking-tight italic">{title}</h3>
           </div>
-          <h3 className="text-xl font-bold font-subheadline text-marrom-escuro tracking-tight italic">{title}</h3>
+          <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">{orders.length}</Badge>
         </div>
-        <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">{orders.length}</Badge>
-      </div>
+      )}
       <ScrollArea className="flex-1">
         <div className="p-3 md:p-4 space-y-4">
           <AnimatePresence mode="popLayout">
-            {orders.map((order: any) => (
-              <OrderCard 
-                key={order.id} 
-                order={order} 
-                onStatusUpdate={onStatusUpdate} 
-                onEdit={onEdit}
-                onNotify={onNotify}
-              />
-            ))}
+            {orders.length > 0 ? (
+              orders.map((order: any) => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  onStatusUpdate={onStatusUpdate} 
+                  onEdit={onEdit}
+                  onNotify={onNotify}
+                />
+              ))
+            ) : (
+              <div className="py-20 text-center opacity-30 italic text-xs">
+                Nenhum pedido aqui
+              </div>
+            )}
           </AnimatePresence>
         </div>
       </ScrollArea>
@@ -426,26 +438,34 @@ export default function AdminOrders() {
       });
   };
 
+  if (loading) return (
+    <div className="h-screen flex flex-col items-center justify-center gap-6">
+      <Loader2 className="w-10 h-10 animate-spin text-marrom-terra opacity-20" />
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-marrom-madeira/40">Sincronizando Pedidos...</p>
+    </div>
+  );
+
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col space-y-6 animate-in fade-in duration-700">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border border-areia-escura/30 shadow-sm">
+    <div className="h-[calc(100vh-140px)] md:h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
+      {/* Header com Filtros */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
-          <h1 className="text-3xl font-headline text-marrom-terra">Gestão de Pedidos</h1>
-          <p className="text-cinza-organico font-subheadline italic text-xs">Acompanhamento e edição em tempo real.</p>
+          <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão de Pedidos</h1>
+          <p className="hidden md:block text-cinza-organico font-subheadline italic text-xs">Acompanhamento e edição em tempo real.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full md:w-64">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-3">
+          <div className="relative w-full lg:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
             <Input 
-              placeholder="Buscar pedido ou cliente..." 
+              placeholder="Buscar..." 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
               className="pl-10 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-xs" 
             />
           </div>
           <Select value={restaurantFilter} onValueChange={setRestaurantFilter}>
-            <SelectTrigger className="w-full md:w-40 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-[10px]">
+            <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 text-[10px]">
               <div className="flex items-center gap-2"><Store className="w-3.5 h-3.5" /><SelectValue placeholder="Restaurante" /></div>
             </SelectTrigger>
             <SelectContent>
@@ -455,8 +475,8 @@ export default function AdminOrders() {
             </SelectContent>
           </Select>
           <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[9px] uppercase tracking-widest px-4">
+            <PopoverTrigger asChild className="sm:col-span-2 lg:col-span-1">
+              <Button variant="outline" className="w-full lg:w-auto h-11 rounded-xl bg-areia-clara/10 border-areia-escura/30 gap-2 font-black text-[9px] uppercase tracking-widest px-4">
                 <CalendarIcon className="w-3.5 h-3.5" />
                 {selectedDate ? format(selectedDate, "dd 'de' MMM", { locale: ptBR }) : "Data"}
               </Button>
@@ -468,7 +488,43 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar">
+      {/* Mobile Tabs View */}
+      <div className="lg:hidden flex-1 overflow-hidden">
+        <Tabs defaultValue="pendentes" className="h-full flex flex-col">
+          <TabsList className="grid grid-cols-4 bg-areia-media/20 p-1 rounded-xl mx-1">
+            <TabsTrigger value="pendentes" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+              PND ({kanbanData.pendentes.length})
+            </TabsTrigger>
+            <TabsTrigger value="preparando" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+              PRE ({kanbanData.preparando.length})
+            </TabsTrigger>
+            <TabsTrigger value="rota" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+              ROT ({kanbanData.rota.length})
+            </TabsTrigger>
+            <TabsTrigger value="finalizados" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+              FIM ({kanbanData.finalizados.length})
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="flex-1 mt-4 overflow-hidden">
+            <TabsContent value="pendentes" className="h-full m-0 p-0">
+              <KanbanColumn orders={kanbanData.pendentes} onStatusUpdate={handleStatusUpdate} onEdit={handleOpenEdit} onNotify={handleNotifyClient} isMobile />
+            </TabsContent>
+            <TabsContent value="preparando" className="h-full m-0 p-0">
+              <KanbanColumn orders={kanbanData.preparando} onStatusUpdate={handleStatusUpdate} onEdit={handleOpenEdit} onNotify={handleNotifyClient} isMobile />
+            </TabsContent>
+            <TabsContent value="rota" className="h-full m-0 p-0">
+              <KanbanColumn orders={kanbanData.rota} onStatusUpdate={handleStatusUpdate} onEdit={handleOpenEdit} onNotify={handleNotifyClient} isMobile />
+            </TabsContent>
+            <TabsContent value="finalizados" className="h-full m-0 p-0">
+              <KanbanColumn orders={kanbanData.finalizados} onStatusUpdate={handleStatusUpdate} onEdit={handleOpenEdit} onNotify={handleNotifyClient} isMobile />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
+
+      {/* Desktop Kanban View */}
+      <div className="hidden lg:flex flex-1 overflow-x-auto pb-4 hide-scrollbar">
         <div className="flex gap-6 h-full min-w-max px-1">
           <KanbanColumn 
             title="Pendentes" 
@@ -509,22 +565,23 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Modal de Edição */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
-          <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara shrink-0">
-            <DialogTitle className="font-headline uppercase tracking-widest flex items-center gap-3">
-              <Edit2 className="w-5 h-5 text-caramelo-palha" />
+        <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col h-[95vh] md:h-auto max-h-[95vh] md:max-h-[90vh]">
+          <DialogHeader className="p-5 md:p-6 bg-marrom-escuro text-areia-clara shrink-0">
+            <DialogTitle className="font-headline uppercase tracking-widest flex items-center gap-3 text-sm md:text-base">
+              <Edit2 className="w-4 h-4 md:w-5 md:h-5 text-caramelo-palha" />
               Editar Pedido #{editingOrder?.orderNumber || editingOrder?.id.substring(0, 6)}
             </DialogTitle>
           </DialogHeader>
 
           {editingOrder && (
             <ScrollArea className="flex-1">
-              <div className="p-6 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-4 md:p-6 space-y-6 md:space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4 text-marrom-madeira" />
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="w-3.5 h-3.5 text-marrom-madeira" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Cliente</Label>
                     </div>
                     <div className="space-y-3">
@@ -532,7 +589,7 @@ export default function AdminOrders() {
                         placeholder="Nome do Cliente"
                         value={editingOrder.customer.name}
                         onChange={(e) => setEditingOrder({...editingOrder, customer: {...editingOrder.customer, name: e.target.value}})}
-                        className="bg-white border-areia-escura h-11 text-sm font-bold"
+                        className="bg-white border-areia-escura h-11 text-sm font-bold rounded-xl"
                       />
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cinza-organico" />
@@ -540,22 +597,22 @@ export default function AdminOrders() {
                           placeholder="WhatsApp"
                           value={editingOrder.customer.phone}
                           onChange={(e) => setEditingOrder({...editingOrder, customer: {...editingOrder.customer, phone: e.target.value.replace(/\D/g, '')}})}
-                          className="bg-white border-areia-escura h-11 pl-10 text-sm"
+                          className="bg-white border-areia-escura h-11 pl-10 text-sm rounded-xl"
                         />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MapPin className="w-4 h-4 text-marrom-madeira" />
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin className="w-3.5 h-3.5 text-marrom-madeira" />
                       <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Endereço</Label>
                     </div>
                     <Textarea 
                       placeholder="Endereço de Entrega"
                       value={editingOrder.customer.address}
                       onChange={(e) => setEditingOrder({...editingOrder, customer: {...editingOrder.customer, address: e.target.value}})}
-                      className="bg-white border-areia-escura min-h-[90px] text-sm italic"
+                      className="bg-white border-areia-escura min-h-[90px] text-sm italic rounded-xl resize-none"
                     />
                   </div>
                 </div>
@@ -564,13 +621,13 @@ export default function AdminOrders() {
 
                 <div className="space-y-6">
                   <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-marrom-madeira" />
+                    <Package className="w-3.5 h-3.5 text-marrom-madeira" />
                     <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Itens do Pedido</Label>
                   </div>
 
                   <div className="space-y-4">
                     {editingOrder.items?.map((item, idx) => (
-                      <div key={idx} className="p-4 bg-white/60 rounded-2xl border border-areia-escura/20 space-y-3">
+                      <div key={idx} className="p-4 bg-white/60 rounded-2xl border border-areia-escura/20 space-y-3 shadow-sm">
                         <div className="flex justify-between items-start">
                           <div className="flex-1 pr-4">
                             <p className="font-subheadline font-bold text-lg text-marrom-escuro uppercase italic leading-tight">
@@ -602,10 +659,10 @@ export default function AdminOrders() {
                         <div className="space-y-1.5">
                           <Label className="text-[9px] font-bold uppercase text-fogo-vibrante/70">Observação do Item</Label>
                           <Input 
-                            placeholder="Sem cebola, bem passado..."
+                            placeholder="Ex: Sem cebola..."
                             value={item.observations || ''}
                             onChange={(e) => handleUpdateItemObs(idx, e.target.value)}
-                            className="h-9 text-xs bg-white/40 border-areia-escura/50"
+                            className="h-9 text-xs bg-white/40 border-areia-escura/50 rounded-lg"
                           />
                         </div>
                       </div>
@@ -616,20 +673,20 @@ export default function AdminOrders() {
             </ScrollArea>
           )}
 
-          <DialogFooter className="p-6 bg-white border-t border-areia-escura shrink-0 flex items-center justify-between">
-            <div className="text-left">
-              <p className="text-[10px] font-black uppercase text-marrom-madeira/40 tracking-widest">Novo Total</p>
+          <DialogFooter className="p-5 md:p-6 bg-white border-t border-areia-escura shrink-0 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left w-full md:w-auto">
+              <p className="text-[9px] font-black uppercase text-marrom-madeira/40 tracking-widest">Novo Total</p>
               <p className="text-2xl font-black text-marrom-escuro tracking-tighter">
                 R$ {editingOrder?.items?.reduce((acc, i) => acc + (i.price * i.quantity), 0).toFixed(2).replace('.', ',')}
               </p>
             </div>
-            <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="text-[10px] font-bold uppercase">
+            <div className="flex gap-3 w-full md:w-auto">
+              <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="flex-1 md:flex-none text-[10px] font-bold uppercase h-12 rounded-xl">
                 Cancelar
               </Button>
               <Button 
                 onClick={handleSaveOrderEdit}
-                className="bg-marrom-terra text-areia-clara h-12 px-8 gap-2 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl"
+                className="flex-[2] md:flex-none bg-marrom-terra text-areia-clara h-12 px-8 gap-2 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl"
               >
                 <Save className="w-4 h-4" />
                 Salvar Alterações
