@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -308,7 +307,7 @@ const KanbanColumn = ({ title, orders, onStatusUpdate, onEdit, icon: Icon, accen
           <div className="p-2 rounded-xl" style={{ backgroundColor: `${accentColor}15` }}>
             <Icon className="w-4 h-4" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-marrom-escuro font-headline">{title}</h3>
+          <h3 className="text-xl md:text-2xl font-bold font-subheadline text-marrom-escuro tracking-tight italic">{title}</h3>
         </div>
         <Badge className="bg-white border border-areia-escura/30 text-marrom-escuro font-black h-6">{orders.length}</Badge>
       </div>
@@ -624,4 +623,3 @@ export default function AdminOrders() {
     </div>
   );
 }
-
