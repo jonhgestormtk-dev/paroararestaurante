@@ -42,7 +42,7 @@ export default function AdminSettings() {
   const settingsRef = useMemo(() => db ? doc(db, 'settings', 'global') : null, [db]);
   const { data: firestoreSettings, loading: settingsLoading } = useDoc<any>(settingsRef);
 
-  // Buscar produtos para o seletor de promoção
+  // Buscar produtos para os seletores de promoção
   const productsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('name', 'asc'));
@@ -54,7 +54,8 @@ export default function AdminSettings() {
     whatsapp: '5591985256348',
     address: 'Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso',
     openingHours: 'Terça a Domingo: 9h às 15:30h',
-    promoProductId: '',
+    paroaraPromoId: '',
+    eguaPromoId: '',
     // Controle de disponibilidade
     paroaraActive: true,
     eguaActive: true,
@@ -81,7 +82,7 @@ export default function AdminSettings() {
       .then(() => {
         toast({
           title: "Configurações Salvas",
-          description: "As informações e o status dos restaurantes foram atualizados.",
+          description: "As informações e as promoções foram atualizadas.",
         });
         setIsLoading(false);
       })
@@ -181,36 +182,48 @@ export default function AdminSettings() {
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <Store className="w-5 h-5 text-marrom-terra" />
-                <CardTitle className="text-lg font-headline text-marrom-terra">Perfil do Restaurante</CardTitle>
+                <Sparkles className="w-5 h-5 text-marrom-terra" />
+                <CardTitle className="text-lg font-headline text-marrom-terra">Promoções Individuais</CardTitle>
               </div>
-              <CardDescription>Nome e destaque promocional da página inicial.</CardDescription>
+              <CardDescription>Defina o produto em destaque para o banner de cada restaurante.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Promo Paroara */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Nome do Estabelecimento</Label>
-                <Input 
-                  value={settings.storeName}
-                  onChange={(e) => setSettings({...settings, storeName: e.target.value})}
-                  className="bg-areia-clara/20 border-areia-escura"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-3 h-3 text-caramelo-palha" />
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Prato em Destaque (Banner Home)</Label>
-                </div>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Oferta do Dia: Paroara</Label>
                 <Select 
-                  value={settings.promoProductId || "none"} 
-                  onValueChange={(v) => setSettings({...settings, promoProductId: v})}
+                  value={settings.paroaraPromoId || "none"} 
+                  onValueChange={(v) => setSettings({...settings, paroaraPromoId: v})}
                 >
                   <SelectTrigger className="bg-areia-clara/20 border-areia-escura">
-                    <SelectValue placeholder="Selecione um produto para promover..." />
+                    <SelectValue placeholder="Selecione um produto Paroara..." />
                   </SelectTrigger>
                   <SelectContent className="bg-areia-clara">
-                    <SelectItem value="none">Nenhum (Ocultar Banner)</SelectItem>
-                    {products?.filter(p => p.active !== false).map((p) => (
+                    <SelectItem value="none">Nenhuma (Ocultar Banner)</SelectItem>
+                    {products?.filter(p => p.active !== false && p.restaurantId === 'paroara').map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.emoji} {p.name} - R$ {p.price.toFixed(2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator className="bg-areia-escura/30" />
+
+              {/* Promo Égua */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-fogo-vibrante">Oferta do Dia: Égua na Panela</Label>
+                <Select 
+                  value={settings.eguaPromoId || "none"} 
+                  onValueChange={(v) => setSettings({...settings, eguaPromoId: v})}
+                >
+                  <SelectTrigger className="bg-areia-clara/20 border-areia-escura">
+                    <SelectValue placeholder="Selecione um produto Égua na Panela..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-areia-clara">
+                    <SelectItem value="none">Nenhuma (Ocultar Banner)</SelectItem>
+                    {products?.filter(p => p.active !== false && p.restaurantId === 'egua-na-panela').map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.emoji} {p.name} - R$ {p.price.toFixed(2)}
                       </SelectItem>
@@ -226,14 +239,34 @@ export default function AdminSettings() {
           <Card className="bg-white border-areia-escura shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
+                <Store className="w-5 h-5 text-marrom-terra" />
+                <CardTitle className="text-lg font-headline text-marrom-terra">Perfil da Empresa</CardTitle>
+              </div>
+              <CardDescription>Informações institucionais unificadas.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Nome Principal</Label>
+                <Input 
+                  value={settings.storeName}
+                  onChange={(e) => setSettings({...settings, storeName: e.target.value})}
+                  className="bg-areia-clara/20 border-areia-escura"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-areia-escura shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-3">
                 <MessageSquare className="w-5 h-5 text-marrom-terra" />
-                <CardTitle className="text-lg font-headline text-marrom-terra">Contato & WhatsApp</CardTitle>
+                <CardTitle className="text-lg font-headline text-marrom-terra">Contato & Redes</CardTitle>
               </div>
               <CardDescription>Configurações globais de contato.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Número Principal (ADM)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">WhatsApp Principal (ADM)</Label>
                 <div className="relative">
                   <Input 
                     value={settings.whatsapp}
