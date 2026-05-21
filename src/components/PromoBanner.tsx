@@ -66,13 +66,15 @@ export function PromoBanner({ onProductClick }: PromoBannerProps) {
           
           <div className="space-y-1 md:space-y-2">
             <h3 className={cn(
-              "font-headline text-base md:text-xl tracking-[0.2em] uppercase font-bold",
+              "font-subheadline text-base md:text-xl tracking-[0.2em] uppercase font-bold",
               isEgua ? "text-fogo-vibrante" : "text-caramelo-palha"
             )}>
               Oferta Especial do Dia
             </h3>
             {productLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-areia-clara opacity-20" />
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-areia-clara opacity-20" />
+              </div>
             ) : promoProduct ? (
               <p className={cn(
                 "font-subheadline text-lg md:text-3xl italic opacity-90 leading-tight",
