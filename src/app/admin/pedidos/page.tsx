@@ -39,7 +39,7 @@ import {
   Timestamp, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { Order, OrderStatus, RestaurantSlug } from '@/lib/types';
+import { Order, OrderStatus, RestaurantSlug, PaymentMethod } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -332,6 +332,26 @@ const EditOrderDialogContent = ({
     setLocalOrder({ ...localOrder, items: newItems });
   };
 
+  const handleUpdatePayment = (method: PaymentMethod) => {
+    setLocalOrder({
+      ...localOrder,
+      payment: {
+        ...localOrder.payment,
+        method
+      }
+    });
+  };
+
+  const handleUpdateChangeFor = (value: string) => {
+    setLocalOrder({
+      ...localOrder,
+      payment: {
+        ...localOrder.payment,
+        changeFor: value ? Number(value) : undefined
+      }
+    });
+  };
+
   const handleTriggerSave = () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -381,6 +401,50 @@ const EditOrderDialogContent = ({
                 className="bg-white border-areia-escura min-h-[90px] text-sm italic rounded-xl resize-none"
               />
             </div>
+          </div>
+
+          <Separator className="bg-areia-escura/30" />
+
+          {/* Seção de Pagamento */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-3.5 h-3.5 text-marrom-madeira" />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Forma de Pagamento</Label>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { id: 'Pix', icon: Wallet },
+                { id: 'Dinheiro', icon: Banknote },
+                { id: 'Débito', icon: CreditCard },
+                { id: 'Crédito', icon: CreditCard }
+              ].map((m) => (
+                <Button
+                  key={m.id}
+                  variant={localOrder.payment.method === m.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleUpdatePayment(m.id as PaymentMethod)}
+                  className={cn(
+                    "h-10 text-[10px] uppercase font-bold tracking-widest gap-2 rounded-xl",
+                    localOrder.payment.method === m.id ? "bg-marrom-terra" : "border-areia-escura/40"
+                  )}
+                >
+                  <m.icon className="w-3.5 h-3.5" />
+                  {m.id}
+                </Button>
+              ))}
+            </div>
+            {localOrder.payment.method === 'Dinheiro' && (
+              <div className="animate-in slide-in-from-top-2 duration-300">
+                <Label className="text-[9px] font-bold uppercase text-marrom-madeira mb-1.5 block">Troco para quanto?</Label>
+                <Input 
+                  type="number"
+                  value={localOrder.payment.changeFor || ''}
+                  onChange={(e) => handleUpdateChangeFor(e.target.value)}
+                  placeholder="Ex: 100"
+                  className="bg-white border-areia-escura h-10 w-full sm:w-40 rounded-xl"
+                />
+              </div>
+            )}
           </div>
 
           <Separator className="bg-areia-escura/30" />
@@ -473,6 +537,7 @@ export default function AdminOrders() {
   const { toast } = useToast();
   const db = useFirestore();
 
+  // Trava de Segurança de Interface
   useEffect(() => {
     if (!isEditModalOpen) {
       const timer = setTimeout(() => {
@@ -570,6 +635,7 @@ export default function AdminOrders() {
     const dataToUpdate = {
       customer: updatedOrder.customer,
       items: updatedOrder.items,
+      payment: updatedOrder.payment,
       total: newTotal,
       updatedAt: serverTimestamp()
     };
@@ -638,6 +704,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Tabs Mobile */}
       <div className="lg:hidden flex-1 overflow-hidden">
         <Tabs defaultValue="pendentes" className="h-full flex flex-col">
           <TabsList className="grid grid-cols-4 bg-areia-media/20 p-1 rounded-xl mx-1 h-auto">
@@ -684,6 +751,7 @@ export default function AdminOrders() {
         </Tabs>
       </div>
 
+      {/* Kanban Desktop */}
       <div className="hidden lg:flex flex-1 overflow-x-auto pb-4 hide-scrollbar">
         <div className="flex gap-6 h-full min-w-max px-1">
           <KanbanColumn 
@@ -725,6 +793,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Modal de Edição */}
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
         if (!open) {
           setIsEditModalOpen(false);
