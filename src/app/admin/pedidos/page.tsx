@@ -81,8 +81,8 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 
 const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; label: string; icon: any }> = {
   'Pendente': { color: '#F59E0B', bg: 'bg-amber-500/10', label: 'Pendente', icon: Clock },
-  'Em Preparo': { color: '#3B82F6', bg: 'bg-blue-500/10', label: 'Preparando', icon: AlertCircle },
-  'Saiu para Entrega': { color: '#8B5CF6', bg: 'bg-violet-500/10', label: 'Em Rota', icon: Truck },
+  'Em Preparo': { color: '#06B6D4', bg: 'bg-cyan-500/10', label: 'Preparando', icon: AlertCircle },
+  'Saiu para Entrega': { color: '#D946EF', bg: 'bg-fuchsia-500/10', label: 'Em Rota', icon: Truck },
   'Finalizado': { color: '#10B981', bg: 'bg-emerald-500/10', label: 'Finalizado', icon: CheckCircle2 },
   'Cancelado': { color: '#EF4444', bg: 'bg-rose-500/10', label: 'Cancelado', icon: XCircle },
 };
@@ -473,7 +473,6 @@ export default function AdminOrders() {
   const { toast } = useToast();
   const db = useFirestore();
 
-  // Trava de Segurança de Interface: Força restauração de eventos de ponteiro ao fechar o modal
   useEffect(() => {
     if (!isEditModalOpen) {
       const timer = setTimeout(() => {
@@ -563,8 +562,6 @@ export default function AdminOrders() {
 
   const handleSaveOrderEdit = (updatedOrder: Order) => {
     if (!db) return;
-    
-    // Fecha o modal imediatamente para evitar travamento na UI
     setIsEditModalOpen(false);
     
     const docRef = doc(db, 'orders', updatedOrder.id);
@@ -601,7 +598,6 @@ export default function AdminOrders() {
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col space-y-4 md:space-y-6 animate-in fade-in duration-700">
-      {/* Header com Filtros */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão de Pedidos</h1>
@@ -642,7 +638,6 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Mobile Tabs View */}
       <div className="lg:hidden flex-1 overflow-hidden">
         <Tabs defaultValue="pendentes" className="h-full flex flex-col">
           <TabsList className="grid grid-cols-4 bg-areia-media/20 p-1 rounded-xl mx-1 h-auto">
@@ -654,13 +649,13 @@ export default function AdminOrders() {
             </TabsTrigger>
             <TabsTrigger 
               value="preparando" 
-              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 border-b-2 border-transparent data-[state=active]:border-blue-600"
+              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-cyan-600 border-b-2 border-transparent data-[state=active]:border-cyan-600"
             >
               PREPARO ({kanbanData.preparando.length})
             </TabsTrigger>
             <TabsTrigger 
               value="rota" 
-              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-violet-600 border-b-2 border-transparent data-[state=active]:border-violet-600"
+              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-fuchsia-600 border-b-2 border-transparent data-[state=active]:border-fuchsia-600"
             >
               ROTA ({kanbanData.rota.length})
             </TabsTrigger>
@@ -689,7 +684,6 @@ export default function AdminOrders() {
         </Tabs>
       </div>
 
-      {/* Desktop Kanban View */}
       <div className="hidden lg:flex flex-1 overflow-x-auto pb-4 hide-scrollbar">
         <div className="flex gap-6 h-full min-w-max px-1">
           <KanbanColumn 
@@ -707,8 +701,8 @@ export default function AdminOrders() {
             onStatusUpdate={handleStatusUpdate} 
             onEdit={handleOpenEdit} 
             onNotify={handleNotifyClient}
-            icon={Timer} 
-            accentColor="#3B82F6" 
+            icon={AlertCircle} 
+            accentColor="#06B6D4" 
           />
           <KanbanColumn 
             title="Saiu Entrega" 
@@ -717,7 +711,7 @@ export default function AdminOrders() {
             onEdit={handleOpenEdit} 
             onNotify={handleNotifyClient}
             icon={Truck} 
-            accentColor="#8B5CF6" 
+            accentColor="#D946EF" 
           />
           <KanbanColumn 
             title="Finalizados" 
@@ -731,7 +725,6 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Modal de Edição */}
       <Dialog open={isEditModalOpen} onOpenChange={(open) => {
         if (!open) {
           setIsEditModalOpen(false);
