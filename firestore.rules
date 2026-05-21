@@ -25,6 +25,12 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Regras para Usuários Administrativos
+    // Necessário para o login e bootstrap inicial de usuários
+    match /adminUsers/{userId} {
+      allow read, write: if true;
+    }
+
     // Regra de segurança para o protótipo: 
     // Permite leitura de qualquer documento, mas bloqueia escrita em coleções não mapeadas
     match /{document=**} {
