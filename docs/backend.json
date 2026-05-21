@@ -59,6 +59,17 @@
         "openingHours": { "type": "string" },
         "promoProductId": { "type": "string" }
       }
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Usuário administrativo do sistema.",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "operador"] }
+      },
+      "required": ["username", "password", "role"]
     }
   },
   "auth": {
@@ -80,6 +91,10 @@
     "/settings/{settingsId}": {
       "schema": "Settings",
       "description": "Configurações."
+    },
+    "/adminUsers/{userId}": {
+      "schema": "AdminUser",
+      "description": "Usuários do painel administrativo."
     }
   }
 }

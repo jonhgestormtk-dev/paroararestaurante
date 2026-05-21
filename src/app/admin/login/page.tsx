@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck, Lock } from 'lucide-react';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
@@ -15,6 +17,7 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const db = useFirestore();
 
   useEffect(() => {
     const isLogado = sessionStorage.getItem('adminLogado');
@@ -23,24 +26,77 @@ export default function AdminLoginPage() {
     }
   }, [router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const bootstrapUsers = async () => {
+    if (!db) return;
+    const usersCol = collection(db, 'adminUsers');
+    const snapshot = await getDocs(usersCol);
+    
+    if (snapshot.empty) {
+      const initialUsers = [
+        { username: 'admin', password: 'admin@26', role: 'admin' },
+        { username: 'suportthreej', password: 'ThreeJ@suport3', role: 'admin' },
+        { username: 'operador', password: '123', role: 'operador' }
+      ];
+      
+      for (const user of initialUsers) {
+        await addDoc(usersCol, user);
+      }
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db) return;
+    
     setIsLoading(true);
 
-    // Login Padrão conforme especificação
-    if (username === 'admin' && password === 'admin@26') {
-      sessionStorage.setItem('adminLogado', 'true');
-      toast({
-        title: "Acesso Autorizado",
-        description: "Bem-vindo ao painel administrativo Paroara.",
-      });
-      router.push('/admin/dashboard');
-    } else {
+    try {
+      // Garantir que existam usuários no banco (Bootstrap na primeira tentativa)
+      await bootstrapUsers();
+
+      const usersCol = collection(db, 'adminUsers');
+      const q = query(usersCol, where('username', '==', username));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+
+        if (userData.password === password) {
+          sessionStorage.setItem('adminLogado', 'true');
+          sessionStorage.setItem('adminUser', JSON.stringify({
+            username: userData.username,
+            role: userData.role
+          }));
+
+          toast({
+            title: "Acesso Autorizado",
+            description: `Bem-vindo, ${username}.`,
+          });
+
+          // Redirecionamento baseado em cargo
+          if (userData.role === 'operador') {
+            router.push('/admin/pedidos');
+          } else {
+            router.push('/admin/dashboard');
+          }
+          return;
+        }
+      }
+
       toast({
         variant: "destructive",
         title: "Erro de Acesso",
         description: "Usuário ou senha inválidos.",
       });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Erro no Servidor",
+        description: "Não foi possível conectar ao banco de dados.",
+      });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -65,7 +121,7 @@ export default function AdminLoginPage() {
               <Input 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Ex: admin"
+                placeholder="Seu usuário"
                 className="bg-areia-clara/30 border-areia-escura focus:ring-marrom-terra"
                 required
               />
