@@ -104,21 +104,27 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     }
     
     // 3. Mapear ordem das categorias para ordenação no "Todos"
+    // Importante: filtrar pelo restaurante atual para evitar conflito de nomes de categorias
     const catMap: Record<string, number> = {};
     if (allCategoriesRaw) {
-      allCategoriesRaw.forEach((c, i) => catMap[c.name] = c.order ?? i);
+      allCategoriesRaw
+        .filter((c: any) => c.restaurantId === restaurantId)
+        .forEach((c: any, i: number) => {
+          catMap[c.name] = c.order ?? i;
+        });
     }
 
-    // 4. Ordenar: Se "Todos", por categoria e depois nome. Se categoria específica, apenas nome.
+    // 4. Ordenar: Se "Todos", primeiro por categoria e depois alfabeticamente. 
+    // Se categoria específica, apenas ordem alfabética.
     return [...list].sort((a, b) => {
       if (activeCategory === 'Todos') {
         const orderA = catMap[a.category] ?? 999;
         const orderB = catMap[b.category] ?? 999;
         if (orderA !== orderB) return orderA - orderB;
       }
-      return a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name, 'pt-BR');
     });
-  }, [activeCategory, allProductsRaw, allCategoriesRaw]);
+  }, [activeCategory, allProductsRaw, allCategoriesRaw, restaurantId]);
 
   // Se o restaurante estiver inativo, mostra tela de bloqueio
   if (!settingsLoading && !isActive) {
