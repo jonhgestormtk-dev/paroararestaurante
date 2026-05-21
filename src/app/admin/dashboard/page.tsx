@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -416,7 +417,7 @@ export default function AdminDashboard() {
                       <type.icon className="w-3.5 h-3.5 opacity-40" />
                       <div className="flex flex-col">
                         <span className="text-[9px] font-bold text-cinza-organico uppercase">Tipo</span>
-                        <span className="text-[11px] font-black text-marrom-escuro uppercase">{type.label}</span>
+                        <span className="text-11px] font-black text-marrom-escuro uppercase">{type.label}</span>
                       </div>
                     </div>
                   </div>

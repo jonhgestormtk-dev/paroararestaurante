@@ -1,10 +1,10 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
     
     // Regras para Coleções do Cardápio (Produtos e Categorias)
-    // Permite leitura pública e escrita total para o gerenciamento administrativo
     match /products/{productId} {
       allow read, write: if true;
     }
@@ -14,25 +14,22 @@ service cloud.firestore {
     }
     
     // Regras para Pedidos
-    // Permite que qualquer cliente crie pedidos e que o admin os gerencie
     match /orders/{orderId} {
       allow read, write: if true;
     }
 
     // Regras para Configurações
-    // Permite leitura e escrita para gestão global do restaurante
     match /settings/{settingsId} {
       allow read, write: if true;
     }
 
     // Regras para Usuários Administrativos
-    // Necessário para o login e bootstrap inicial de usuários
+    // Permite leitura e escrita para o processo de login e bootstrap de usuários
     match /adminUsers/{userId} {
       allow read, write: if true;
     }
 
-    // Regra de segurança para o protótipo: 
-    // Permite leitura de qualquer documento, mas bloqueia escrita em coleções não mapeadas
+    // Regra de segurança padrão para o protótipo
     match /{document=**} {
       allow read: if true;
       allow write: if false;
