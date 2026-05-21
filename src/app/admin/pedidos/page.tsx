@@ -645,17 +645,29 @@ export default function AdminOrders() {
       {/* Mobile Tabs View */}
       <div className="lg:hidden flex-1 overflow-hidden">
         <Tabs defaultValue="pendentes" className="h-full flex flex-col">
-          <TabsList className="grid grid-cols-4 bg-areia-media/20 p-1 rounded-xl mx-1">
-            <TabsTrigger value="pendentes" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+          <TabsList className="grid grid-cols-4 bg-areia-media/20 p-1 rounded-xl mx-1 h-auto">
+            <TabsTrigger 
+              value="pendentes" 
+              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-amber-600 border-b-2 border-transparent data-[state=active]:border-amber-600"
+            >
               PND ({kanbanData.pendentes.length})
             </TabsTrigger>
-            <TabsTrigger value="preparando" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+            <TabsTrigger 
+              value="preparando" 
+              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 border-b-2 border-transparent data-[state=active]:border-blue-600"
+            >
               PRE ({kanbanData.preparando.length})
             </TabsTrigger>
-            <TabsTrigger value="rota" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+            <TabsTrigger 
+              value="rota" 
+              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-violet-600 border-b-2 border-transparent data-[state=active]:border-violet-600"
+            >
               ROT ({kanbanData.rota.length})
             </TabsTrigger>
-            <TabsTrigger value="finalizados" className="text-[10px] font-black uppercase rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2">
+            <TabsTrigger 
+              value="finalizados" 
+              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 border-b-2 border-transparent data-[state=active]:border-emerald-600"
+            >
               FIM ({kanbanData.finalizados.length})
             </TabsTrigger>
           </TabsList>
