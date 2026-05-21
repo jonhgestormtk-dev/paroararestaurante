@@ -80,7 +80,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     if (!featuredProductsRaw) return [];
     return featuredProductsRaw
       .filter(p => p.active !== false)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.trim().localeCompare(b.name.trim(), 'pt-BR', { sensitivity: 'base' }));
   }, [featuredProductsRaw]);
 
   const allProductsQuery = useMemo(() => {
@@ -103,26 +103,33 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
       list = list.filter(p => p.category === activeCategory);
     }
     
-    // 3. Mapear ordem das categorias para ordenação no "Todos"
-    // Importante: filtrar pelo restaurante atual para evitar conflito de nomes de categorias
+    // 3. Mapear ordem das categorias de forma robusta e normalizada
     const catMap: Record<string, number> = {};
     if (allCategoriesRaw) {
       allCategoriesRaw
         .filter((c: any) => c.restaurantId === restaurantId)
-        .forEach((c: any, i: number) => {
-          catMap[c.name] = c.order ?? i;
+        .forEach((c: any) => {
+          // Normalização para garantir que o match ocorra mesmo com espaços ou diferenças de caixa
+          const normalizedName = c.name.trim().toLowerCase();
+          catMap[normalizedName] = c.order ?? 999;
         });
     }
 
-    // 4. Ordenar: Se "Todos", primeiro por categoria e depois alfabeticamente. 
-    // Se categoria específica, apenas ordem alfabética.
+    // 4. Ordenação Final
     return [...list].sort((a, b) => {
+      // Se estivermos na aba "Todos", respeitamos a prioridade das categorias primeiro
       if (activeCategory === 'Todos') {
-        const orderA = catMap[a.category] ?? 999;
-        const orderB = catMap[b.category] ?? 999;
+        const normA = a.category.trim().toLowerCase();
+        const normB = b.category.trim().toLowerCase();
+        const orderA = catMap[normA] ?? 999;
+        const orderB = catMap[normB] ?? 999;
+        
         if (orderA !== orderB) return orderA - orderB;
       }
-      return a.name.localeCompare(b.name, 'pt-BR');
+      
+      // Ordenação Alfabética Rigorosa (A-Z) para desempate ou quando em categoria específica
+      // Usamos sensitivity 'base' para que acentos como 'à' sejam tratados junto com 'a' corretamente
+      return a.name.trim().localeCompare(b.name.trim(), 'pt-BR', { sensitivity: 'base' });
     });
   }, [activeCategory, allProductsRaw, allCategoriesRaw, restaurantId]);
 
