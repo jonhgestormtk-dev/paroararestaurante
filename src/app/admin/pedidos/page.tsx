@@ -27,7 +27,9 @@ import {
   Save,
   MapPin,
   User,
-  Phone
+  Phone,
+  Zap,
+  TriangleAlert
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { 
@@ -108,15 +110,18 @@ const getSafeDate = (createdAt: any) => {
   return new Date(createdAt);
 };
 
+const getMinutesElapsed = (createdAt: any) => {
+  const date = getSafeDate(createdAt);
+  return Math.floor((new Date().getTime() - date.getTime()) / 60000);
+};
+
 const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus }) => {
   const [minutes, setMinutes] = useState(0);
 
   useEffect(() => {
     if (status === 'Finalizado' || status === 'Cancelado') return;
     const calculate = () => {
-      const date = getSafeDate(createdAt);
-      const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
-      setMinutes(Math.max(0, diff));
+      setMinutes(Math.max(0, getMinutesElapsed(createdAt)));
     };
     calculate();
     const interval = setInterval(calculate, 60000);
@@ -134,14 +139,15 @@ const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus
 
   const isCritical = minutes >= 36;
   const isAttention = minutes >= 26 && minutes < 36;
+  
   let colorClass = "text-emerald-500";
-  if (isCritical) colorClass = "text-rose-500 animate-pulse";
+  if (isCritical) colorClass = "text-rose-500 animate-pulse scale-110";
   else if (isAttention) colorClass = "text-amber-500";
 
   return (
-    <div className={cn("flex items-center gap-1 text-[10px] font-black", colorClass)}>
-      <Timer className="w-3 h-3" />
-      {minutes} MIN
+    <div className={cn("flex items-center gap-1.5 font-black transition-all duration-500", colorClass)}>
+      <Timer className={cn("w-4 h-4", isCritical && "animate-spin-slow")} />
+      <span className="text-sm md:text-base tracking-tighter">{minutes} MIN</span>
     </div>
   );
 };
@@ -157,9 +163,20 @@ const OrderCard = ({
   onEdit: (order: Order) => void;
   onNotify: (order: Order) => void;
 }) => {
+  const [minutes, setMinutes] = useState(0);
+  
+  useEffect(() => {
+    setMinutes(getMinutesElapsed(order.createdAt));
+    const interval = setInterval(() => setMinutes(getMinutesElapsed(order.createdAt)), 60000);
+    return () => clearInterval(interval);
+  }, [order.createdAt]);
+
   const status = STATUS_CONFIG[order.status] || STATUS_CONFIG['Pendente'];
   const type = TYPE_CONFIG[order.type || 'Delivery'] || TYPE_CONFIG['Delivery'];
   const PaymentIcon = PAYMENT_ICONS[order.payment.method] || Wallet;
+  
+  const isOngoing = order.status === 'Pendente' || order.status === 'Em Preparo';
+  const isCritical = isOngoing && minutes >= 36;
   
   return (
     <motion.div
@@ -167,13 +184,21 @@ const OrderCard = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group relative bg-white rounded-2xl p-4 border border-areia-escura/30 shadow-sm hover:shadow-md transition-all duration-300"
+      className={cn(
+        "group relative bg-white rounded-2xl p-4 border transition-all duration-500 shadow-sm hover:shadow-md",
+        isCritical ? "border-rose-500 shadow-[0_0_20px_rgba(239,68,68,0.15)] animate-pulse-slow" : "border-areia-escura/30"
+      )}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="min-w-0 flex-1">
-          <h4 className="font-subheadline font-bold text-lg text-marrom-escuro truncate uppercase tracking-tight italic">
-            {order.customer.name}
-          </h4>
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-subheadline font-bold text-lg text-marrom-escuro truncate uppercase tracking-tight italic">
+              {order.customer.name}
+            </h4>
+            {isCritical && (
+              <Badge className="bg-rose-500 text-white text-[8px] font-black animate-bounce px-1.5 py-0.5">ATRASADO</Badge>
+            )}
+          </div>
           <p className={cn(
             "text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5",
             order.restaurantId === 'paroara' ? "text-marrom-terra" : "text-fogo-vibrante"
@@ -215,7 +240,10 @@ const OrderCard = ({
       </div>
 
       <div className="flex items-center justify-between mt-auto">
-        <OrderTimer createdAt={order.createdAt} status={order.status} />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[8px] font-black uppercase text-cinza-organico/60 tracking-widest leading-none">Tempo Transcorrido</span>
+          <OrderTimer createdAt={order.createdAt} status={order.status} />
+        </div>
         
         <div className="flex items-center gap-1">
           <Button 
@@ -418,19 +446,20 @@ const EditOrderDialogContent = ({
                 { id: 'Débito', icon: CreditCard },
                 { id: 'Crédito', icon: CreditCard }
               ].map((m) => (
-                <Button
+                <button
                   key={m.id}
-                  variant={localOrder.payment.method === m.id ? 'default' : 'outline'}
-                  size="sm"
+                  type="button"
                   onClick={() => handleUpdatePayment(m.id as PaymentMethod)}
                   className={cn(
-                    "h-10 text-[10px] uppercase font-bold tracking-widest gap-2 rounded-xl",
-                    localOrder.payment.method === m.id ? "bg-marrom-terra" : "border-areia-escura/40"
+                    "flex items-center justify-center gap-2.5 h-11 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all",
+                    localOrder.payment.method === m.id 
+                      ? "bg-marrom-terra text-white border-marrom-terra shadow-lg" 
+                      : "bg-white border-areia-escura/40 text-marrom-madeira/60 hover:bg-areia-clara/50"
                   )}
                 >
-                  <m.icon className="w-3.5 h-3.5" />
+                  <m.icon className="w-4 h-4" />
                   {m.id}
-                </Button>
+                </button>
               ))}
             </div>
             {localOrder.payment.method === 'Dinheiro' && (
@@ -537,7 +566,6 @@ export default function AdminOrders() {
   const { toast } = useToast();
   const db = useFirestore();
 
-  // Trava de Segurança de Interface
   useEffect(() => {
     if (!isEditModalOpen) {
       const timer = setTimeout(() => {
@@ -572,6 +600,12 @@ export default function AdminOrders() {
       rota: filteredOrders.filter(o => o.status === 'Saiu para Entrega'),
       finalizados: filteredOrders.filter(o => o.status === 'Finalizado' || o.status === 'Cancelado'),
     };
+  }, [filteredOrders]);
+
+  const operationalAlerts = useMemo(() => {
+    const inProgress = filteredOrders.filter(o => o.status === 'Pendente' || o.status === 'Em Preparo');
+    const critical = inProgress.filter(o => getMinutesElapsed(o.createdAt) >= 36);
+    return { total: inProgress.length, critical: critical.length };
   }, [filteredOrders]);
 
   const handleStatusUpdate = (id: string, newStatus: OrderStatus) => {
@@ -667,7 +701,18 @@ export default function AdminOrders() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão de Pedidos</h1>
-          <p className="hidden md:block text-cinza-organico font-subheadline italic text-xs">Acompanhamento e edição em tempo real.</p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20">
+              <Zap className="w-3 h-3 text-amber-600" />
+              <span className="text-[10px] font-black text-amber-700 uppercase">{operationalAlerts.total} EM ABERTO</span>
+            </div>
+            {operationalAlerts.critical > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500 rounded-full border border-rose-600 animate-pulse">
+                <TriangleAlert className="w-3 h-3 text-white" />
+                <span className="text-[10px] font-black text-white uppercase">{operationalAlerts.critical} CRÍTICOS</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-3">
@@ -710,25 +755,25 @@ export default function AdminOrders() {
           <TabsList className="grid grid-cols-4 bg-areia-media/20 p-1 rounded-xl mx-1 h-auto">
             <TabsTrigger 
               value="pendentes" 
-              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-amber-600 border-b-2 border-transparent data-[state=active]:border-amber-600"
+              className="text-[9px] font-black uppercase rounded-lg py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-amber-600 border-b-2 border-transparent data-[state=active]:border-amber-600"
             >
               PENDENTE ({kanbanData.pendentes.length})
             </TabsTrigger>
             <TabsTrigger 
               value="preparando" 
-              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-cyan-600 border-b-2 border-transparent data-[state=active]:border-cyan-600"
+              className="text-[9px] font-black uppercase rounded-lg py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-cyan-600 border-b-2 border-transparent data-[state=active]:border-cyan-600"
             >
               PREPARO ({kanbanData.preparando.length})
             </TabsTrigger>
             <TabsTrigger 
               value="rota" 
-              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-fuchsia-600 border-b-2 border-transparent data-[state=active]:border-fuchsia-600"
+              className="text-[9px] font-black uppercase rounded-lg py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-fuchsia-600 border-b-2 border-transparent data-[state=active]:border-fuchsia-600"
             >
               ROTA ({kanbanData.rota.length})
             </TabsTrigger>
             <TabsTrigger 
               value="finalizados" 
-              className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 border-b-2 border-transparent data-[state=active]:border-emerald-600"
+              className="text-[9px] font-black uppercase rounded-lg py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 border-b-2 border-transparent data-[state=active]:border-emerald-600"
             >
               FINALIZADO ({kanbanData.finalizados.length})
             </TabsTrigger>
