@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -197,8 +196,16 @@ export default function AdminDashboard() {
       const pRev = p.reduce((acc, o) => acc + (o.total || 0), 0);
       const eRev = e.reduce((acc, o) => acc + (o.total || 0), 0);
       return {
-        paroara: { count: p.length, revenue: pRev },
-        egua: { count: e.length, revenue: eRev }
+        paroara: { 
+          count: p.length, 
+          revenue: pRev,
+          avgTicket: p.length > 0 ? pRev / p.length : 0
+        },
+        egua: { 
+          count: e.length, 
+          revenue: eRev,
+          avgTicket: e.length > 0 ? eRev / e.length : 0
+        }
       };
     };
 
@@ -309,8 +316,8 @@ export default function AdminDashboard() {
                 <p className="text-xl font-black">{formatBRL(company.stats?.revenue || 0)}</p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[10px] font-subheadline font-bold uppercase text-cinza-organico opacity-60">Meta Hoje</p>
-                <p className="text-xl font-black text-marrom-terra">{formatBRL(company.id === 'paroara' ? 3500 : 2800)}</p>
+                <p className="text-[10px] font-subheadline font-bold uppercase text-cinza-organico opacity-60">Ticket Médio</p>
+                <p className="text-xl font-black text-marrom-terra">{formatBRL(company.stats?.avgTicket || 0)}</p>
               </div>
             </div>
           </motion.div>
@@ -399,7 +406,7 @@ export default function AdminDashboard() {
                       <PaymentIcon className="w-3.5 h-3.5 opacity-40" />
                       <div className="flex flex-col">
                         <span className="text-[9px] font-bold text-cinza-organico uppercase">Pagamento</span>
-                        <span className="text-[11px] font-black text-marrom-escuro uppercase">{order.payment.method}</span>
+                        <span className="text-11px] font-black text-marrom-escuro uppercase">{order.payment.method}</span>
                       </div>
                     </div>
 
