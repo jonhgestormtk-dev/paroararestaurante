@@ -4,7 +4,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShoppingBag, 
-  DollarSign, 
   Store,
   Filter,
   Loader2,
