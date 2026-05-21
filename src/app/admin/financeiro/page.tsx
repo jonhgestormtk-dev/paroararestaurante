@@ -13,7 +13,6 @@ import {
   ArrowDownRight,
   Filter,
   Calendar as CalendarIcon,
-  Download,
   AlertCircle,
   Trophy,
   Activity,
@@ -301,10 +300,6 @@ export default function AdminFinancial() {
                 />
               </PopoverContent>
             </Popover>
-
-            <Button variant="ghost" size="icon" className="h-10 w-10 text-areia-clara hover:bg-white/10">
-              <Download className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </div>
