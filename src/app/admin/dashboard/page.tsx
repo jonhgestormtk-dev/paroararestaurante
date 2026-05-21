@@ -256,15 +256,25 @@ export default function AdminDashboard() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div className="space-y-4">
             <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Dashboard</h1>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20">
-                <Zap className="w-4 h-4 text-caramelo-palha" />
-                <span className="text-[10px] font-black text-areia-clara uppercase tracking-widest">{stats?.alerts.ongoing} EM PREPARO</span>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-3 bg-amber-500/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-amber-500/30 transition-all hover:scale-105">
+                <div className="p-1.5 bg-amber-500 rounded-lg shadow-md">
+                  <Zap className="w-4 h-4 text-white animate-pulse" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-amber-500/80 uppercase tracking-widest leading-none mb-0.5">Cozinha Ativa</span>
+                  <span className="text-sm font-black text-areia-clara uppercase tracking-tight">{stats?.alerts.ongoing} EM ANDAMENTO</span>
+                </div>
               </div>
               {stats?.alerts.critical > 0 && (
-                <div className="flex items-center gap-2 bg-rose-500 px-4 py-1.5 rounded-full border border-rose-600 animate-pulse">
-                  <TriangleAlert className="w-4 h-4 text-white" />
-                  <span className="text-[10px] font-black text-white uppercase tracking-widest">{stats.alerts.critical} CRÍTICOS</span>
+                <div className="flex items-center gap-3 bg-rose-500/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-rose-500/30 animate-pulse transition-all hover:scale-105">
+                  <div className="p-1.5 bg-rose-600 rounded-lg shadow-md">
+                    <TriangleAlert className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-rose-500/80 uppercase tracking-widest leading-none mb-0.5">Alerta Crítico</span>
+                    <span className="text-sm font-black text-areia-clara uppercase tracking-tight">{stats.alerts.critical} ATRASADOS</span>
+                  </div>
                 </div>
               )}
             </div>

@@ -701,15 +701,21 @@ export default function AdminOrders() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border border-areia-escura/30 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-headline text-marrom-terra">Gestão de Pedidos</h1>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20">
-              <Zap className="w-3 h-3 text-amber-600" />
-              <span className="text-[10px] font-black text-amber-700 uppercase">{operationalAlerts.total} EM ABERTO</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2.5 px-4 py-2 bg-amber-500 text-white rounded-xl border border-amber-600 shadow-lg shadow-amber-500/20 transition-all hover:scale-105">
+              <Zap className="w-4 h-4 fill-white animate-pulse" />
+              <div className="flex flex-col">
+                <span className="text-[8px] font-black uppercase opacity-80 leading-none mb-0.5">Operacional</span>
+                <span className="text-xs font-black uppercase tracking-tight">{operationalAlerts.total} EM ABERTO</span>
+              </div>
             </div>
             {operationalAlerts.critical > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500 rounded-full border border-rose-600 animate-pulse">
-                <TriangleAlert className="w-3 h-3 text-white" />
-                <span className="text-[10px] font-black text-white uppercase">{operationalAlerts.critical} CRÍTICOS</span>
+              <div className="flex items-center gap-2.5 px-4 py-2 bg-rose-600 text-white rounded-xl border border-rose-700 animate-pulse shadow-lg shadow-rose-500/30 transition-all hover:scale-105">
+                <TriangleAlert className="w-4 h-4 fill-white" />
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black uppercase opacity-80 leading-none mb-0.5">Urgente</span>
+                  <span className="text-xs font-black uppercase tracking-tight">{operationalAlerts.critical} CRÍTICOS</span>
+                </div>
               </div>
             )}
           </div>
