@@ -361,7 +361,7 @@ export default function AdminDashboard() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
-                      <h4 className="font-headline text-lg text-marrom-escuro truncate uppercase tracking-tighter italic">
+                      <h4 className="font-subheadline font-bold text-lg text-marrom-escuro truncate uppercase tracking-tight italic">
                         {order.customer.name}
                       </h4>
                       {isCritical && (
