@@ -5,32 +5,20 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShoppingBag, 
   DollarSign, 
-  TrendingUp,
   Store,
-  CalendarDays,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
   Filter,
   Loader2,
-  Trophy,
   Activity,
-  BarChart3,
-  PieChart as PieChartIcon,
   Timer,
   AlertCircle,
   Truck,
   CheckCircle2,
   XCircle,
   Wallet,
-  MapPin,
   UtensilsCrossed,
   Package,
-  TrendingDown,
   Banknote,
   CreditCard,
-  MessageCircle,
-  MoreVertical,
   Zap,
   TriangleAlert
 } from 'lucide-react';
@@ -56,18 +44,6 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area,
-  PieChart,
-  Cell,
-  Pie
-} from 'recharts';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -95,6 +71,10 @@ const PAYMENT_ICONS: Record<string, any> = {
   'Débito': CreditCard,
   'Crédito': CreditCard
 };
+
+function Clock(props: any) {
+  return <Timer {...props} />;
+}
 
 const getSafeDate = (createdAt: any) => {
   if (!createdAt) return new Date();
@@ -192,13 +172,6 @@ export default function AdminDashboard() {
       default: currentStart = todayStart;
     }
 
-    const currentOrders = allOrders.filter(o => {
-      const date = getSafeDate(o.createdAt);
-      const matchesDate = date >= currentStart && date <= currentEnd;
-      const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
-      return matchesDate && matchesRes;
-    });
-
     const activeOrders = allOrders.filter(o => {
       const date = getSafeDate(o.createdAt);
       const isToday = date >= todayStart;
@@ -207,16 +180,16 @@ export default function AdminDashboard() {
       return isToday && matchesRes && isOngoing;
     });
 
+    const currentOrders = allOrders.filter(o => {
+      const date = getSafeDate(o.createdAt);
+      const matchesDate = date >= currentStart && date <= currentEnd;
+      const matchesRes = restaurantFilter === 'all' || o.restaurantId === restaurantFilter;
+      return matchesDate && matchesRes;
+    });
+
     const criticalOrders = activeOrders.filter(o => 
       (o.status === 'Pendente' || o.status === 'Em Preparo') && getMinutesElapsed(o.createdAt) >= 36
     );
-
-    const hourlyDataMap: Record<number, { hour: string; revenue: number }> = {};
-    for (let i = 0; i < 24; i++) hourlyDataMap[i] = { hour: `${i}h`, revenue: 0 };
-    currentOrders.forEach(o => {
-      const h = getSafeDate(o.createdAt).getHours();
-      hourlyDataMap[h].revenue += o.total || 0;
-    });
 
     const calculateMetrics = (orders: Order[]) => {
       const p = orders.filter(o => o.restaurantId === 'paroara' && o.status !== 'Cancelado');
@@ -224,14 +197,13 @@ export default function AdminDashboard() {
       const pRev = p.reduce((acc, o) => acc + (o.total || 0), 0);
       const eRev = e.reduce((acc, o) => acc + (o.total || 0), 0);
       return {
-        paroara: { count: p.length, revenue: pRev, avgPrep: p.length > 0 ? 18 : 0 },
-        egua: { count: e.length, revenue: eRev, avgPrep: e.length > 0 ? 22 : 0 }
+        paroara: { count: p.length, revenue: pRev },
+        egua: { count: e.length, revenue: eRev }
       };
     };
 
     return {
       current: calculateMetrics(currentOrders),
-      hourlyData: Object.values(hourlyDataMap),
       recentOrders: activeOrders,
       alerts: {
         ongoing: activeOrders.filter(o => o.status === 'Pendente' || o.status === 'Em Preparo').length,
@@ -257,23 +229,23 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <h1 className="text-4xl md:text-5xl font-headline text-areia-clara tracking-tight">Dashboard</h1>
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-3 bg-amber-500/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-amber-500/30 transition-all hover:scale-105">
-                <div className="p-1.5 bg-amber-500 rounded-lg shadow-md">
+              <div className="flex items-center gap-3 bg-amber-500 text-white px-5 py-2.5 rounded-2xl border border-amber-600 shadow-lg shadow-amber-500/20 transition-all hover:scale-105">
+                <div className="p-1.5 bg-white/20 rounded-lg">
                   <Zap className="w-4 h-4 text-white animate-pulse" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-amber-500/80 uppercase tracking-widest leading-none mb-0.5">Cozinha Ativa</span>
-                  <span className="text-sm font-black text-areia-clara uppercase tracking-tight">{stats?.alerts.ongoing} EM ANDAMENTO</span>
+                  <span className="text-[9px] font-black uppercase opacity-80 leading-none mb-0.5">Operacional</span>
+                  <span className="text-sm font-black uppercase tracking-tight">{stats?.alerts.ongoing} EM ANDAMENTO</span>
                 </div>
               </div>
               {stats?.alerts.critical > 0 && (
-                <div className="flex items-center gap-3 bg-rose-500/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-rose-500/30 animate-pulse transition-all hover:scale-105">
-                  <div className="p-1.5 bg-rose-600 rounded-lg shadow-md">
+                <div className="flex items-center gap-3 bg-rose-600 text-white px-5 py-2.5 rounded-2xl border border-rose-700 shadow-lg shadow-rose-500/30 animate-pulse transition-all hover:scale-105">
+                  <div className="p-1.5 bg-white/20 rounded-lg">
                     <TriangleAlert className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-rose-500/80 uppercase tracking-widest leading-none mb-0.5">Alerta Crítico</span>
-                    <span className="text-sm font-black text-areia-clara uppercase tracking-tight">{stats.alerts.critical} ATRASADOS</span>
+                    <span className="text-[9px] font-black uppercase opacity-80 leading-none mb-0.5">Urgente</span>
+                    <span className="text-sm font-black uppercase tracking-tight">{stats.alerts.critical} CRÍTICOS</span>
                   </div>
                 </div>
               )}
@@ -377,16 +349,9 @@ export default function AdminDashboard() {
                   className={cn(
                     "p-6 flex flex-col md:flex-row md:items-center gap-6 group transition-all relative overflow-hidden",
                     "hover:bg-areia-clara/20",
-                    isCritical && "bg-rose-50/40 border-l-4 border-rose-500 shadow-[inset_0_0_20px_rgba(239,68,68,0.05)]"
+                    isCritical && "bg-rose-50/40 border-l-4 border-rose-500 shadow-[inset_0_0_20px_rgba(239,68,68,0.15)]"
                   )}
                 >
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-transform group-hover:scale-110 shrink-0 shadow-sm",
-                    order.restaurantId === 'paroara' ? "bg-marrom-terra text-white" : "bg-fogo-vibrante text-white"
-                  )}>
-                    {order.customer.name.charAt(0).toUpperCase()}
-                  </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <h4 className="font-headline text-lg text-marrom-escuro truncate uppercase tracking-tighter italic">
