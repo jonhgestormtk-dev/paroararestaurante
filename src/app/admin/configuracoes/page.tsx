@@ -47,7 +47,7 @@ export default function AdminSettings() {
     storeName: 'Paroara | Restaurante | Beer Drik’s',
     whatsapp: '5591985256348',
     address: 'Mercado Municipal - Francisco Bolonha - Complexo do Ver-o-Peso',
-    openingHours: 'Terça a Domingo: 9h às 15:30h',
+    openingHours: 'Domingo a domingo 9h às 23:30h',
     paroaraPromoId: '',
     eguaPromoId: '',
     paroaraActive: true,
@@ -276,7 +276,6 @@ export default function AdminSettings() {
                 />
               </div>
             </CardContent>
-          </Card>
 
           <div className="pt-4">
             <Button 
