@@ -650,25 +650,25 @@ export default function AdminOrders() {
               value="pendentes" 
               className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-amber-600 border-b-2 border-transparent data-[state=active]:border-amber-600"
             >
-              PND ({kanbanData.pendentes.length})
+              PENDENTE ({kanbanData.pendentes.length})
             </TabsTrigger>
             <TabsTrigger 
               value="preparando" 
               className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 border-b-2 border-transparent data-[state=active]:border-blue-600"
             >
-              PRE ({kanbanData.preparando.length})
+              PREPARO ({kanbanData.preparando.length})
             </TabsTrigger>
             <TabsTrigger 
               value="rota" 
               className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-violet-600 border-b-2 border-transparent data-[state=active]:border-violet-600"
             >
-              ROT ({kanbanData.rota.length})
+              ROTA ({kanbanData.rota.length})
             </TabsTrigger>
             <TabsTrigger 
               value="finalizados" 
               className="text-[10px] font-black uppercase rounded-lg py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 border-b-2 border-transparent data-[state=active]:border-emerald-600"
             >
-              FIM ({kanbanData.finalizados.length})
+              FINALIZADO ({kanbanData.finalizados.length})
             </TabsTrigger>
           </TabsList>
           
