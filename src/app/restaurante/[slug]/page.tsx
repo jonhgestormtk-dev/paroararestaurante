@@ -78,7 +78,9 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
 
   const featuredProducts = useMemo(() => {
     if (!featuredProductsRaw) return [];
-    return featuredProductsRaw.filter(p => p.active !== false);
+    return featuredProductsRaw
+      .filter(p => p.active !== false)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [featuredProductsRaw]);
 
   const allProductsQuery = useMemo(() => {
@@ -92,10 +94,31 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
 
   const filteredProducts = useMemo(() => {
     if (!allProductsRaw) return [];
-    const activeOnly = allProductsRaw.filter(p => p.active !== false);
-    if (activeCategory === 'Todos') return activeOnly;
-    return activeOnly.filter(p => p.category === activeCategory);
-  }, [activeCategory, allProductsRaw]);
+    
+    // 1. Filtrar ativos
+    let list = allProductsRaw.filter(p => p.active !== false);
+    
+    // 2. Filtrar por categoria selecionada
+    if (activeCategory !== 'Todos') {
+      list = list.filter(p => p.category === activeCategory);
+    }
+    
+    // 3. Mapear ordem das categorias para ordenação no "Todos"
+    const catMap: Record<string, number> = {};
+    if (allCategoriesRaw) {
+      allCategoriesRaw.forEach((c, i) => catMap[c.name] = c.order ?? i);
+    }
+
+    // 4. Ordenar: Se "Todos", por categoria e depois nome. Se categoria específica, apenas nome.
+    return [...list].sort((a, b) => {
+      if (activeCategory === 'Todos') {
+        const orderA = catMap[a.category] ?? 999;
+        const orderB = catMap[b.category] ?? 999;
+        if (orderA !== orderB) return orderA - orderB;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [activeCategory, allProductsRaw, allCategoriesRaw]);
 
   // Se o restaurante estiver inativo, mostra tela de bloqueio
   if (!settingsLoading && !isActive) {

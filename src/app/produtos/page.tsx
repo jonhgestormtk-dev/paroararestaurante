@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -36,7 +37,7 @@ export default function MenuPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [priceRange, setPriceRange] = useState([0, 250]);
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  const [sortBy, setSortBy] = useState<SortOption>('az'); // Mudado para 'az' como padrão
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -66,7 +67,7 @@ export default function MenuPage() {
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
     
-    return allProducts
+    return [...allProducts]
       .filter(p => {
         const isActive = p.active !== false;
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -79,9 +80,9 @@ export default function MenuPage() {
       .sort((a, b) => {
         if (sortBy === 'price-asc') return a.price - b.price;
         if (sortBy === 'price-desc') return b.price - a.price;
-        if (sortBy === 'az') return a.name.localeCompare(b.name);
+        if (sortBy === 'az' || sortBy === 'relevance') return a.name.localeCompare(b.name);
         if (sortBy === 'popular') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-        return 0;
+        return a.name.localeCompare(b.name);
       });
   }, [allProducts, searchTerm, activeCategory, priceRange, sortBy]);
 
@@ -96,7 +97,7 @@ export default function MenuPage() {
     setSearchTerm('');
     setActiveCategory('Todos');
     setPriceRange([0, 250]);
-    setSortBy('relevance');
+    setSortBy('az');
   };
 
   return (
@@ -242,11 +243,10 @@ export default function MenuPage() {
                     </div>
                   </SelectTrigger>
                   <SelectContent className="bg-areia-clara border-areia-escura">
-                    <SelectItem value="relevance">Relevância</SelectItem>
+                    <SelectItem value="az">A-Z</SelectItem>
                     <SelectItem value="price-asc">Menor Preço</SelectItem>
                     <SelectItem value="price-desc">Maior Preço</SelectItem>
                     <SelectItem value="popular">Destaques</SelectItem>
-                    <SelectItem value="az">A-Z</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -263,11 +263,10 @@ export default function MenuPage() {
                         <SelectValue placeholder="Ordenar por" />
                       </SelectTrigger>
                       <SelectContent className="bg-areia-clara border-areia-escura">
-                        <SelectItem value="relevance">Relevância</SelectItem>
+                        <SelectItem value="az">A-Z</SelectItem>
                         <SelectItem value="price-asc">Menor Preço</SelectItem>
                         <SelectItem value="price-desc">Maior Preço</SelectItem>
                         <SelectItem value="popular">Destaques</SelectItem>
-                        <SelectItem value="az">A-Z</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

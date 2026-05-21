@@ -26,7 +26,7 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [priceRange, setPriceRange] = useState([0, 250]);
-  const [sortBy, setSortBy] = useState<string>('relevance');
+  const [sortBy, setSortBy] = useState<string>('az'); // Mudado para 'az' como padrão
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const db = useFirestore();
@@ -59,7 +59,7 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
     
-    return allProducts
+    return [...allProducts]
       .filter(p => {
         const isActive = p.active !== false;
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,7 +71,7 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
         if (sortBy === 'price-asc') return a.price - b.price;
         if (sortBy === 'price-desc') return b.price - a.price;
         if (sortBy === 'popular') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-        return 0;
+        return a.name.localeCompare(b.name); // Padrão alfabético (az)
       });
   }, [allProducts, searchTerm, activeCategory, priceRange, sortBy]);
 
