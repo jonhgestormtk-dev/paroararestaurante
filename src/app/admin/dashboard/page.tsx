@@ -119,7 +119,7 @@ const OrderTimer = ({ createdAt, status }: { createdAt: any; status: OrderStatus
   else if (isAttention) colorClass = "text-amber-500";
 
   return (
-    <div className={cn("flex items-center gap-1.5 font-black", colorClass)}>
+    <div className={cn("flex items-center gap-1.5 font-black transition-all duration-500", colorClass)}>
       <Timer className={cn("w-4 h-4", isCritical && "animate-spin-slow")} />
       <span className="text-base tracking-tighter">{minutes} MIN</span>
     </div>

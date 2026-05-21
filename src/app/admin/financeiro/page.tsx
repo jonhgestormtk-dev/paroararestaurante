@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -68,7 +69,6 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
-// Mock Sparkline Data for KPIs
 const SPARKLINE_UP = [10, 15, 12, 25, 30, 28, 45];
 const SPARKLINE_DOWN = [50, 45, 48, 30, 25, 20, 15];
 
@@ -116,7 +116,6 @@ export default function AdminFinancial() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [companyFilter, setCompanyFilter] = useState('all');
   
-  // Estados de Metas Individuais
   const [isEditingGoals, setIsEditingGoals] = useState(false);
   const [goals, setGoals] = useState({ paroara: 100000, egua: 80000 });
   const [editGoalValues, setEditGoalValues] = useState({ paroara: '100000', egua: '80000' });
@@ -179,7 +178,6 @@ export default function AdminFinancial() {
       }).reduce((acc, curr) => acc + curr.total, 0)
     }));
 
-    // Cálculos de Metas Mensais Individuais
     const monthStart = startOfMonth(new Date());
     const monthOrders = orders.filter(o => {
       const date = o.createdAt instanceof Timestamp ? o.createdAt.toDate() : new Date(o.createdAt);
@@ -411,7 +409,6 @@ export default function AdminFinancial() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Metas Mensais Individuais */}
         <Card className="bg-marrom-escuro border-none rounded-[2.5rem] shadow-2xl overflow-hidden relative text-areia-clara">
           <div className="absolute inset-0 bg-rustic-texture opacity-5"></div>
           <CardHeader className="p-8 relative z-10">
@@ -426,7 +423,6 @@ export default function AdminFinancial() {
             </div>
 
             <div className="space-y-10">
-              {/* Meta Paroara */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
@@ -468,7 +464,6 @@ export default function AdminFinancial() {
                 </div>
               </div>
 
-              {/* Meta Égua na Panela */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
@@ -516,7 +511,6 @@ export default function AdminFinancial() {
           </CardHeader>
         </Card>
 
-        {/* Insights & Market Share */}
         <div className="space-y-8">
           <Card className="bg-white border-areia-escura rounded-[2.5rem] shadow-xl overflow-hidden">
             <CardHeader className="p-8 border-b border-areia-escura/10 flex flex-row items-center justify-between">
