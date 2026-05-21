@@ -103,32 +103,39 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
       list = list.filter(p => p.category === activeCategory);
     }
     
-    // 3. Mapear ordem das categorias de forma robusta e normalizada
-    const catMap: Record<string, number> = {};
+    // 3. Mapear ordens e nomes das categorias para ordenação robusta
+    const catMap: Record<string, { order: number; name: string }> = {};
     if (allCategoriesRaw) {
       allCategoriesRaw
         .filter((c: any) => c.restaurantId === restaurantId)
         .forEach((c: any) => {
-          // Normalização para garantir que o match ocorra mesmo com espaços ou diferenças de caixa
-          const normalizedName = c.name.trim().toLowerCase();
-          catMap[normalizedName] = c.order ?? 999;
+          const key = c.name.trim().toLowerCase();
+          catMap[key] = {
+            order: c.order ?? 999,
+            name: c.name.trim()
+          };
         });
     }
 
     // 4. Ordenação Final
     return [...list].sort((a, b) => {
-      // Se estivermos na aba "Todos", respeitamos a prioridade das categorias primeiro
+      // Se estivermos na aba "Todos", a prioridade é o agrupamento de categorias
       if (activeCategory === 'Todos') {
-        const normA = a.category.trim().toLowerCase();
-        const normB = b.category.trim().toLowerCase();
-        const orderA = catMap[normA] ?? 999;
-        const orderB = catMap[normB] ?? 999;
+        const keyA = a.category.trim().toLowerCase();
+        const keyB = b.category.trim().toLowerCase();
         
-        if (orderA !== orderB) return orderA - orderB;
+        const catA = catMap[keyA] || { order: 999, name: a.category.trim() };
+        const catB = catMap[keyB] || { order: 999, name: b.category.trim() };
+        
+        // Primeiro por ordem numérica da categoria
+        if (catA.order !== catB.order) return catA.order - catB.order;
+        
+        // Segundo por nome da categoria (A-Z) para desempate de grupos
+        const catNameCmp = catA.name.localeCompare(catB.name, 'pt-BR', { sensitivity: 'base' });
+        if (catNameCmp !== 0) return catNameCmp;
       }
       
-      // Ordenação Alfabética Rigorosa (A-Z) para desempate ou quando em categoria específica
-      // Usamos sensitivity 'base' para que acentos como 'à' sejam tratados junto com 'a' corretamente
+      // Ordenação Alfabética do Prato (A-Z) - Sempre o critério final
       return a.name.trim().localeCompare(b.name.trim(), 'pt-BR', { sensitivity: 'base' });
     });
   }, [activeCategory, allProductsRaw, allCategoriesRaw, restaurantId]);

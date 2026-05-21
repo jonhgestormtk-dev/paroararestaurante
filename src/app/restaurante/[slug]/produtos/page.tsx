@@ -26,12 +26,12 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [priceRange, setPriceRange] = useState([0, 250]);
-  const [sortBy, setSortBy] = useState<string>('az'); // Mudado para 'az' como padrão
+  const [sortBy, setSortBy] = useState<string>('az'); 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const db = useFirestore();
 
-  // Consultar todas as categorias e filtrar em memória
+  // Consultar todas as categorias para mapear ordens
   const catQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -59,21 +59,49 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
     
-    return [...allProducts]
-      .filter(p => {
-        const isActive = p.active !== false;
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
-        const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
-        return isActive && matchesSearch && matchesCategory && matchesPrice;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'price-asc') return a.price - b.price;
-        if (sortBy === 'price-desc') return b.price - a.price;
-        if (sortBy === 'popular') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-        return a.name.localeCompare(b.name); // Padrão alfabético (az)
-      });
-  }, [allProducts, searchTerm, activeCategory, priceRange, sortBy]);
+    let list = [...allProducts].filter(p => p.active !== false);
+
+    // Filtros de Busca e Categoria
+    list = list.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
+      const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
+      return matchesSearch && matchesCategory && matchesPrice;
+    });
+
+    // Mapeamento de Ordem das Categorias
+    const catMap: Record<string, { order: number; name: string }> = {};
+    if (allCategoriesRaw) {
+      allCategoriesRaw
+        .filter((c: any) => c.restaurantId === restaurantId)
+        .forEach((c: any) => {
+          const key = c.name.trim().toLowerCase();
+          catMap[key] = { order: c.order ?? 999, name: c.name.trim() };
+        });
+    }
+    
+    return list.sort((a, b) => {
+      // 1. Lógica de Ordenação Especial (Preço ou Popularidade)
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'popular') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+      
+      // 2. Lógica de Ordenação Padrão (A-Z respeitando categorias no "Todos")
+      if (activeCategory === 'Todos') {
+        const keyA = a.category.trim().toLowerCase();
+        const keyB = b.category.trim().toLowerCase();
+        const catA = catMap[keyA] || { order: 999, name: a.category.trim() };
+        const catB = catMap[keyB] || { order: 999, name: b.category.trim() };
+        
+        if (catA.order !== catB.order) return catA.order - catB.order;
+        const catNameCmp = catA.name.localeCompare(catB.name, 'pt-BR', { sensitivity: 'base' });
+        if (catNameCmp !== 0) return catNameCmp;
+      }
+
+      // 3. Ordenação Alfabética do Nome (A-Z)
+      return a.name.trim().localeCompare(b.name.trim(), 'pt-BR', { sensitivity: 'base' });
+    });
+  }, [allProducts, searchTerm, activeCategory, priceRange, sortBy, allCategoriesRaw, restaurantId]);
 
   return (
     <CartProvider>
@@ -108,7 +136,10 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
                     {categories.map(cat => (
                       <button
                         key={cat}
-                        onClick={() => setActiveCategory(cat)}
+                        onClick={() => {
+                          setActiveCategory(cat);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                         className={cn(
                           "px-3 py-2 text-sm rounded-sm text-left transition-colors",
                           activeCategory === cat ? "bg-marrom-terra text-white" : "hover:bg-areia-media/30"
@@ -122,6 +153,10 @@ export default function RestaurantMenuPage({ params }: { params: Promise<{ slug:
               </aside>
 
               <div className="flex-1">
+                <div className="mb-6 flex justify-between items-center lg:hidden">
+                   <p className="text-xs font-bold text-marrom-madeira uppercase tracking-widest">{activeCategory}</p>
+                </div>
+
                 {loading ? (
                   <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin opacity-20" /></div>
                 ) : filteredProducts.length > 0 ? (
