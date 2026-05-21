@@ -276,6 +276,7 @@ export default function AdminSettings() {
                 />
               </div>
             </CardContent>
+          </Card>
 
           <div className="pt-4">
             <Button 
