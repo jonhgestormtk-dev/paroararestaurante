@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -23,7 +24,7 @@ import Link from 'next/link';
  * Função utilitária para normalizar strings para comparação (remove acentos e espaços extras)
  */
 const normalizeText = (text: string) => 
-  text.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  text?.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
 
 export default function RestaurantHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -93,7 +94,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
       list = list.filter(p => p.category === activeCategory);
     }
     
-    // Mapa de prioridades das categorias
+    // Mapa de prioridades das categorias baseado no Firestore
     const catMap: Record<string, { order: number; name: string }> = {};
     if (allCategoriesRaw) {
       allCategoriesRaw
@@ -105,15 +106,20 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     }
 
     return [...list].sort((a, b) => {
+      // 1. Se estiver no "Todos", agrupa primeiro pela ordem da categoria
       if (activeCategory === 'Todos') {
         const catA = catMap[normalizeText(a.category)] || { order: 999, name: a.category };
         const catB = catMap[normalizeText(b.category)] || { order: 999, name: b.category };
         
+        // Compara por ordem numérica da categoria
         if (catA.order !== catB.order) return catA.order - catB.order;
+        
+        // Se a ordem for igual, compara pelo nome da categoria (A-Z)
         const catNameCmp = normalizeText(catA.name).localeCompare(normalizeText(catB.name), 'pt-BR');
         if (catNameCmp !== 0) return catNameCmp;
       }
       
+      // 2. Por fim, ordena os pratos pelo nome (A-Z)
       return normalizeText(a.name).localeCompare(normalizeText(b.name), 'pt-BR');
     });
   }, [activeCategory, allProductsRaw, allCategoriesRaw, restaurantId]);
