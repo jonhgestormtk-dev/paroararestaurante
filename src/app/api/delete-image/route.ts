@@ -16,6 +16,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ID da imagem é obrigatório' }, { status: 400 });
     }
 
+    // O publicId geralmente vem com o folder no Firestore, ex: "paroara_upload/nome_imagem"
+    // Cloudinary destroy precisa do path completo
     const result = await cloudinary.uploader.destroy(publicId);
 
     return NextResponse.json({ result });
