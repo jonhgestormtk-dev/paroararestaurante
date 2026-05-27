@@ -3,12 +3,11 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import { saveImageMetadata } from '@/services/imageService';
 import { useFirestore } from '@/firebase';
 import { toast } from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface DragDropUploadProps {
@@ -24,7 +23,7 @@ export function DragDropUpload({ restaurantId, onSuccess }: DragDropUploadProps)
     if (!db || acceptedFiles.length === 0) return;
     
     setIsUploading(true);
-    const uploadToast = toast.loading('Enviando imagem...');
+    const uploadToast = toast.loading('Enviando para o Cloudinary...');
 
     try {
       const file = acceptedFiles[0];
@@ -36,11 +35,11 @@ export function DragDropUpload({ restaurantId, onSuccess }: DragDropUploadProps)
         restaurantId: restaurantId
       });
 
-      toast.success('Upload concluído!', { id: uploadToast });
+      toast.success('Upload concluído com sucesso!', { id: uploadToast });
       if (onSuccess) onSuccess(result.secure_url);
     } catch (error: any) {
       console.error(error);
-      toast.error('Erro no upload: ' + error.message, { id: uploadToast });
+      toast.error(error.message || 'Erro ao realizar upload', { id: uploadToast });
     } finally {
       setIsUploading(false);
     }
@@ -70,7 +69,7 @@ export function DragDropUpload({ restaurantId, onSuccess }: DragDropUploadProps)
         <p className="text-sm font-black uppercase tracking-widest text-marrom-madeira">
           {isDragActive ? "Solte para enviar" : "Arraste uma foto ou clique aqui"}
         </p>
-        <p className="text-[10px] text-cinza-organico italic uppercase tracking-wider">Formatos aceitos: JPG, PNG, WEBP (Max 5MB)</p>
+        <p className="text-[10px] text-cinza-organico italic uppercase tracking-wider">Formatos aceitos: JPG, PNG, WEBP (Max 10MB)</p>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export async function saveImageMetadata(db: Firestore, data: { imageUrl: string,
 }
 
 export async function deleteImageRecord(db: Firestore, id: string, publicId: string) {
-  // Primeiro deletar do Cloudinary via nossa API
+  // Primeiro deletar do Cloudinary via nossa API de servidor segura
   const response = await fetch('/api/delete-image', {
     method: 'POST',
     body: JSON.stringify({ publicId }),
@@ -21,7 +21,7 @@ export async function deleteImageRecord(db: Firestore, id: string, publicId: str
     throw new Error("Falha ao remover do Cloudinary");
   }
 
-  // Se deu certo no Cloudinary, deleta do Firestore
+  // Se a exclusão no Cloudinary foi bem-sucedida, removemos o registro do Firestore
   const docRef = doc(db, 'images', id);
   return deleteDoc(docRef);
 }
