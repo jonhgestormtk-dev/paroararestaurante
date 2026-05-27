@@ -7,23 +7,32 @@ export function optimizeImage(url: string) {
 export async function uploadImageToCloudinary(file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append(
-    "upload_preset",
-    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "paroara_upload"
-  );
+  
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "paroara_upload";
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dijgjpenq";
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dijgjpenq'}/image/upload`,
-    {
-      method: "POST",
-      body: formData,
+  formData.append("upload_preset", uploadPreset);
+
+  try {
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // O Cloudinary retorna erros no formato { error: { message: "..." } }
+      const errorMessage = data.error?.message || "Erro desconhecido no servidor de imagens";
+      throw new Error(errorMessage);
     }
-  );
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Erro no upload");
+    return data;
+  } catch (error: any) {
+    // Garante que o erro seja propagado com uma mensagem legível
+    throw new Error(error.message || "Falha na comunicação com o Cloudinary");
   }
-
-  return response.json();
 }
