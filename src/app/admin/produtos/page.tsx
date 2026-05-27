@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -43,6 +44,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ImagePickerModal } from '@/components/admin/ImagePickerModal';
+import { Toaster } from 'react-hot-toast';
 
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,6 +126,7 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      <Toaster position="top-right" />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-headline text-marrom-terra">Gestão de Pratos</h1>
@@ -161,38 +165,46 @@ export default function AdminProducts() {
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh]">
+        <DialogContent className="max-w-4xl bg-areia-clara p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh]">
           <DialogHeader className="p-6 bg-marrom-escuro text-areia-clara shrink-0">
             <DialogTitle className="font-headline uppercase tracking-widest">{editingProduct ? 'Editar Prato' : 'Novo Prato'}</DialogTitle>
           </DialogHeader>
           <ScrollArea className="flex-1 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-              <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+              <div className="space-y-6">
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-marrom-madeira">Imagem do Prato</Label>
+                  <ImagePickerModal 
+                    value={formData.imageUrl} 
+                    onSelect={(url) => setFormData({...formData, imageUrl: url})} 
+                    restaurantId={formData.restaurantId || 'paroara'}
+                  />
+                </div>
+                
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Restaurante *</Label>
                   <Select value={formData.restaurantId} onValueChange={(v) => setFormData({...formData, restaurantId: v as RestaurantSlug, category: ''})}><SelectTrigger className="bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paroara">Paroara</SelectItem><SelectItem value="egua-na-panela">Égua na Panela</SelectItem></SelectContent></Select>
                 </div>
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Categoria *</Label>
                   <Select value={formData.category} onValueChange={(v) => setFormData({...formData, category: v})}><SelectTrigger className="bg-white"><SelectValue placeholder="Selecione..." /></SelectTrigger><SelectContent>{availableCategories.map((c: any) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select>
                 </div>
+              </div>
+
+              <div className="space-y-4">
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Nome *</Label><Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-white" /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Preço *</Label><Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} className="bg-white" /></div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Estoque</Label><Input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})} className="bg-white" /></div>
                 </div>
-              </div>
-              <div className="space-y-4">
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Descrição *</Label><Textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="h-24 bg-white" /></div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase">URL Imagem</Label><Input value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} className="bg-white" /></div>
-                <div className="flex gap-4 items-center p-3 bg-white/40 rounded-sm border">
-                  <div className="flex items-center gap-2"><Switch checked={formData.active} onCheckedChange={(v) => setFormData({...formData, active: v})} /><Label className="text-xs font-bold">Ativo</Label></div>
-                  <div className="flex items-center gap-2"><Switch checked={formData.featured} onCheckedChange={(v) => setFormData({...formData, featured: v})} /><Label className="text-xs font-bold">Destaque</Label></div>
+                <div className="flex gap-4 items-center p-4 bg-white/40 rounded-xl border border-areia-escura/30 shadow-inner">
+                  <div className="flex items-center gap-3"><Switch checked={formData.active} onCheckedChange={(v) => setFormData({...formData, active: v})} /><Label className="text-[10px] font-black uppercase">Ativo</Label></div>
+                  <div className="flex items-center gap-3"><Switch checked={formData.featured} onCheckedChange={(v) => setFormData({...formData, featured: v})} /><Label className="text-[10px] font-black uppercase">Destaque</Label></div>
                 </div>
               </div>
             </div>
           </ScrollArea>
           <DialogFooter className="p-6 bg-white border-t border-areia-escura shrink-0">
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="text-[10px] font-bold uppercase tracking-widest">Cancelar</Button>
-            <Button onClick={handleSave} className="bg-marrom-terra text-areia-clara uppercase font-bold tracking-widest text-xs px-10 rounded-sm shadow-xl h-11">Salvar</Button>
+            <Button onClick={handleSave} className="bg-marrom-terra text-areia-clara uppercase font-bold tracking-widest text-xs px-10 rounded-sm shadow-xl h-11">Salvar Alterações</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -12,6 +12,11 @@ service cloud.firestore {
     match /categories/{categoryId} {
       allow read, write: if true;
     }
+
+    // Regras para Biblioteca de Imagens
+    match /images/{imageId} {
+      allow read, write: if true;
+    }
     
     // Regras para Pedidos
     match /orders/{orderId} {

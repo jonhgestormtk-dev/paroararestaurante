@@ -13,7 +13,8 @@ import {
   X,
   Tags,
   Monitor,
-  TrendingUp
+  TrendingUp,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -73,6 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Venda PDV', icon: Monitor, path: '/admin/pdv' },
     { label: 'Produtos', icon: Package, path: '/admin/produtos' },
     { label: 'Categorias', icon: Tags, path: '/admin/categorias' },
+    { label: 'Fotos', icon: ImageIcon, path: '/admin/photos' },
     { label: 'Pedidos', icon: ShoppingBag, path: '/admin/pedidos' },
     { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
   ];
