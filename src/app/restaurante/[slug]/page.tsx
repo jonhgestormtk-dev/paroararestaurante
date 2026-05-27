@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, use } from 'react';
@@ -16,9 +15,15 @@ import { CartProvider } from '@/context/CartContext';
 import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, orderBy, where, doc } from 'firebase/firestore';
 import { Product, RestaurantSlug } from '@/lib/types';
-import { Sparkles, Loader2, Flame, Utensils, AlertCircle, Home } from 'lucide-react';
+import { Sparkles, Loader2, Utensils, AlertCircle, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+
+/**
+ * Função utilitária para normalizar strings para comparação (remove acentos e espaços extras)
+ */
+const normalizeText = (text: string) => 
+  text.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 export default function RestaurantHomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -54,7 +59,7 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     if (!db) return null;
     return query(collection(db, 'categories'), orderBy('order', 'asc'));
   }, [db]);
-  const { data: allCategoriesRaw, loading: categoriesLoading } = useCollection<any>(categoriesQuery);
+  const { data: allCategoriesRaw } = useCollection<any>(categoriesQuery);
 
   const dynamicCategories = useMemo(() => {
     const base = ['Todos'];
@@ -66,81 +71,53 @@ export default function RestaurantHomePage({ params }: { params: Promise<{ slug:
     return [...base, 'Regionais', 'Peixes', 'Grelhados', 'Bebidas'];
   }, [allCategoriesRaw, restaurantId]);
 
-  const featuredQuery = useMemo(() => {
-    if (!db) return null;
-    return query(
-      collection(db, 'products'), 
-      where('restaurantId', '==', restaurantId),
-      where('featured', '==', true)
-    );
-  }, [db, restaurantId]);
-  const { data: featuredProductsRaw } = useCollection<Product>(featuredQuery);
-
-  const featuredProducts = useMemo(() => {
-    if (!featuredProductsRaw) return [];
-    return featuredProductsRaw
-      .filter(p => p.active !== false)
-      .sort((a, b) => a.name.trim().localeCompare(b.name.trim(), 'pt-BR', { sensitivity: 'base' }));
-  }, [featuredProductsRaw]);
-
   const allProductsQuery = useMemo(() => {
     if (!db) return null;
-    return query(
-      collection(db, 'products'),
-      where('restaurantId', '==', restaurantId)
-    );
+    return query(collection(db, 'products'), where('restaurantId', '==', restaurantId));
   }, [db, restaurantId]);
   const { data: allProductsRaw, loading: productsLoading } = useCollection<Product>(allProductsQuery);
+
+  const featuredProducts = useMemo(() => {
+    if (!allProductsRaw) return [];
+    return allProductsRaw
+      .filter(p => p.active !== false && p.featured)
+      .sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name), 'pt-BR'));
+  }, [allProductsRaw]);
 
   const filteredProducts = useMemo(() => {
     if (!allProductsRaw) return [];
     
-    // 1. Filtrar ativos
     let list = allProductsRaw.filter(p => p.active !== false);
     
-    // 2. Filtrar por categoria selecionada
     if (activeCategory !== 'Todos') {
       list = list.filter(p => p.category === activeCategory);
     }
     
-    // 3. Mapear ordens e nomes das categorias para ordenação robusta
+    // Mapa de prioridades das categorias
     const catMap: Record<string, { order: number; name: string }> = {};
     if (allCategoriesRaw) {
       allCategoriesRaw
         .filter((c: any) => c.restaurantId === restaurantId)
         .forEach((c: any) => {
-          const key = c.name.trim().toLowerCase();
-          catMap[key] = {
-            order: c.order ?? 999,
-            name: c.name.trim()
-          };
+          const key = normalizeText(c.name);
+          catMap[key] = { order: c.order ?? 999, name: c.name };
         });
     }
 
-    // 4. Ordenação Final
     return [...list].sort((a, b) => {
-      // Se estivermos na aba "Todos", a prioridade é o agrupamento de categorias
       if (activeCategory === 'Todos') {
-        const keyA = a.category.trim().toLowerCase();
-        const keyB = b.category.trim().toLowerCase();
+        const catA = catMap[normalizeText(a.category)] || { order: 999, name: a.category };
+        const catB = catMap[normalizeText(b.category)] || { order: 999, name: b.category };
         
-        const catA = catMap[keyA] || { order: 999, name: a.category.trim() };
-        const catB = catMap[keyB] || { order: 999, name: b.category.trim() };
-        
-        // Primeiro por ordem numérica da categoria
         if (catA.order !== catB.order) return catA.order - catB.order;
-        
-        // Segundo por nome da categoria (A-Z) para desempate de grupos
-        const catNameCmp = catA.name.localeCompare(catB.name, 'pt-BR', { sensitivity: 'base' });
+        const catNameCmp = normalizeText(catA.name).localeCompare(normalizeText(catB.name), 'pt-BR');
         if (catNameCmp !== 0) return catNameCmp;
       }
       
-      // Ordenação Alfabética do Prato (A-Z) - Sempre o critério final
-      return a.name.trim().localeCompare(b.name.trim(), 'pt-BR', { sensitivity: 'base' });
+      return normalizeText(a.name).localeCompare(normalizeText(b.name), 'pt-BR');
     });
   }, [activeCategory, allProductsRaw, allCategoriesRaw, restaurantId]);
 
-  // Se o restaurante estiver inativo, mostra tela de bloqueio
   if (!settingsLoading && !isActive) {
     return (
       <div className={cn(

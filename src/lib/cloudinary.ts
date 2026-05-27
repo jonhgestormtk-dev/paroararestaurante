@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -33,12 +32,14 @@ export async function uploadImageToCloudinary(file: File) {
     const data = await response.json();
 
     if (!response.ok) {
+      // Captura a mensagem de erro específica do Cloudinary
       const errorMessage = data.error?.message || "Erro desconhecido no Cloudinary";
       throw new Error(errorMessage);
     }
 
     return data;
   } catch (error: any) {
+    // Garante que o erro seja propagado com uma mensagem legível
     throw new Error(error.message || "Falha na comunicação com o Cloudinary");
   }
 }
