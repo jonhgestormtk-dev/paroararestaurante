@@ -12,16 +12,16 @@ export function optimizeImage(url: string) {
 }
 
 /**
- * Realiza o upload de uma imagem diretamente para o Cloudinary.
- * Utiliza a estratégia de "Unsigned Upload" para permitir uploads via Client-side.
+ * Realiza o upload de uma imagem diretamente para o Cloudinary via Unsigned Upload.
+ * Isso permite que o frontend envie a imagem sem expor a API Secret.
  */
 export async function uploadImageToCloudinary(file: File) {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-  // Verifica se as configurações básicas estão presentes
+  // Validação preventiva no lado do cliente
   if (!cloudName || !uploadPreset) {
-    throw new Error("Configuração Cloudinary ausente no arquivo .env");
+    throw new Error("Configuração Cloudinary ausente. Verifique o arquivo .env");
   }
 
   const formData = new FormData();
@@ -40,14 +40,15 @@ export async function uploadImageToCloudinary(file: File) {
     const data = await response.json();
 
     if (!response.ok) {
-      // O Cloudinary retorna a mensagem detalhada em data.error.message
-      const errorMessage = data.error?.message || "Erro desconhecido no servidor de imagens";
+      // O Cloudinary retorna mensagens detalhadas como "Upload preset not found"
+      // ou "Invalid Cloud Name". Capturamos isso para exibir no Toast.
+      const errorMessage = data.error?.message || "Erro desconhecido no Cloudinary";
       throw new Error(errorMessage);
     }
 
     return data;
   } catch (error: any) {
-    // Repropaga a mensagem exata para ser exibida no Toast do Admin
-    throw new Error(error.message || "Falha na conexão com Cloudinary");
+    // Repropaga a mensagem amigável para ser capturada pelo componente de UI
+    throw new Error(error.message || "Falha na conexão com o servidor de imagens");
   }
 }
